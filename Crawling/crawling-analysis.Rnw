@@ -1,0 +1,317 @@
+\documentclass{article}
+
+\usepackage{fullpage}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage[tableposition=top]{caption}
+\usepackage[utf8]{inputenc}
+
+\begin{document}
+\SweaveOpts{concordance=FALSE}
+
+\title{Analysis of Crawling Rates for Muscle TSC1/Raptor Flies}
+\author{Isabelle Hatfield and Dave Bridges}
+\date{\today}
+\maketitle
+
+
+\section*{Experimental Design}
+
+<<data-input, echo=FALSE>>=
+spreadsheet_location <- 'https://docs.google.com/spreadsheet/pub?key=0Aitfmor6rCjYdElBV0gtNmszZXNNQ3JfNmVRbkVqNGc&single=true&gid=0&output=csv' 
+mapping_file <- '../Data/gene_mapping.csv'
+mapping.data <- read.csv(mapping_file)
+
+data_file_name <- '../Data/Crawling Data.csv'
+download.file(spreadsheet_location, data_file_name, method="curl")
+crawling_data <- read.csv(data_file_name)
+
+births_worksheet_location <- 'https://docs.google.com/spreadsheet/pub?key=0Aitfmor6rCjYdHpHTk1BZVh0MFEtNDV6QVI2V2RWSEE&single=true&gid=0&output=csv' 
+birth_file_name <- '../Data/Birth Data.csv'
+download.file(births_worksheet_location, birth_file_name, method="curl")
+birth_data <- read.csv(birth_file_name)
+@
+
+These data are stored in \verb+\Sexpr{getwd()}+, with the raw data saved in \verb+\Sexpr{data_file_name}+.  This script was most recently run on \Sexpr{date()}
+
+\section*{Analysis}
+
+<<data-analysis, echo=FALSE>>=
+library(reshape2)
+combined_crawling_data <- merge(crawling_data, dcast(birth_data, Female+Male+CrossName~Gender, value.var='Count', sum), by='CrossName', all.x=T)
+combined_crawling_data$UAS <- as.factor(sapply(strsplit(as.character(combined_crawling_data$Male), '/'),"[", 1))
+combined_crawling_data$Driver <- as.factor(sapply(strsplit(as.character(combined_crawling_data$Female), '/'),"[", 1))
+
+annotated_crawling_data <- merge(mapping.data, combined_crawling_data, by='UAS', all.y=T)
+annotated_crawling_data <- droplevels(annotated_crawling_data)
+annotated_crawling_data$UAS <- as.factor(annotated_crawling_data$UAS)
+annotated_crawling_data$UAS <- relevel(annotated_crawling_data$UAS, ref='36304')
+annotated_crawling_data$Time <- as.numeric(as.character(annotated_crawling_data$Time))
+
+#set time limit at 10s
+time.limit <- 10
+annotated_crawling_data$Over.Limit <- annotated_crawling_data$Time>time.limit
+
+library(lubridate)
+annotated_crawling_data$Born <- mdy(as.character(annotated_crawling_data$Born))
+annotated_crawling_data$Assay.Date <- mdy(as.character(annotated_crawling_data$Assay.Date))
+annotated_crawling_data$Age <- as.integer(annotated_crawling_data$Assay.Date-annotated_crawling_data$Born)
+annotated_crawling_data$Age.Range <- cut(annotated_crawling_data$Age, breaks=c(min(annotated_crawling_data$Age),19, 45,max(annotated_crawling_data$Age)),dig.lab=2)
+annotated_crawling_data$Assay.Group <- as.factor(annotated_crawling_data$Assay.Date)
+
+crawling.summary.table <- data.frame(row.names=levels(annotated_crawling_data$UAS))
+crawling.summary.table <- cbind(crawling.summary.table, 
+                                rep(NA, length(levels(annotated_crawling_data$UAS))),
+                                rep(NA, length(levels(annotated_crawling_data$UAS))),
+                                rep(NA, length(levels(annotated_crawling_data$UAS))))   
+colnames(crawling.summary.table) <- levels(annotated_crawling_data$Age.Range)
+
+crawling.summary.n <- data.frame(row.names=levels(annotated_crawling_data$UAS))
+crawling.summary.n <- cbind(crawling.summary.n, 
+                                rep(NA, length(levels(annotated_crawling_data$UAS))),
+                                rep(NA, length(levels(annotated_crawling_data$UAS))),
+                                rep(NA, length(levels(annotated_crawling_data$UAS))))  
+
+colnames(crawling.summary.n) <- levels(annotated_crawling_data$Age.Range)
+
+#this generates a table with the percent of flies that do not crawl the limit and another table with all the flies in each age range
+for (uas in rownames(crawling.summary.table)) {
+    summary.table <- with(subset(annotated_crawling_data, Driver=='C179-Gal4'&UAS==uas), table(Over.Limit,Age.Range))
+    crawling.summary.table[uas,] <- summary.table['TRUE',]/colSums(summary.table)*100
+    crawling.summary.n[uas,] <- colSums(summary.table)
+}
+
+#calculates teh standard error for the counts
+crawling.summary.error <- 100*sqrt(((1-crawling.summary.table/100)*crawling.summary.table/100)/crawling.summary.n)
+#this stable has the left three columns as the number of f lies tested and the right hand colums being the number of flies that didnt crawl that high
+crawling.counts.summary <- cbind(crawling.summary.n,crawling.summary.table*crawling.summary.n/100)
+#crawling.counts.summary <- crawling.counts.summary[,c(1,3,2,4)]
+
+
+crawling.fisher.tests <- data.frame(row.names=levels(annotated_crawling_data$UAS))
+crawling.fisher.tests <- cbind(crawling.fisher.tests, 
+                                rep(NA, length(levels(annotated_crawling_data$UAS))),
+                                rep(NA, length(levels(annotated_crawling_data$UAS))),
+                                rep(NA, length(levels(annotated_crawling_data$UAS))))   
+colnames(crawling.fisher.tests) <- levels(annotated_crawling_data$Age.Range)
+
+for (uas in rownames(crawling.counts.summary)[1:5]){
+  crawling.fisher.tests[uas,1] <- fisher.test(crawling.counts.summary[c('36304',uas),1:2])$p.value
+  crawling.fisher.tests[uas,2] <- fisher.test(crawling.counts.summary[c('36304',uas),3:4])$p.value
+  crawling.fisher.tests[uas,3] <- fisher.test(crawling.counts.summary[c('36304',uas),5:6])$p.value
+}
+
+annotated.crawling.summary.table <- droplevels(merge(crawling.summary.table, mapping.data, by.x=0, by.y='UAS'))
+annotated.crawling.summary.error <- droplevels(merge(crawling.summary.error, mapping.data, by.x=0, by.y='UAS'))
+colnames(annotated.crawling.summary.table)[1] <- 'UAS'
+colnames(annotated.crawling.summary.error)[1] <- 'UAS'
+
+#reorder columns and re-arrange rows for summary.table
+annotated.crawling.summary.table <- annotated.crawling.summary.table[,c('Gene','UAS', levels(annotated_crawling_data$Age.Range))]
+annotated.crawling.summary.table <- annotated.crawling.summary.table[order(annotated.crawling.summary.table$Gene),]
+
+annotated.crawling.summary.error <- annotated.crawling.summary.error[,c('Gene','UAS', levels(annotated_crawling_data$Age.Range))]
+annotated.crawling.summary.error <- annotated.crawling.summary.error[order(annotated.crawling.summary.error$Gene),]
+
+uas.anova <- aov(Time~Age.Range+UAS, data=subset(annotated_crawling_data, Driver == 'C179-Gal4'))
+uas.anova.date <- aov(Time~Assay.Date+Age.Range+UAS, data=subset(annotated_crawling_data, Driver == 'C179-Gal4'))
+uas.anova.int <- aov(Time~Age.Range*UAS, data=subset(annotated_crawling_data, Driver == 'C179-Gal4'))
+
+library(plyr)
+uas.summary<- ddply(subset(annotated_crawling_data, Driver == 'C179-Gal4'), ~Age.Range+Gene+UAS, summarize,
+                        mean = mean(Time, na.rm=T),
+                        se = sd(Time, na.rm=T)/sqrt(length(Time)),
+                        sd = sd(Time, na.rm=T),
+                        rel.error = sd(Time, na.rm=T)/mean(Time, na.rm=T)*100,
+                        n = length(Time))
+
+uas.summary.gender<- ddply(subset(annotated_crawling_data, Driver == 'C179-Gal4'), ~Age.Range+Gene+UAS+Gender, summarize,
+                        mean = mean(Time, na.rm=T),
+                        se = sd(Time, na.rm=T)/sqrt(length(Time)),
+                        sd = sd(Time, na.rm=T),
+                        rel.error = sd(Time, na.rm=T)/mean(Time, na.rm=T)*100,
+                        n = length(Time))
+
+uas.summary.assay.group <- ddply(annotated_crawling_data, ~Assay.Group+Age.Range+Driver+Gene+UAS, summarize,
+                        mean = mean(Time, na.rm=T),
+                        se = sd(Time, na.rm=T)/sqrt(length(Time)),
+                        sd = sd(Time, na.rm=T),
+                        rel.error = sd(Time, na.rm=T)/mean(Time, na.rm=T)*100,
+                        n = length(Time))
+
+#did dunnet test vs the control
+library(multcomp)
+uas.dunnett <- glht(uas.anova.date, linfct=mcp(UAS="Dunnett"))
+#made a table with the dunnet test results
+uas.dunnett.summary <- cbind(summary(uas.dunnett)$test$coefficients, summary(uas.dunnett)$test$pvalues)
+colnames(uas.dunnett.summary) <- c("Effect Size (s)", "p-value")
+@
+
+<<label=larvae-summary-tables,echo=FALSE,results=tex>>=
+require(xtable)
+print(xtable(uas.summary, caption="Summary of Crawling Times per Cross", label="tab:summary"), include.rownames=F)
+print(xtable(uas.summary.assay.group, caption="Summary of Crawling Times per Cross Separated by Assay Group", label="tab:summary-assay-group"), include.rownames=F)
+print(xtable(uas.anova.date, caption="ANOVA of Crawling Times per UAS", label="tab:anova"))
+print(xtable(uas.dunnett.summary, caption="Dunnet Tests of Crawling Times per shRNA", label="tab:dunnett"))
+print(xtable(annotated.crawling.summary.table, caption=sprintf("Percent of Flies Which Do Not Crawl 4cm in %s Seconds", time.limit), label='tab:time-limit-summary'), include.rownames=F)
+print(xtable(crawling.fisher.tests, caption=sprintf("Fisher's Exact Test For Flies Which Do Not Crawl 4cm in %s Seconds", time.limit), label='tab:fisher-test-summary'))
+@
+
+\begin{figure}
+\begin{center}
+<<label=timing-density-plot,fig=TRUE,echo=FALSE>>=
+plot(density(annotated_crawling_data$Age), main="Crawling Assay Ages", las=1, xlab="Age (days)")
+@
+\end{center}
+\caption{Crawling Assay Ages.}
+\label{fig:density-ages}
+\end{figure}
+
+
+\begin{figure}
+\begin{center}
+<<label=barplot,fig=TRUE,echo=FALSE>>=
+superpose.eb <- 
+ function (x, y, ebl, ebu = ebl, length = 0.08, ...) 
+ arrows(x, y + ebu, x, y - ebl, angle = 90, code = 3, 
+ length = length, ...)
+
+par(mfrow=c(1,length(levels(uas.summary$Age.Range))))
+for (range in levels(uas.summary$Age.Range)){
+data.used <- subset(uas.summary,Age.Range==range)
+par( mar=c(8,4.1,4.1,2.1))
+ymax <- max(data.used$mean+data.used$se, na.rm=T)
+plot <- barplot(data.used $mean,
+        beside=T, las=2,
+        ylim=c(0,ymax),
+        names.arg=data.used$UAS,
+        col=data.used$Gene,
+        ylab="Time to Crawl 4cm (s)",
+        xlab="shRNA Clone",
+        main=sprintf("Age Range- %s",range))
+
+legend("topleft", levels(data.used$Gene), fill= palette()[1:length(levels(data.used$Gene))], bty='n')
+
+superpose.eb(plot, 
+             data.used$mean,
+             data.used$se)
+}
+@
+\end{center}
+\caption{Crawling times for C179 Driven Knockdowns.}
+\label{fig:barplot}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=barplot-gender,fig=TRUE,echo=FALSE>>=
+
+par(mfrow=c(2,length(levels(uas.summary.gender$Age.Range))))
+for (range in levels(uas.summary.gender$Age.Range)){
+data.used <- subset(uas.summary.gender,Age.Range==range&Gender=='Male')
+par( mar=c(8,4.1,4.1,2.1))
+ymax <- max(subset(uas.summary.gender,Gender=='Male')$mean+subset(uas.summary.gender,Gender=='Male')$se, na.rm=T)
+plot <- barplot(data.used $mean,
+        beside=T, las=2,
+        ylim=c(0,ymax),
+        names.arg=data.used$UAS,
+        col=data.used$Gene,
+        ylab="Time to Crawl 4cm (s)",
+        xlab="shRNA Clone",
+        main=sprintf("Age Range- %s, Males",range))
+
+legend("topleft", levels(data.used$Gene), fill= palette()[1:length(levels(data.used$Gene))], bty='n')
+
+superpose.eb(plot, 
+             data.used$mean,
+             data.used$se)
+}
+
+for (range in levels(uas.summary.gender$Age.Range)){
+data.used <- subset(uas.summary.gender,Age.Range==range&Gender=='Female')
+par( mar=c(8,4.1,4.1,2.1))
+ymax <- max(subset(uas.summary.gender,Gender=='Female')$mean+subset(uas.summary.gender,Gender=='Female')$se, na.rm=T)
+plot <- barplot(data.used $mean,
+        beside=T, las=2,
+        ylim=c(0,ymax),
+        names.arg=data.used$UAS,
+        col=data.used$Gene,
+        ylab="Time to Crawl 4cm (s)",
+        xlab="shRNA Clone",
+        main=sprintf("Age Range- %s, Females",range))
+
+legend("topleft", levels(data.used$Gene), fill= palette()[1:length(levels(data.used$Gene))], bty='n')
+
+superpose.eb(plot, 
+             data.used$mean,
+             data.used$se)
+}
+@
+\end{center}
+\caption{Crawling times for C179 Driven Knockdowns Separated by Gender.}
+\label{fig:barplot-gender}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=barplot-time-limit,fig=TRUE,echo=FALSE>>=
+max.ylim <- max(annotated.crawling.summary.table[,3:5], na.rm=T)+max(annotated.crawling.summary.error[,3:5], na.rm=T)
+plot <- barplot(as.matrix(annotated.crawling.summary.table[,3:5]),
+        beside=T, las=1,
+        names.arg=levels(annotated_crawling_data$Age.Range),
+        col=annotated.crawling.summary.table$Gene,
+        ylab="Percent of Flies",
+        ylim=c(0,max.ylim),
+        main=sprintf("Flies Which Did Not Crawl 4cm in %s Seconds", time.limit),
+        xlab="Fly Age")
+
+legend("topleft", levels(annotated.crawling.summary.table$Gene), fill= palette()[1:length(levels(annotated.crawling.summary.table$Gene))], bty='n')
+
+superpose.eb(plot, 
+             as.matrix(annotated.crawling.summary.table[,3:5]),
+             as.matrix(annotated.crawling.summary.error[,3:5]),)
+
+@
+\end{center}
+\caption{Time Limit Barplot.}
+\label{fig:time-limit-barplot}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=scatter-plot,fig=TRUE,echo=FALSE>>=
+with(annotated_crawling_data, plot(Age, Time, pch=18, col=UAS, cex=0.5, ylim=c(0,50)))
+library(MASS)
+for (uas in levels(annotated_crawling_data$UAS)) {
+  abline(rlm(Time~Age, data=subset(annotated_crawling_data, UAS==uas)), col=palette()[match(uas, levels(annotated_crawling_data$UAS))])
+}
+
+legend("topleft", annotated.crawling.summary.table$UAS, col= palette()[1:length(annotated.crawling.summary.table$UAS)], lty=1, bty='n', pch=18)
+
+@
+\end{center}
+\caption{Aging scatter plot.}
+\label{fig:scatter-plot}
+\end{figure}
+
+To test this effect, first we tested a model in which first the age range was taken into account, and then the uas was included.  To test whether there was an interaction between the UAS and the age range on crawling time, we compared these models and did a test.  The p-value for this is \textbf{\Sexpr{round(anova(uas.anova, uas.anova.int, test="Chisq")$`Pr(>Chi)`[2],4)}} so we ignored the interaction. The results of this test are in Table \ref{tab:anova} and are summarized in Table \ref{tab:summary} and Figure \ref{fig:barplot}
+
+Using this model we did an ANOVA testing for whether the Age has an effect on crawlign speed.  The p-value for that comparason is \textbf{\Sexpr{round(summary(uas.anova)[[1]][["Pr(>F)"]][1],4)}}.  Even though it was not significant, we kept this term in the model, since we expect it to reach significance eventually.
+
+We next tested if CrossName has an effect on the crawling speed.  The p-value for that comparason is \textbf{\Sexpr{round(summary(uas.anova)[[1]][["Pr(>F)"]][2],4)}}.  We then performed a Dunnett's test comparing each cross to the \textit{C179-GAL4/+} control (see Table \ref{tab:dunnett}).  
+
+<<bibliography, include=F, echo=F>>=
+require(bibtex)
+write.bib(c(names(sessionInfo()$otherPkgs),'base','stats','utils'), file='crawling-references.bib')
+@
+
+The key packages used in this analysis were R \cite{base}, plyr \cite{plyr}, reshape2 \cite{reshape2}, and multcomp \cite{multcomp}.
+
+\bibliography{crawling-references}
+\bibliographystyle{unsrt}
+
+\section*{Session Information}
+<<sessionInfo, results=tex, echo=F>>=
+toLatex(sessionInfo())
+@
+
+\end{document}
