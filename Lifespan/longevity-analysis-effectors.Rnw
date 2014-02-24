@@ -1,0 +1,491 @@
+\documentclass{article}
+
+\usepackage{fullpage}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage[tableposition=top]{caption}
+\usepackage[utf8]{inputenc}
+
+\begin{document}
+\SweaveOpts{concordance=FALSE}
+
+\title{Analysis of Longevity from Muscle mTORC1 Effector Flies}
+\author{Isabelle Hatfield, Erika Yates, Matt Peloquin and Dave Bridges}
+\date{\today}
+\maketitle
+
+
+\section*{Experimental Design}
+
+<<data-input, echo=FALSE>>=
+require(RCurl, quietly=T)
+require(lubridate, quietly=T)
+birth_worksheet <- 'https://docs.google.com/spreadsheet/pub?key=0Am2qM2oZ12_jdHhNTjNuc25zdDJKZzR3MzVuUUU4dEE&single=true&gid=0&output=csv' 
+death_worksheet <- 'https://docs.google.com/spreadsheet/pub?key=0Aitfmor6rCjYdG9GUlgtRXRuc01EVFJqdmp3WVU4b0E&single=true&gid=0&output=csv'
+
+mapping_data <- read.csv('../Data/gene_mapping.csv')
+birth_file <- getURL(birth_worksheet)
+death_file <- getURL(death_worksheet)
+birth_data <- read.csv(textConnection(birth_file))
+birth_data$CrossName <- tolower(birth_data$CrossName)
+death_data <- read.csv(textConnection(death_file))
+death_data$CrossName <- tolower(death_data$CrossName)
+
+data <- merge(death_data, birth_data[duplicated(birth_data$CrossName)==FALSE,c('CrossName','Generation','Cross','Replicate','DateStarted', 'Male', 'Female')], by='CrossName')
+data$Birth.Date <- mdy(gsub("/", "-", data$Birth.Date))
+data$Death.Date <- mdy(gsub("/", "-", data$Death.Date))
+data$Age <- as.integer(data$Death.Date - data$Birth.Date)
+data$Cross <- as.factor(paste(data$Male, data$Female, sep=" x "))
+
+#this is complicated in this group
+data$Driver <- as.factor(sapply(strsplit(as.character(data$Female), "/"),"[", 1))
+data$UAS <- as.factor(data$Male)
+
+data <- merge(data, mapping_data)
+#moved gender to being case insensitive
+data$Gender <- as.factor(tolower(data$Gender))
+#made genotype case insensitive
+data$Phenotype <- as.factor(tolower(data$Phenotype))
+data$Genotype[data$Phenotype =='wt'] <- "shRNA/GAL4"
+data$Genotype[data$Phenotype == 'sb'] <- "shRNA/Tm3"
+#made genotype into a factor
+data$Genotype <- as.factor(data$Genotype)
+#set levels of genotype
+data$Genotype <- factor(data$Genotype, levels=c("shRNA/GAL4","shRNA/Tm3"))
+data$Genotype <- relevel(data$Genotype, ref="shRNA/GAL4")
+
+data <- droplevels(data)
+write.csv(data, "../Data/Effector Longevity Analysis Data.csv")
+@
+
+These data are stored in the \textbf{Data} subfolder.  This script was most recently run on \Sexpr{date()}.  There has been a total of \textbf{\Sexpr{dim(death_data)[1]}} deaths, with \textbf{\Sexpr{dim(death_data[death_data$Accidental==FALSE,])[1]}} of natural causes and \textbf{\Sexpr{dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]}} of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was \textbf{\Sexpr{ max(data$Age, na.rm=T)}} days old at time of death.
+
+\begin{figure}
+\begin{center}
+<<label=histogram-gender,fig=TRUE,echo=FALSE>>=
+with(data[data$Accidental==FALSE&data$Gender=='male'&data$Genotype!='Tm3/Tm6B'&data$Genotype!='NA',], plot(density(Age, na.rm=T), col="black", las=1))
+with(data[data$Accidental==FALSE&data$Gender=='female'&data$Genotype!='Tm3/Tm6B'&data$Genotype!='NA',], lines(density(Age, na.rm=T), main="Natural Death Distribution", col="red", las=1, xlab=""))
+legend("topright", c("Male","Female"), lty=1, col=c("black","red"), bty="n")
+@
+\end{center}
+\caption{Histogram of Age Ranges for All Genotypes}
+\label{fig:histogram-genders}
+\end{figure}
+
+
+
+
+\section*{Gene Level Analysis}
+
+<<summary-statistics, echo=FALSE>>=
+require(plyr)
+require(reshape2)
+
+complete.data <- data[!(is.na(data$Age)),]
+
+summarised.data.all <- ddply(complete.data, .(Driver,UAS,Genotype), summarise,
+                         Deaths = length(Age),
+                         Median.Age = median(Age),
+                         Age= mean(Age),
+                         Error = sd(Age, na.rm=T)/sqrt(length(Age)))
+summarised.data.natural <- ddply(data[data$Accidental==FALSE,], .(Driver,UAS,Genotype), summarise,
+                         Deaths = length(Age),
+                         Median.Age = median(Age),
+                         Age= mean(Age),
+                         Error = sd(Age, na.rm=T)/sqrt(length(Age)))
+
+summarised.data.natural.genes <- ddply(complete.data[complete.data$Accidental==FALSE&complete.data$Genotype!='shRNA/GAL4',], .(UAS,Driver,Gene,Genotype), summarise,
+                         Deaths = length(Age),
+                         Median.Age = median(Age, na.rm=T),
+                         Age= mean(Age, na.rm=T),
+                         Error = sd(Age, na.rm=T))
+
+summarised.data.natural.gene <- ddply(data[data$Accidental==FALSE,], .(Driver,Gene,Genotype), summarise,
+                         Deaths = length(Age),
+                         Median.Age = median(Age),
+                         Age= mean(Age),
+                         Error = sd(Age, na.rm=T)/sqrt(length(Age)))
+summarised.data.natural.gene.gender <- ddply(data[data$Accidental==FALSE,], .(Driver,Gene,Genotype,Gender), summarise,
+                         Deaths = length(Age),
+                         Median.Age = median(Age),
+                         Age= mean(Age),
+                         Error = sd(Age, na.rm=T)/sqrt(length(Age)))
+@
+
+
+
+\subsection*{Number of Flies Examined}
+
+The total number of deaths for each cross and genotype, removing deaths that were accidental or not due to natural causes, the data is shown in Table \ref{tab:analysed-deaths-gene} and \ref{tab:analysed-deaths-gene-gender}.  
+
+The distribution of deaths in the samples are shown at a gender level in Figure \ref{fig:histogram-genders}.  
+
+<<label=selected-data,echo=FALSE,results=tex>>=
+require(xtable)
+print(xtable(dcast(summarised.data.natural.gene, Driver+Gene~Genotype, value.var='Deaths', margins=F, sum), caption = "Total Natural Deaths for Each Gene and Genotype", label = "tab:analysed-deaths-gene"), include.rownames=F)
+print(xtable(dcast(summarised.data.natural.gene.gender, Driver+Gene+Gender~Genotype, value.var='Deaths', margins=F, sum), caption = "Total Natural Deaths by Gender for Each Gene and Genotype", label = "tab:analysed-deaths-gene-gender"), include.rownames=F)
+@
+
+\subsection*{Survival Analysis}
+
+All of these are relative to the reference Genotype which is the knockdown (GAL4/shRNA).  The key packages used in this analysis were R \cite{base}, lubridate \cite{lubridate}, plyr \cite{plyr} and survival \cite{survival1, survival2}.  The summary statistics from this analysis are shown in Tables \ref{tab:coxph-summary-24b} and \ref{tab:coxph-summary-24b-gender}.
+
+<<survival-analysis-24b, echo=FALSE>>=
+require(RColorBrewer)
+genotype.colors <- brewer.pal(2, "Set2")
+require(survival)
+summary.coxph.24b.gene <- data.frame(row.names=levels(data$Gene), 
+                                n=rep(NA,length(levels(data$Gene))), 
+                                logtest.p=rep(NA,length(levels(data$Gene))),
+                                waldtest.p=rep(NA,length(levels(data$Gene))),
+                                sctest.p=rep(NA,length(levels(data$Gene))))
+for (gene in levels(data$Gene)[1:4]) {
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene==gene&data$Genotype!='Tm3/Tm6B',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    #print(sprintf('Analysis of %s with 24B-GAL4 Driver', gene))
+    #print(survfit(survobj~Genotype, data=data.used), print.rmean=TRUE)
+    coxph.fit <- coxph(survobj~Genotype, data=data.used)
+    beta <- coef(coxph.fit)
+    se <- sqrt(diag(coxph.fit$var))
+    assign(paste('coxph.table.24b',gene,sep='.'),data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+    
+    summary.coxph.24b.gene[gene,] <- c(
+      n=coxph(survobj~Genotype, data=data.used)$nevent,
+      logtest.p=summary(coxph(survobj~Genotype, data=data.used))$logtest[3],
+      waldtest.p=summary(coxph(survobj~Genotype, data=data.used))$wald[3],
+      sctest.p=summary(coxph(survobj~Genotype, data=data.used))$sctest[3])
+    #summary.coxph.24b$padj <- p.adjust(summary.coxph.24b$logrank.p,n=3,method="BH")
+    
+    pdf(sprintf('figure/24B-%s-survival-plot.pdf', gene))
+    plot(survfit, main = sprintf('Survival of %s with 24B-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+    dev.off()
+}
+
+
+#Separating out genders for this analysis
+summary.coxph.24b.gene.gender <- data.frame(
+                row.names=paste(c("Atg5","Atg5","Atg8a","Atg8a","Atg8b","Atg8b","HLH106","HLH106"),c(rep(c("male","female"),4))),
+                n=rep(NA,8), 
+                logtest.p=rep(NA,8),
+                waldtest.p=rep(NA,8),
+                sctest.p=rep(NA,8))
+
+#iterate over gender, then over each gene
+for (gender in levels(data$Gender)) {
+    for (gene in levels(data$Gene)[1:4]) {
+        data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene==gene&data$Genotype!='Tm3/Tm6B'&data$Gender==gender,])
+        survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+        survfit <- survfit(survobj~Genotype, data=data.used)
+        #print(survfit(survobj~Genotype, data=data.used), print.rmean=TRUE)
+        #print(coxph(survobj~Genotype, data=data.used))
+        
+        coxph.fit <- coxph(survobj~Genotype, data=data.used)
+        beta <- coef(coxph.fit)
+        se <- sqrt(diag(coxph.fit$var))
+        assign(paste(paste('coxph.table.24b',gene,sep='.'),gender, sep="."),
+               data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+        
+        summary.coxph.24b.gene.gender[paste(gene, gender),] <- c(
+          n=coxph(survobj~Genotype, data=data.used)$nevent,
+          logtest.p=summary(coxph(survobj~Genotype, data=data.used))$logtest[3],
+          waldtest.p=summary(coxph(survobj~Genotype, data=data.used))$wald[3],
+          sctest.p=summary(coxph(survobj~Genotype, data=data.used))$sctest[3])
+        #summary.coxph.24b$padj <- p.adjust(summary.coxph.24b$logrank.p,n=3,method="BH")
+        pdf(sprintf('figure/24B-%s-survival-plot.pdf', paste(gene,gender,sep="-")))
+        plot(survfit, main = sprintf('Survival of %s with 24B-GAL4 Driver', paste(gene,gender)),
+             xlab= 'Days',
+             ylab= 'Percent Survival',
+             yscale=100, 
+             las = 1,
+             lty=c(1,2,2,2),
+             col= genotype.colors)
+        legend("bottomleft", levels(data$Genotype), col=genotype.colors, lty=c(1,2,2,2), bty="n")
+        dev.off()
+}
+}
+@
+
+<<label=coxph-datatables,echo=FALSE,results=tex>>=
+print(xtable(summary.coxph.24b.gene, digits=c(0,0,9,9,9),caption = "Gene Level Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b"))
+print(xtable(summary.coxph.24b.gene.gender, digits=c(0,0,9,9,9),caption = "Gene and Gender Level  Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b-gender"))
+@
+
+
+\begin{figure}
+\begin{center}
+<<label=survival-24b-atg5,fig=TRUE,echo=FALSE>>=
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg5'&data$Genotype!='Tm3/Tm6B',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Survival of Atg5 shRNA Flies with 24B-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curve for 24B Driven Atg5 Knockdown}
+\label{fig:survival-24b-atg5}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=survival-24b-atg5-gender,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(1,2))
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg5'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Males',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg5'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Females',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curves for 24B Driven Atg5 Knockdown}
+\label{fig:survival-24b-atg5-gender}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=survival-24b-atg8a,fig=TRUE,echo=FALSE>>=
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg8a'&data$Genotype!='Tm3/Tm6B',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Survival of Atg8a shRNA Flies with 24B-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curve for 24B Driven Atg8a Knockdown}
+\label{fig:survival-24b-atg8a}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=survival-24b-atg8a-gender,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(1,2))
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg8a'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Males',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg8a'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Females',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curves for 24B Driven Atg8a Knockdown}
+\label{fig:survival-24b-atg8a-gender}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=survival-24b-atg8b,fig=TRUE,echo=FALSE>>=
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg8b'&data$Genotype!='Tm3/Tm6B',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Survival of Atg8b shRNA Flies with 24B-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curve for 24B Driven Atg8a Knockdown}
+\label{fig:survival-24b-atg8b}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=survival-24b-atg8b-gender,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(1,2))
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg8b'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Males',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg8b'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Females',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curves for 24B Driven Atg8b Knockdown}
+\label{fig:survival-24b-atg8b-gender}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=survival-24b-HLH106,fig=TRUE,echo=FALSE>>=
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg8b'&data$Genotype!='Tm3/Tm6B',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Survival of HLH106 shRNA Flies with 24B-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curve for 24B Driven HLH106 Knockdown}
+\label{fig:survival-24b-HLH106}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=survival-24b-HLH106-gender,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(1,2))
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='HLH106'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Males',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='HLH106'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Females',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curves for 24B Driven HLH106 Knockdown}
+\label{fig:survival-24b-HLH106-gender}
+\end{figure}
+
+
+<<label=coxph-datatables,echo=FALSE,results=tex>>=
+atg5.summary <- rbind(coxph.table.24b.Atg5,coxph.table.24b.Atg5.female,coxph.table.24b.Atg5.male)
+rownames(atg5.summary) <- c("Total", "Male", "Female")
+print(xtable(atg5.summary, digits=c(0,3,3,3,8),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and Atg5 Knockdown", label = "tab:coxph.table.24b.atg5"))
+
+atg8a.summary <- rbind(coxph.table.24b.Atg8a,coxph.table.24b.Atg8a.female,coxph.table.24b.Atg8a.male)
+rownames(atg8a.summary) <- c("Total", "Male", "Female")
+print(xtable(atg8a.summary, digits=c(0,3,3,3,3),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and Atg8a Knockdown", label = "tab:coxph.table.24b.atg8a"))
+
+atg8b.summary <- rbind(coxph.table.24b.Atg8b,coxph.table.24b.Atg8b.female,coxph.table.24b.Atg8b.male)
+rownames(atg8b.summary) <- c("Total", "Male", "Female")
+print(xtable(atg8b.summary, digits=c(0,3,3,3,15),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and Atg8b Knockdown", label = "tab:coxph.table.24b.atg8b"))
+
+HLH106.summary <- rbind(coxph.table.24b.HLH106,coxph.table.24b.HLH106.female,coxph.table.24b.HLH106.male)
+rownames(HLH106.summary) <- c("Total", "Male", "Female")
+print(xtable(HLH106.summary, digits=c(0,3,3,3,15),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and HLH106 Knockdown", label = "tab:coxph.table.24b.HLH106"))
+@
+
+\pagebreak
+
+\subsubsection*{Atg5 Knockdown}
+
+The summary statistics from this analysis are shown in Table \ref{tab:coxph.table.24b.atg5}.  In the case of muscle \textit{Atg5} knockdown flies, we observed the knockdown flies dying later than the wildtypes with a hazard ratio of \Sexpr{round(atg5.summary['Total',]$Hazard.Ratio, 3)} (p=\Sexpr{round(atg5.summary['Total',]$p, 8)}).  This was true for both Males (HR=\Sexpr{round(atg5.summary['Male',]$Hazard.Ratio, 3)}, p=\Sexpr{round(atg5.summary['Male',]$p, 7)}) and Females (HR=\Sexpr{round(atg5.summary['Female',]$Hazard.Ratio, 3)}, p=\Sexpr{round(atg5.summary['Female',]$p, 7)}).
+
+
+\subsubsection*{Atg8a Knockdown}
+
+The summary statistics from this analysis are shown in Table \ref{tab:coxph.table.24b.atg8a}.  In the case of muscle \textit{Atg8b} knockdown flies, we observed no significant differences with a hazard ratio of \Sexpr{round(atg8a.summary['Total',]$Hazard.Ratio, 3)} (p=\Sexpr{round(atg8a.summary['Total',]$p, 3)}).  This was true for both Males (HR=\Sexpr{round(atg8a.summary['Male',]$Hazard.Ratio, 3)}, p=\Sexpr{round(atg8a.summary['Male',]$p, 3)}) and Females (HR=\Sexpr{round(atg8a.summary['Female',]$Hazard.Ratio, 3)}, p=\Sexpr{round(atg8a.summary['Female',]$p, 3)}).
+
+\subsubsection*{Atg8b Knockdown}
+
+The summary statistics from this analysis are shown in Table \ref{tab:coxph.table.24b.atg8b}.  In the case of muscle \textit{Atg8b} knockdown flies, we observed the knockdown flies dying later than the wildtypes with a hazard ratio of \Sexpr{round(atg8b.summary['Total',]$Hazard.Ratio, 3)} (p=\Sexpr{round(atg8b.summary['Total',]$p, 15)}).  This was true for both Males (HR=\Sexpr{round(atg8b.summary['Male',]$Hazard.Ratio, 3)}, p=\Sexpr{round(atg8b.summary['Male',]$p, 15)}) and Females (HR=\Sexpr{round(atg8b.summary['Female',]$Hazard.Ratio, 3)}, p=\Sexpr{round(atg8b.summary['Female',]$p, 5)}).
+
+\subsubsection*{HLH106 Knockdown}
+
+The summary statistics from this analysis are shown in Table \ref{tab:coxph.table.24b.HLH106}.  In the case of muscle \textit{HLH106} knockdown flies, we observed the knockdown flies dying later than the wildtypes with a hazard ratio of \Sexpr{round(HLH106.summary['Total',]$Hazard.Ratio, 3)} (p=\Sexpr{round(HLH106.summary['Total',]$p, 10)}).  This was true for both Males (HR=\Sexpr{round(HLH106.summary['Male',]$Hazard.Ratio, 3)}, p=\Sexpr{round(HLH106.summary['Male',]$p, 7)}) and Females (HR=\Sexpr{round(HLH106.summary['Female',]$Hazard.Ratio, 3)}, p=\Sexpr{round(HLH106.summary['Female',]$p, 5)}).
+
+
+<<bibliography, include=F, echo=F>>=
+require(bibtex)
+write.bib(c(names(sessionInfo()$otherPkgs),'base','stats','utils'), file='death-references.bib')
+@
+
+\bibliography{death-references}
+\bibliographystyle{unsrt}
+
+\section*{Session Information}
+<<sessionInfo, results=tex, echo=F>>=
+toLatex(sessionInfo())
+@
+
+\end{document}

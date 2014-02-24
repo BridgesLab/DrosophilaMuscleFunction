@@ -1,0 +1,896 @@
+\documentclass{article}
+
+\usepackage{fullpage}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage[tableposition=top]{caption}
+\usepackage[utf8]{inputenc}
+
+\begin{document}
+\SweaveOpts{concordance=FALSE}
+
+\title{Analysis of Longevity from Muscle TSC1/Raptor Flies}
+\author{Isabelle Hatfield, Erika Yates, Matt Peloquin and Dave Bridges}
+\date{\today}
+\maketitle
+
+
+\section*{Experimental Design}
+
+<<data-input, echo=FALSE>>=
+require(RCurl, quietly=T)
+require(lubridate, quietly=T)
+birth_worksheet <- 'https://docs.google.com/spreadsheet/pub?key=0Aitfmor6rCjYdFZsdGpxcmhLX2lNd2lNWUN6T014Qnc&output=csv' 
+death_worksheet <- 'https://docs.google.com/spreadsheet/pub?key=0Am2qM2oZ12_jdHd3RTdVUjNuQWxtYmV1S2laR3M4Znc&single=true&gid=0&output=csv'
+
+mapping_data <- read.csv('../Data/gene_mapping.csv')
+birth_file <- getURL(birth_worksheet)
+death_file <- getURL(death_worksheet)
+birth_data <- read.csv(textConnection(birth_file))
+death_data <- read.csv(textConnection(death_file))
+data <- merge(death_data, birth_data[duplicated(birth_data$CrossName)==FALSE,c('CrossName','Generation','Cross','Replicate','DateStarted', 'Male', 'Female')], by='CrossName')
+data$Birth.Date <- mdy(gsub("/", "-", data$Birth.Date))
+data$Death.Date <- mdy(gsub("/", "-", data$Death.Date))
+data$Age <- as.integer(data$Death.Date - data$Birth.Date)
+data$Cross <- as.factor(paste(data$Male, data$Female, sep=" x "))
+data$Driver <- as.factor(sapply(strsplit(as.character(data$Female), "/"),"[", 1))
+data$UAS <- factor(sapply(strsplit(as.character(data$Male), "/"),"[", 1), levels=c('31039','31314','35144','31528','31529','34814'))
+
+data <- merge(data, mapping_data)
+#moved gender to being case insensitive
+data$Gender <- as.factor(tolower(data$Gender))
+#made genotype case insensitive
+data$Phenotype <- as.factor(tolower(data$Phenotype))
+data$Genotype[data$Phenotype =='wt'] <- "shRNA/GAL4"
+data$Genotype[data$Phenotype == 'ser'] <- "shRNA/Tm3"
+data$Genotype[data$Phenotype == 'sb'] <- "shRNA/Tm3"
+data$Genotype[data$Phenotype == 'tm6b'] <- "GAL4/Tm6B"
+data$Genotype[data$Phenotype == 'tm6b/ser'] <- "Tm3/Tm6B"
+data$Genotype[data$Phenotype == 'tm6b/sb'] <- "Tm3/Tm6B"
+#made genotype into a factor
+data$Genotype <- as.factor(data$Genotype)
+#set levels of genotype
+data$Genotype <- factor(data$Genotype, levels=c("shRNA/GAL4","shRNA/Tm3","GAL4/Tm6B","Tm3/Tm6B"))
+data$Genotype <- relevel(data$Genotype, ref="shRNA/GAL4")
+
+data <- droplevels(data)
+write.csv(data, "../Data/Longevity Analysis Data.csv")
+@
+
+These data are stored in the \textbf{Data} subfolder.  This script was most recently run on \Sexpr{date()}.  There has been a total of \textbf{\Sexpr{dim(death_data)[1]}} deaths, with \textbf{\Sexpr{dim(death_data[death_data$Accidental==FALSE,])[1]}} of natural causes and \textbf{\Sexpr{dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]}} of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was \textbf{\Sexpr{ max(data$Age, na.rm=T)}} days old at time of death.
+
+\begin{figure}
+\begin{center}
+<<label=histogram-gender,fig=TRUE,echo=FALSE>>=
+with(data[data$Accidental==FALSE&data$Gender=='female'&data$Genotype!='Tm3/Tm6B'&data$Genotype!='NA',], plot(density(Age, na.rm=T), main="Natural Death Distribution", col="red", las=1, xlab=""))
+with(data[data$Accidental==FALSE&data$Gender=='male'&data$Genotype!='Tm3/Tm6B'&data$Genotype!='NA',], lines(density(Age, na.rm=T), col="black", las=1))
+legend("topright", c("Male","Female"), lty=1, col=c("black","red"), bty="n")
+@
+\end{center}
+\caption{Histogram of Age Ranges for All Genotypes}
+\label{fig:histogram-genders}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=histogram-controls,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(2,1))
+require(RColorBrewer)
+genotype.colors <- brewer.pal(4, 'Set2')
+with(data[data$Accidental==FALSE&data$Gender=='female'&data$Genotype==levels(data$Genotype)[2],], plot(density(Age, na.rm=T), main="Natural Death Distribution - Female Controls", col=genotype.colors[2], las=1, xlab=""))
+with(data[data$Accidental==FALSE&data$Gender=='female'&data$Genotype==levels(data$Genotype)[3],], lines(density(Age, na.rm=T),  col=genotype.colors[3]))
+with(data[data$Accidental==FALSE&data$Gender=='female'&data$Genotype==levels(data$Genotype)[4],], lines(density(Age, na.rm=T), col=genotype.colors[4]))
+legend("topleft", levels(data$Genotype)[2:4], lty=1, bty="n", col=genotype.colors[2:4])
+
+with(data[data$Accidental==FALSE&data$Gender=='male'&data$Genotype==levels(data$Genotype)[2],], plot(density(Age, na.rm=T), main="Natural Death Distribution - Male Controls", col=genotype.colors[2],ylim=c(0,0.030), las=1, xlab=""))
+with(data[data$Accidental==FALSE&data$Gender=='male'&data$Genotype==levels(data$Genotype)[3],], lines(density(Age, na.rm=T), col=genotype.colors[3]))
+with(data[data$Accidental==FALSE&data$Gender=='male'&data$Genotype==levels(data$Genotype)[4],], lines(density(Age, na.rm=T), col=genotype.colors[4]))
+legend("topleft", levels(data$Genotype)[2:4], lty=1, bty="n", col=genotype.colors[2:4])
+@
+\end{center}
+\caption{Histogram of Age Ranges for Control Genotypes}
+\label{fig:histogram-controls}
+\end{figure}
+
+
+\section*{Gene Level Analysis}
+
+<<summary-statistics, echo=FALSE>>=
+require(plyr)
+require(reshape2)
+
+complete.data <- data[!(is.na(data$Age)),]
+
+summarised.data.all <- ddply(complete.data, .(Driver,UAS,Genotype), summarise,
+                         Deaths = length(Age),
+                         Median.Age = median(Age),
+                         Age= mean(Age),
+                         Error = sd(Age, na.rm=T)/sqrt(length(Age)))
+summarised.data.natural <- ddply(data[data$Accidental==FALSE,], .(Driver,UAS,Genotype), summarise,
+                         Deaths = length(Age),
+                         Median.Age = median(Age),
+                         Age= mean(Age),
+                         Error = sd(Age, na.rm=T)/sqrt(length(Age)))
+
+summarised.data.natural.genes <- ddply(complete.data[complete.data$Accidental==FALSE&complete.data$Genotype!='shRNA/GAL4',], .(UAS,Driver,Gene,Genotype), summarise,
+                         Deaths = length(Age),
+                         Median.Age = median(Age, na.rm=T),
+                         Age= mean(Age, na.rm=T),
+                         Error = sd(Age, na.rm=T))
+
+summarised.data.natural.gene <- ddply(data[data$Accidental==FALSE,], .(Driver,Gene,Genotype), summarise,
+                         Deaths = length(Age),
+                         Median.Age = median(Age),
+                         Age= mean(Age),
+                         Error = sd(Age, na.rm=T)/sqrt(length(Age)))
+summarised.data.natural.gene.gender <- ddply(data[data$Accidental==FALSE,], .(Driver,Gene,Genotype,Gender), summarise,
+                         Deaths = length(Age),
+                         Median.Age = median(Age),
+                         Age= mean(Age),
+                         Error = sd(Age, na.rm=T)/sqrt(length(Age)))
+@
+
+\begin{figure}
+\begin{center}
+<<label=barplot-controls,fig=TRUE,echo=FALSE>>=
+median.summary <- dcast(subset(summarised.data.natural.genes, Deaths>20), Driver+UAS~Genotype, value.var='Median.Age', mean, na.rm=T)
+barplot(as.matrix(median.summary[3:5]), beside=T, col=median.summary$Driver, las=1, main="Median Age of Controls by UAS")
+legend("topright", levels(median.summary$Driver), fill=palette()[1:3], bty="n")
+@
+\end{center}
+\caption{Median Ages for Control Genotypes}
+\label{fig:barplot-controls}
+\end{figure}
+
+\subsection*{Number of Flies Examined}
+
+The total number of deaths for each cross and genotype ,removing deaths that were accidental or not due to natural causes, the data is shown in Table \ref{tab:analysed-deaths-gene} and \ref{tab:analysed-deaths-gene-gender}.
+
+The distribution of deaths in the samples are shown at a gender level in Figure \ref{fig:histogram-genders} and looking at the controls in Figure \ref{fig:histogram-controls}.  To examine the controls, and whether there are effects of the GAL4 or the shRNA we examined the median age of the controls from each cross.  These data are shown in Figure \ref{fig:barplot-controls}.  Still need to do some statistics to test if this is relevant.
+
+<<label=selected-data,echo=FALSE,results=tex>>=
+require(xtable)
+print(xtable(dcast(summarised.data.natural.gene, Driver+Gene~Genotype, value.var='Deaths', margins=F, sum), caption = "Total Natural Deaths for Each Gene and Genotype", label = "tab:analysed-deaths-gene"), include.rownames=F)
+print(xtable(dcast(summarised.data.natural.gene.gender, Driver+Gene+Gender~Genotype, value.var='Deaths', margins=F, sum), caption = "Total Natural Deaths by Gender for Each Gene and Genotype", label = "tab:analysed-deaths-gene-gender"), include.rownames=F)
+@
+
+\subsection*{Survival Analysis}
+
+All of these are relative to the reference Genotype which is the knockdown (GAL4/shRNA).  The key packages used in this analysis were R \cite{base}, lubridate \cite{lubridate}, plyr \cite{plyr} and survival \cite{survival1, survival2}.
+
+
+\pagebreak
+
+\subsubsection*{24B-Gal4 Driver Analysis}
+This analysis is only for the three \textit{Tsc1} shRNA alleles, since there were so few births in the \textit{Raptor} knockdown alleles.  The summary statistics from this analysis are shown in Table \ref{tab:coxph-summary-24b}.
+
+<<survival-analysis-24b, echo=FALSE>>=
+require(survival)
+summary.coxph.24b.gene <- data.frame(row.names=levels(data$Gene), 
+                                n=rep(NA,length(levels(data$Gene))), 
+                                logtest.p=rep(NA,length(levels(data$Gene))),
+                                waldtest.p=rep(NA,length(levels(data$Gene))),
+                                sctest.p=rep(NA,length(levels(data$Gene))))
+for (gene in levels(data$Gene)) {
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene==gene&data$Genotype!='Tm3/Tm6B',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    #print(sprintf('Analysis of %s with 24B-GAL4 Driver', gene))
+    #print(survfit(survobj~Genotype, data=data.used), print.rmean=TRUE)
+    coxph.fit <- coxph(survobj~Genotype, data=data.used)
+    beta <- coef(coxph.fit)
+    se <- sqrt(diag(coxph.fit$var))
+    assign(paste('coxph.table.24b',gene,sep='.'),data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+    
+    summary.coxph.24b.gene[gene,] <- c(
+      n=coxph(survobj~Genotype, data=data.used)$nevent,
+      logtest.p=summary(coxph(survobj~Genotype, data=data.used))$logtest[3],
+      waldtest.p=summary(coxph(survobj~Genotype, data=data.used))$wald[3],
+      sctest.p=summary(coxph(survobj~Genotype, data=data.used))$sctest[3])
+    #summary.coxph.24b$padj <- p.adjust(summary.coxph.24b$logrank.p,n=3,method="BH")
+    
+    pdf(sprintf('figure/24B-%s-survival-plot.pdf', gene))
+    plot(survfit, main = sprintf('Survival of %s with 24B-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+    dev.off()
+}
+
+
+#Separating out genders for this analysis
+summary.coxph.24b.gene.gender <- data.frame(
+                row.names=paste(c("Tsc1","Tsc1","Raptor","Raptor"),c("male","female","male","female")),
+                n=rep(NA,length(rep(levels(data$Gene), length(levels(data$Gender))))), 
+                logtest.p=rep(NA,length(rep(levels(data$Gene), length(levels(data$Gender))))),
+                waldtest.p=rep(NA,length(rep(levels(data$Gene), length(levels(data$Gender))))),
+                sctest.p=rep(NA,length(rep(levels(data$Gene), length(levels(data$Gender))))))
+
+#iterate over gender, then over each gene
+for (gender in levels(data$Gender)) {
+    for (gene in levels(data$Gene)) {
+        data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene==gene&data$Genotype!='Tm3/Tm6B'&data$Gender==gender,])
+        survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+        survfit <- survfit(survobj~Genotype, data=data.used)
+        #print(survfit(survobj~Genotype, data=data.used), print.rmean=TRUE)
+        #print(coxph(survobj~Genotype, data=data.used))
+        
+        coxph.fit <- coxph(survobj~Genotype, data=data.used)
+        beta <- coef(coxph.fit)
+        se <- sqrt(diag(coxph.fit$var))
+        assign(paste(paste('coxph.table.24b',gene,sep='.'),gender, sep="."),
+               data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+        
+        summary.coxph.24b.gene.gender[paste(gene, gender),] <- c(
+          n=coxph(survobj~Genotype, data=data.used)$nevent,
+          logtest.p=summary(coxph(survobj~Genotype, data=data.used))$logtest[3],
+          waldtest.p=summary(coxph(survobj~Genotype, data=data.used))$wald[3],
+          sctest.p=summary(coxph(survobj~Genotype, data=data.used))$sctest[3])
+        #summary.coxph.24b$padj <- p.adjust(summary.coxph.24b$logrank.p,n=3,method="BH")
+        pdf(sprintf('figure/24B-%s-survival-plot.pdf', paste(gene,gender,sep="-")))
+        plot(survfit, main = sprintf('Survival of %s with 24B-GAL4 Driver', paste(gene,gender)),
+             xlab= 'Days',
+             ylab= 'Percent Survival',
+             yscale=100, 
+             las = 1,
+             lty=c(1,2,2,2),
+             col= genotype.colors)
+        legend("bottomleft", levels(data$Genotype), col=genotype.colors, lty=c(1,2,2,2), bty="n")
+        dev.off()
+}
+}
+@
+
+<<label=coxph-datatables,echo=FALSE,results=tex>>=
+print(xtable(summary.coxph.24b.gene, digits=c(0,0,5,5,5),caption = "Gene Level Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b"))
+print(xtable(summary.coxph.24b.gene.gender, digits=c(0,0,15,5,5),caption = "Gene and Gender Level  Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b-gender"))
+
+print(xtable(coxph.table.24b.Tsc1, digits=c(0,3,3,3,15),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and Tsc1 Knockdown", label = "tab:coxph.table.24b.tsc1"))
+print(xtable(coxph.table.24b.Tsc1.male, digits=c(0,3,3,3,15),caption = "Gene Level Cox Proportional Hazard Tests for Males with 24B-Gal4 Drivers and Tsc1 Knockdown", label = "tab:coxph.table.24b.tsc1.male"))
+print(xtable(coxph.table.24b.Tsc1.female, digits=c(0,3,3,3,17),caption = "Gene Level Cox Proportional Hazard Tests for Females with 24B-Gal4 Drivers and Tsc1 Knockdown", label = "tab:coxph.table.24b.tsc1.female"))
+@
+
+
+\begin{figure}
+\begin{center}
+<<label=survival-24b-tsc,fig=TRUE,echo=FALSE>>=
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Tsc1'&data$Genotype!='Tm3/Tm6B',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Survival of Tsc1 shRNA Flies with 24B-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curve for 24B Driven Tsc1 Knockdown}
+\label{fig:survival-24b-tsc1}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=survival-24b-tsc-gender,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(1,2))
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Tsc1'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Males',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Tsc1'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Females',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curves for 24B Driven Tsc1 Knockdown}
+\label{fig:survival-24b-tsc1-gender}
+\end{figure}
+
+We performed a variety of survival tests for the was a 24B-Gal4 driven \textit{Tsc1} knockdowns (see Tables \ref{tab:coxph-summary-24b} and \ref{tab:coxph-summary-24b-gender}).  These tests removed the Tm3/Tm6B flies, which in all cases died prematurely.  The logrank test was highly significant (p-=\Sexpr{summary.coxph.24b.gene['Tsc',]$logtest.p}) for the combined comparasons and both males (p=\Sexpr{round(summary.coxph.24b.gene.gender['Tsc1 male','logtest.p'], 7)}) and females (p=\Sexpr{round(summary.coxph.24b.gene.gender['Tsc1 female','logtest.p'],17)}).
+
+For post-hoc testing, we performed cox proportional hazard tests, shown in Tables \ref{tab:coxph.table.24b.tsc1}, \ref{tab:coxph.table.24b.tsc1.male} and \ref{tab:coxph.table.24b.tsc1.female}.  All comparasons were highly significant all less than \Sexpr{round(max(rbind(coxph.table.24b.Tsc1.male,coxph.table.24b.Tsc1.female)$p),5)}.  The instantaneous hazard ratios ranged from \Sexpr{round(min(rbind(coxph.table.24b.Tsc1.male,coxph.table.24b.Tsc1.female)$Hazard.Ratio),2)} to \Sexpr{round(max(rbind(coxph.table.24b.Tsc1.male,coxph.table.24b.Tsc1.female)$Hazard.Ratio),2)}, in terms of that much less likely to die than the knockdown flies.  These results are presented graphically in Figures \ref{fig:survival-24b-tsc1} and \ref{fig:survival-24b-tsc1-gender}.
+
+
+\pagebreak
+
+\subsection*{C179 Driver Analysis}
+
+This analysis is only for the three \textit{Raptor} shRNA alleles, since we did not examine the effects of Tsc1 knockdown with this driver.  The summary statistics from this analysis are shown in Table \ref{tab:coxph-summary-c179}.
+
+<<survival-analysis-c179, echo=FALSE>>=
+gene <- 'Raptor'
+summary.coxph.c179.gene <- data.frame(row.names=levels(data$Gene), 
+                                n=rep(NA,length(levels(data$Gene))), 
+                                logtest.p=rep(NA,length(levels(data$Gene))),
+                                waldtest.p=rep(NA,length(levels(data$Gene))),
+                                sctest.p=rep(NA,length(levels(data$Gene))))
+
+    data.used <- droplevels(data[data$Driver=='C179-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    coxph.fit <- coxph(survobj~Genotype, data=data.used)
+    beta <- coef(coxph.fit)
+    se <- sqrt(diag(coxph.fit$var))
+    assign(paste('coxph.table.c179',gene,sep='.'),data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+    
+    summary.coxph.c179.gene[gene,] <- c(
+      n=coxph(survobj~Genotype, data=data.used)$nevent,
+      logtest.p=summary(coxph(survobj~Genotype, data=data.used))$logtest[3],
+      waldtest.p=summary(coxph(survobj~Genotype, data=data.used))$wald[3],
+      sctest.p=summary(coxph(survobj~Genotype, data=data.used))$sctest[3])
+    
+    pdf(sprintf('figure/C179-%s-survival-plot.pdf', gene))
+    plot(survfit, main = sprintf('Survival of %s with C179-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+    dev.off()
+
+
+#Separating out genders for this analysis
+summary.coxph.c179.gene.gender <- data.frame(
+                row.names=paste(c("Raptor","Raptor"),c("male","female")),
+                n=rep(NA,2), 
+                logtest.p=rep(NA,2),
+                waldtest.p=rep(NA,2),
+                sctest.p=rep(NA,2))
+
+#iterate over gender, then over each gene
+for (gender in levels(data$Gender)) {
+        data.used <- droplevels(data[data$Driver=='C179-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B'&data$Gender==gender,])
+        survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+        survfit <- survfit(survobj~Genotype, data=data.used)
+        
+        coxph.fit <- coxph(survobj~Genotype, data=data.used)
+        beta <- coef(coxph.fit)
+        se <- sqrt(diag(coxph.fit$var))
+        assign(paste(paste('coxph.table.c179','Raptor',sep='.'),gender, sep="."),
+               data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+        
+        summary.coxph.c179.gene.gender[paste('Raptor', gender),] <- c(
+          n=coxph(survobj~Genotype, data=data.used)$nevent,
+          logtest.p=summary(coxph(survobj~Genotype, data=data.used))$logtest[3],
+          waldtest.p=summary(coxph(survobj~Genotype, data=data.used))$wald[3],
+          sctest.p=summary(coxph(survobj~Genotype, data=data.used))$sctest[3])
+        #summary.coxph.c179$padj <- p.adjust(summary.coxph.c179$logrank.p,n=3,method="BH")
+        pdf(sprintf('figure/C179-%s-survival-plot.pdf', paste(gene,gender,sep="-")))
+        plot(survfit, main = sprintf('Survival of %s with C179-GAL4 Driver', paste('Raptor',gender)),
+             xlab= 'Days',
+             ylab= 'Percent Survival',
+             yscale=100, 
+             las=1,
+             lty=c(1,2,2,2),
+             col= genotype.colors)
+        legend("bottomleft", levels(data$Genotype), col=genotype.colors, lty=c(1,2,2,2), bty="n")
+        dev.off()
+}
+
+@
+
+<<label=coxph-datatables-c179,echo=FALSE,results=tex>>=
+print(xtable(summary.coxph.c179.gene, digits=c(0,0,5,5,5),caption = "Gene Level Tests for C179-Gal4 Drivers", label = "tab:coxph-summary-c179"))
+print(xtable(summary.coxph.c179.gene.gender, digits=c(0,0,5,5,5),caption = "Gene and Gender Level  Tests for C179-Gal4 Drivers", label = "tab:coxph-summary-c179-gender"))
+
+print(xtable(coxph.table.c179.Raptor, digits=c(0,3,3,3,3),caption = "Gene Level Cox Proportional Hazard Tests for C179-Gal4 Drivers and Raptor Knockdown", label = "tab:coxph.table.c179.raptor"))
+print(xtable(coxph.table.c179.Raptor.male, digits=c(0,3,3,3,7),caption = "Gene Level Cox Proportional Hazard Tests for Males with C179-Gal4 Drivers and Raptor Knockdown", label = "tab:coxph.table.c179.raptor.male"))
+print(xtable(coxph.table.c179.Raptor.female, digits=c(0,3,3,3,3),caption = "Gene Level Cox Proportional Hazard Tests for Females with C179-Gal4 Drivers and Raptor Knockdown", label = "tab:coxph.table.c179.raptor.female"))
+@
+
+
+\begin{figure}
+\begin{center}
+<<label=survival-c179-raptor,fig=TRUE,echo=FALSE>>=
+    data.used <- droplevels(data[data$Driver=='C179-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Survival of Raptor shRNA Flies with C179-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curve for C179 Driven Raptor Knockdown}
+\label{fig:survival-c179-raptor}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=survival-c179-raptor-gender,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(1,2))
+    data.used <- droplevels(data[data$Driver=='C179-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Males',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='C179-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Females',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curves for C179 Driven Raptor Knockdown}
+\label{fig:survival-c179-raptor-gender}
+\end{figure}
+
+We performed a variety of survival tests for the was a C179-Gal4 driven \textit{Raptor} knockdowns (see Tables \ref{tab:coxph-summary-c179} and \ref{tab:coxph-summary-c179-gender}).  These tests removed the Tm3/Tm6B flies, which in all cases died prematurely.  The logrank test was not significant (p=\Sexpr{round(summary.coxph.c179.gene['Raptor',]$logtest.p,3)}) for the combined comparason and females (p=\Sexpr{round(summary.coxph.c179.gene.gender['Raptor female','logtest.p'],3)}).  There was a significant difference with the males (p=\Sexpr{round(summary.coxph.c179.gene.gender['Raptor male','logtest.p'], 7)}).
+
+For post-hoc testing, we performed cox proportional hazard tests, shown in Tables \ref{tab:coxph.table.c179.raptor}, \ref{tab:coxph.table.c179.raptor.male} and \ref{tab:coxph.table.c179.raptor.female}. The instantaneous hazard ratios ranged from \Sexpr{round(min(rbind(coxph.table.c179.Raptor.male,coxph.table.c179.Raptor.female)$Hazard.Ratio),2)} to \Sexpr{round(max(rbind(coxph.table.c179.Raptor.male,coxph.table.c179.Raptor.female)$Hazard.Ratio),2)}, in terms of that much less likely to die than the knockdown flies.  These results are presented graphically in Figures \ref{fig:survival-c179-raptor} and \ref{fig:survival-c179-raptor-gender}.
+
+\pagebreak
+
+\subsection*{Hand-Gal4 Analysis}
+
+This analysis is for both the three \textit{Tsc1} and the three \textit{Raptor} shRNA alleles.  The summary statistics from this analysis are shown in Table \ref{tab:coxph-summary-hand}.
+
+<<survival-analysis-24b, echo=FALSE>>=
+require(survival)
+summary.coxph.hand.gene <- data.frame(row.names=levels(data$Gene), 
+                                n=rep(NA,length(levels(data$Gene))), 
+                                logtest.p=rep(NA,length(levels(data$Gene))),
+                                waldtest.p=rep(NA,length(levels(data$Gene))),
+                                sctest.p=rep(NA,length(levels(data$Gene))))
+for (gene in levels(data$Gene)) {
+    data.used <- droplevels(data[data$Driver=='Hand-Gal4'&data$Gene==gene&data$Genotype!='Tm3/Tm6B',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    #print(sprintf('Analysis of %s with Hand-GAL4 Driver', gene))
+    #print(survfit(survobj~Genotype, data=data.used), print.rmean=TRUE)
+    coxph.fit <- coxph(survobj~Genotype, data=data.used)
+    beta <- coef(coxph.fit)
+    se <- sqrt(diag(coxph.fit$var))
+    assign(paste('coxph.table.hand',gene,sep='.'),data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+    
+    summary.coxph.hand.gene[gene,] <- c(
+      n=coxph(survobj~Genotype, data=data.used)$nevent,
+      logtest.p=summary(coxph(survobj~Genotype, data=data.used))$logtest[3],
+      waldtest.p=summary(coxph(survobj~Genotype, data=data.used))$wald[3],
+      sctest.p=summary(coxph(survobj~Genotype, data=data.used))$sctest[3])
+    #summary.coxph.hand$padj <- p.adjust(summary.coxph.hand$logrank.p,n=3,method="BH")
+    
+    pdf(sprintf('figure/Hand-%s-survival-plot.pdf', gene))
+    plot(survfit, main = sprintf('Survival of %s with Hand-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las =1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+    dev.off()
+}
+
+
+#Separating out genders for this analysis
+summary.coxph.hand.gene.gender <- data.frame(
+                row.names=paste(c("Tsc1","Tsc1","Raptor","Raptor"),c("male","female","male","female")),
+                n=rep(NA,length(rep(levels(data$Gene), length(levels(data$Gender))))), 
+                logtest.p=rep(NA,length(rep(levels(data$Gene), length(levels(data$Gender))))),
+                waldtest.p=rep(NA,length(rep(levels(data$Gene), length(levels(data$Gender))))),
+                sctest.p=rep(NA,length(rep(levels(data$Gene), length(levels(data$Gender))))))
+
+#iterate over gender, then over each gene
+for (gender in levels(data$Gender)) {
+    for (gene in levels(data$Gene)) {
+        data.used <- droplevels(data[data$Driver=='Hand-Gal4'&data$Gene==gene&data$Genotype!='Tm3/Tm6B'&data$Gender==gender,])
+        survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+        survfit <- survfit(survobj~Genotype, data=data.used)
+        #print(survfit(survobj~Genotype, data=data.used), print.rmean=TRUE)
+        #print(coxph(survobj~Genotype, data=data.used))
+        
+        coxph.fit <- coxph(survobj~Genotype, data=data.used)
+        beta <- coef(coxph.fit)
+        se <- sqrt(diag(coxph.fit$var))
+        assign(paste(paste('coxph.table.hand',gene,sep='.'),gender, sep="."),
+               data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+        
+        summary.coxph.hand.gene.gender[paste(gene, gender),] <- c(
+          n=coxph(survobj~Genotype, data=data.used)$nevent,
+          logtest.p=summary(coxph(survobj~Genotype, data=data.used))$logtest[3],
+          waldtest.p=summary(coxph(survobj~Genotype, data=data.used))$wald[3],
+          sctest.p=summary(coxph(survobj~Genotype, data=data.used))$sctest[3])
+        #summary.coxph.hand$padj <- p.adjust(summary.coxph.hand$logrank.p,n=3,method="BH")
+        pdf(sprintf('figure/Hand-%s-survival-plot.pdf', paste(gene,gender,sep="-")))
+        plot(survfit, main = sprintf('Survival of %s with Hand-GAL4 Driver', paste(gene,gender)),
+             xlab= 'Days',
+             ylab= 'Percent Survival',
+             yscale=100, 
+             las=1,
+             lty=c(1,2,2,2),
+             col= genotype.colors)
+        legend("bottomleft", levels(data$Genotype), col=genotype.colors, lty=c(1,2,2,2), bty="n")
+        dev.off()
+}
+}
+@
+
+<<label=coxph-datatables,echo=FALSE,results=tex>>=
+print(xtable(summary.coxph.hand.gene, digits=c(0,0,17,5,5),caption = "Gene Level Tests for Hand-Gal4 Drivers", label = "tab:coxph-summary-hand"))
+print(xtable(summary.coxph.hand.gene.gender, digits=c(0,0,17,5,5),caption = "Gene and Gender Level  Tests for Hand-Gal4 Drivers", label = "tab:coxph-summary-hand-gender"))
+
+print(xtable(coxph.table.hand.Tsc1, digits=c(0,3,3,3,3),caption = "Gene Level Cox Proportional Hazard Tests for Hand-Gal4 Drivers and Tsc1 Knockdown", label = "tab:coxph.table.hand.tsc1"))
+print(xtable(coxph.table.hand.Tsc1.male, digits=c(0,3,3,3,17),caption = "Gene Level Cox Proportional Hazard Tests for Males with Hand-Gal4 Drivers and Tsc1 Knockdown", label = "tab:coxph.table.hand.tsc1.male"))
+print(xtable(coxph.table.hand.Tsc1.female, digits=c(0,3,3,3,17),caption = "Gene Level Cox Proportional Hazard Tests for Females with Hand-Gal4 Drivers and Tsc1 Knockdown", label = "tab:coxph.table.hand.tsc1.female"))
+
+print(xtable(coxph.table.hand.Raptor, digits=c(0,3,3,3,10),caption = "Gene Level Cox Proportional Hazard Tests for Hand-Gal4 Drivers and Raptor Knockdown", label = "tab:coxph.table.hand.raptor"))
+print(xtable(coxph.table.hand.Raptor.male, digits=c(0,3,3,3,10),caption = "Gene Level Cox Proportional Hazard Tests for Males with Hand-Gal4 Drivers and Raptor Knockdown", label = "tab:coxph.table.hand.raptor.male"))
+print(xtable(coxph.table.hand.Raptor.female, digits=c(0,3,3,3,10),caption = "Gene Level Cox Proportional Hazard Tests for Females with Hand-Gal4 Drivers and Raptor Knockdown", label = "tab:coxph.table.hand.raptor.female"))
+@
+
+
+\begin{figure}
+\begin{center}
+<<label=survival-hand-tsc1,fig=TRUE,echo=FALSE>>=
+    data.used <- droplevels(data[data$Driver=='Hand-Gal4'&data$Gene=='Tsc1'&data$Genotype!='Tm3/Tm6B',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Survival of Tsc1 shRNA Flies with Hand-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curve for Hand Driven Tsc1 Knockdown}
+\label{fig:survival-hand-tsc1}
+\end{figure}
+
+
+\begin{figure}
+\begin{center}
+<<label=survival-hand-tsc1-gender,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(1,2))
+    data.used <- droplevels(data[data$Driver=='Hand-Gal4'&data$Gene=='Tsc1'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Males',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='Hand-Gal4'&data$Gene=='Tsc1'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Females',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100,
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curves for Hand Driven Tsc1 Knockdown}
+\label{fig:survival-hand-tsc1-gender}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=survival-hand-raptor,fig=TRUE,echo=FALSE>>=
+    data.used <- droplevels(data[data$Driver=='Hand-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Survival of Raptor shRNA Flies with Hand-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curve for Hand Driven Raptor Knockdown}
+\label{fig:survival-hand-raptor}
+\end{figure}
+
+
+\begin{figure}
+\begin{center}
+<<label=survival-hand-raptor-gender,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(1,2))
+    data.used <- droplevels(data[data$Driver=='Hand-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Males',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='Hand-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female',])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = 'Females',
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+@
+\end{center}
+\caption{Survival Curves for Hand Driven Raptor Knockdown}
+\label{fig:survival-hand-raptor-gender}
+\end{figure}
+
+\subsubsection*{Tsc1 Knockdown with Hand-Gal4}
+
+We performed a variety of survival tests for the was a Hand-Gal4 driven \textit{Tsc1} knockdowns (see Tables \ref{tab:coxph-summary-hand} and \ref{tab:coxph-summary-hand-gender}).  These tests removed the Tm3/Tm6B flies, which in all cases died prematurely.  The logrank test was highly significant (p=\Sexpr{round(summary.coxph.hand.gene['Tsc',]$logtest.p,15)}) for the combined comparasons and both males (p=\Sexpr{round(summary.coxph.hand.gene.gender['Tsc1 male','logtest.p'], 7)}) and females (p=\Sexpr{round(summary.coxph.hand.gene.gender['Tsc1 female','logtest.p'],13)}).
+
+For post-hoc testing, we performed cox proportional hazard tests, shown in Tables \ref{tab:coxph.table.hand.tsc1}, \ref{tab:coxph.table.hand.tsc1.male} and \ref{tab:coxph.table.hand.tsc1.female}.  All comparasons were highly significant all less than \Sexpr{round(max(rbind(coxph.table.hand.Tsc1.male,coxph.table.hand.Tsc1.female)$p),4)}.  The instantaneous hazard ratios ranged from \Sexpr{round(min(rbind(coxph.table.hand.Tsc1.male,coxph.table.hand.Tsc1.female)$Hazard.Ratio),2)} to \Sexpr{round(max(rbind(coxph.table.hand.Tsc1.male,coxph.table.hand.Tsc1.female)$Hazard.Ratio),2)}, in terms of that much less likely to die than the knockdown flies.  These results are presented graphically in Figures \ref{fig:survival-hand-tsc1} and \ref{fig:survival-hand-tsc1-gender}.
+
+\subsubsection*{Raptor Knockdown with Hand-Gal4}
+
+We performed further survival tests for the was a Hand-Gal4 driven \textit{Raptor} knockdowns (see Tables \ref{tab:coxph-summary-hand} and \ref{tab:coxph-summary-hand-gender}).  These tests removed the Tm3/Tm6B flies, which in all cases died prematurely.  The logrank test was highly significant (p=\Sexpr{round(summary.coxph.hand.gene['Raptor',]$logtest.p,6)}) for the combined comparasons and both males (p=\Sexpr{round(summary.coxph.hand.gene.gender['Raptor male','logtest.p'], 8)}) and females (p=\Sexpr{round(summary.coxph.hand.gene.gender['Raptor female','logtest.p'],7)}).
+
+For post-hoc testing, we performed cox proportional hazard tests, shown in Tables \ref{tab:coxph.table.hand.raptor}, \ref{tab:coxph.table.hand.raptor.male} and \ref{tab:coxph.table.hand.raptor.female}.  All comparasons were highly significant all less than \Sexpr{round(max(rbind(coxph.table.hand.Raptor.male,coxph.table.hand.Raptor.female)$p),4)}.  The instantaneous hazard ratios ranged from \Sexpr{round(min(rbind(coxph.table.hand.Raptor.male,coxph.table.hand.Raptor.female)$Hazard.Ratio),3)} to \Sexpr{round(max(rbind(coxph.table.hand.Raptor.male,coxph.table.hand.Raptor.female)$Hazard.Ratio),2)}, in terms of that much less likely to die than the knockdown flies.  These results are presented graphically in Figures \ref{fig:survival-hand-raptor} and \ref{fig:survival-hand-raptor-gender}.
+
+\pagebreak
+
+\section*{Strain Level Analysis}
+
+\subsection*{Strain Level Graphs for C179-Gal4 Driven Knockdowns}
+\begin{figure}
+\begin{center}
+<<label=survival-24b-tsc-gender-strain,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(3,2))
+for (uas in mapping_data[mapping_data$Gene=='Tsc1','UAS']){
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Tsc1'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male'&data$UAS==uas,])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Males-%s',uas),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         las=1,
+         yscale=100, 
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Tsc1'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female'&data$UAS==uas,])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Females-%s',uas),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+}
+@
+\end{center}
+\caption{Survival Curves for 24B Driven Tsc1 Knockdown}
+\label{fig:survival-24b-tsc-gender-strain}
+\end{figure}
+
+\pagebreak
+\subsection*{Strain Level Graphs for C179-Gal4 Driven Knockdowns}
+
+<<label=survival-c179-raptor-gender-strain,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(3,2))
+for (uas in mapping_data[mapping_data$Gene=='Raptor','UAS']){
+    data.used <- droplevels(data[data$Driver=='C179-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male'&data$UAS==uas,])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Males-%s',uas),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         las=1,
+         yscale=100, 
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='C179-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female'&data$UAS==uas,])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Females-%s',uas),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+}
+@
+\end{center}
+\caption{Survival Curves for C179 Driven Raptor Knockdown}
+\label{fig:survival-c179-raptor-gender-strain}
+\end{figure}
+
+
+<<label=survival-c179-raptor-gender-strain-adult,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(3,2))
+for (uas in mapping_data[mapping_data$Gene=='Raptor','UAS']){
+    data.used <- droplevels(data[data$Driver=='C179-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male'&data$UAS==uas&data$Age>40,])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Males-%s',uas),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         las=1,
+         yscale=100, 
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='C179-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female'&data$UAS==uas&data$Age>40,])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Females-%s',uas),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+}
+@
+\end{center}
+\caption{Survival Curves for C179 Driven Raptor Knockdown, Older than 40 days only.}
+\label{fig:survival-c179-raptor-gender-strain-adult}
+\end{figure}
+\pagebreak
+\subsection*{Strain Level Graphs for Hand-Gal4 Driven Knockdowns}
+
+<<label=survival-hand-raptor-gender-strain,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(3,2))
+for (uas in mapping_data[mapping_data$Gene=='Raptor','UAS']){
+    data.used <- droplevels(data[data$Driver=='Hand-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male'&data$UAS==uas,])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Males-%s',uas),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         las=1,
+         yscale=100, 
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='Hand-Gal4'&data$Gene=='Raptor'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female'&data$UAS==uas,])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Females-%s',uas),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+}
+@
+\end{center}
+\caption{Survival Curves for Hand Driven Raptor Knockdown}
+\label{fig:survival-hand-raptor-gender-strain}
+\end{figure}
+
+\pagebreak
+
+<<label=survival-hand-tsc1-gender-strain,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(3,2))
+for (uas in mapping_data[mapping_data$Gene=='Tsc1','UAS']){
+    data.used <- droplevels(data[data$Driver=='Hand-Gal4'&data$Gene=='Tsc1'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male'&data$UAS==uas,])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Males-%s',uas),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         las=1,
+         yscale=100, 
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+
+    data.used <- droplevels(data[data$Driver=='Hand-Gal4'&data$Gene=='Tsc1'&data$Genotype!='Tm3/Tm6B'&data$Gender=='female'&data$UAS==uas,])
+    survobj <- with(data.used, Surv(Age, Accidental==FALSE))
+    survfit <- survfit(survobj~Genotype, data=data.used)
+    plot(survfit, main = sprintf('Females-%s',uas),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las=1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
+}
+@
+\end{center}
+\caption{Survival Curves for Hand Driven Tsc1 Knockdown}
+\label{fig:survival-hand-tsc1-gender-strain}
+\end{figure}
+
+\pagebreak
+
+<<bibliography, include=F, echo=F>>=
+require(bibtex)
+write.bib(c(names(sessionInfo()$otherPkgs),'base','stats','utils'), file='death-references.bib')
+@
+
+\bibliography{death-references}
+\bibliographystyle{unsrt}
+
+\section*{Session Information}
+<<sessionInfo, results=tex, echo=F>>=
+toLatex(sessionInfo())
+@
+
+\end{document}

@@ -1,0 +1,87 @@
+Power Analysis for Drosophila Lifespan Experiments
+====================================================
+
+This analysis was performed by Dave Bridges on ```r date()```
+
+The statistical power is the chance that an observation will be detected at a given false positive rate (for these calculations the false positive rate is 0.05).  The power is the same as one minus the false negative rate.  
+
+The relative risk is the probability of an event, in this case death, relative to another group.  See http://en.wikipedia.org/wiki/Relative_risk for more details.
+
+```{r power-analysis, echo=FALSE}
+require(powerSurvEpi)
+
+exp.group <- ctrl.group <- 500
+risk.data.500 <- data.frame(risk=NA, power=NA)
+for (risk in seq(1,1.99, by=0.01)) {
+  power <- powerCT.default0(k=exp.group/ctrl.group, m=exp.group+ctrl.group, RR=risk, alpha = 0.05)
+  risk.data.500 <- rbind(risk.data.500, c(risk,power))
+}
+
+exp.group <- ctrl.group <- 250
+risk.data.250 <- data.frame(risk=NA, power=NA)
+for (risk in seq(1,1.99, by=0.01)) {
+ power <- powerCT.default0(k=exp.group/ctrl.group, m=exp.group+ctrl.group, RR=risk, alpha = 0.05)
+ risk.data.250 <- rbind(risk.data.250, c(risk,power))
+ }
+
+exp.group <- ctrl.group <- 100
+risk.data.100 <- data.frame(risk=NA, power=NA)
+for (risk in seq(1,1.99, by=0.01)) {
+  power <- powerCT.default0(k=exp.group/ctrl.group, m=exp.group+ctrl.group, RR=risk, alpha = 0.05)
+  risk.data.100 <- rbind(risk.data.100, c(risk,power))
+}
+
+exp.group <- ctrl.group <- 50
+risk.data.50 <- data.frame(risk=NA, power=NA)
+for (risk in seq(1,1.99, by=0.01)) {
+  power <- powerCT.default0(k=exp.group/ctrl.group, m=exp.group+ctrl.group, RR=risk, alpha = 0.05)
+  risk.data.50 <- rbind(risk.data.50, c(risk,power))
+}
+
+exp.group <- ctrl.group <- 25
+risk.data.25 <- data.frame(risk=NA, power=NA)
+for (risk in seq(1,1.99, by=0.01)) {
+  power <- powerCT.default0(k=exp.group/ctrl.group, m=exp.group+ctrl.group, RR=risk, alpha = 0.05)
+  risk.data.25 <- rbind(risk.data.25, c(risk,power))
+}
+```
+The number of samples can be determined either empirically by examining a series of sample sizes compared to the relative risk and statistical power:
+
+```{r plots, dev=c('png','pdf'), echo=FALSE, fig.show='asis'}
+library(RColorBrewer)
+selected.colors <- brewer.pal(5, "Set1")
+plot <- with(risk.data.500, plot(risk,power, 
+                         ylab="Statistical Power", 
+                         xlab="Relative Risk",
+                         type="l", las=1,
+                         cex.lab=1.5,
+                         col=selected.colors[1]))
+with(risk.data.250, lines(risk,power, col=selected.colors[2]))
+with(risk.data.100, lines(risk,power, col=selected.colors[3]))
+with(risk.data.50, lines(risk,power, col=selected.colors[4]))
+with(risk.data.25, lines(risk,power, col=selected.colors[5]))
+abline(a=0.8, b=0, lty=3)
+legend("bottomright", 
+       c("500 Per Genotype", "250 Per Genotype", "100 Per Genotype", "50 Per Genotype", "25 Per Genotype"),
+       col=selected.colors,
+       lty=1, bty="n")
+```
+
+The sample size can also be calculated for a given deisired relative risk and statistical power:
+
+```{r sample-size}
+ssizeCT.default(power=0.8, k=1, pE=1, pC=1, RR=1.5, alpha = 0.05)
+```
+
+References
+-----------
+```{r reference}
+citation('powerSurvEpi')
+citation()
+```
+
+Session Information
+---------------------
+```{r session-information}
+sessionInfo()
+```
