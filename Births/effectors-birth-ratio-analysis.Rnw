@@ -1,0 +1,175 @@
+\documentclass{article}
+
+\usepackage{fullpage}
+\usepackage[colorlinks=true]{hyperref}
+\usepackage[tableposition=top]{caption}
+\usepackage[utf8]{inputenc}
+
+\begin{document}
+\SweaveOpts{concordance=FALSE}
+
+\title{Analysis of Births Ratios from Muscle Srebp1/Atg Flies}
+\author{Isabelle Hatfield and Dave Bridges}
+\date{\today}
+\maketitle
+
+
+\section*{Experimental Design}
+
+<<data-input, echo=FALSE>>=
+spreadsheet_location <- 'https://docs.google.com/spreadsheet/pub?key=0Am2qM2oZ12_jdHhNTjNuc25zdDJKZzR3MzVuUUU4dEE&single=true&gid=0&output=csv' 
+mapping.data <- read.csv('../Data/gene_mapping.csv')
+
+data_file_name <- '../Data/effector_birth_worksheet.csv'
+download.file(spreadsheet_location, data_file_name, method="curl")
+
+data <- read.csv(data_file_name)
+data$Total <- rowSums(data[,10:11])
+all.flies <- colSums(data[,10:11])
+require(plyr, quietly=T)
+data$Cross <- as.factor(paste(data$Male, data$Female, sep=" x "))
+data$Driver <- as.factor(sapply(strsplit(as.character(data$Female), "/"),"[", 1))
+uas.order <- c('25975','34073','27551','28989','34340','27554','34900') 
+
+data$UAS <- sapply(strsplit(as.character(data$Male), "/"),"[", 1)
+#merged with gene mapping file
+data <- merge(mapping.data, data, by="UAS")
+data$UAS <- factor(data$UAS, levels=uas.order)
+@
+
+These data are stored in \verb+\Sexpr{getwd()}+.  This script was most recently run on \Sexpr{date()}
+
+\section*{Strain Summaries}
+
+<<data-analysis, echo=FALSE>>=
+gene.summarised.data <- ddply(data, .(Driver,Gene), summarise, 
+      KD = sum(WT, na.rm=T),
+      Control = sum(Ser.Sb, na.rm=T),
+      Total = as.integer(sum(Total)))
+
+gene.summarised.data$pval <-rep(NA, dim(gene.summarised.data)[1])
+for (n in seq(1,dim(gene.summarised.data)[1])) {   
+  values <- gene.summarised.data[n,3:4]
+  test <- chisq.test(values, p=rep(1,2), rescale.p=T)
+  gene.summarised.data[n,]$pval <- test$p.value  
+}
+gene.summarised.data$padj <- p.adjust(gene.summarised.data$pval, method="BH")
+
+driver.summarised.data <- ddply(data, .(Driver,UAS), summarise, 
+      KD = sum(WT, na.rm=T),
+      Control = sum(Ser.Sb, na.rm=T),
+      Total = as.integer(sum(Total)))
+
+driver.summarised.data$pval <-rep(NA, dim(driver.summarised.data)[1])
+for (n in seq(1,dim(driver.summarised.data)[1])) {   
+  values <- driver.summarised.data[n,3:4]
+  test <- chisq.test(values, p=c(1,1), rescale.p=T)
+  driver.summarised.data[n,]$pval <- test$p.value  
+}
+driver.summarised.data$padj <- p.adjust(driver.summarised.data$pval, method="BH")
+
+summarised.data <- ddply(data, ~Cross, summarise, 
+      KD = sum(WT, na.rm=T),
+      Control = sum(Ser.Sb, na.rm=T),
+      Total = as.integer(sum(Total)))
+all.progeny <-rep(NA, length(levels(data$Cross)))
+names(all.progeny) <- levels(data$Cross)
+for (n in seq(1,length(levels(data$Cross)))){
+  values <- summarised.data[n,2:3]
+  test <- chisq.test(values, p=rep(1,2), rescale.p=T)
+  all.progeny[levels(data$Cross)[n]] <- test$p.value  
+}
+all.progeny.padj <- cbind(pval=all.progeny, padj=p.adjust(all.progeny, method="BH"))
+
+summarised.data$pval <-rep(NA, dim(summarised.data)[1])
+for (n in seq(1,length(levels(summarised.data$Cross)))) {
+  values <- summarised.data[n,2:3]
+  test <- chisq.test(values, p=rep(1,2), rescale.p=T)
+  summarised.data[n,]$pval <- test$p.value  
+}
+summarised.data$padj <- p.adjust(summarised.data$pval, method="BH")
+
+summarised.data.gendered <- ddply(data, .(UAS, Driver,Gender), summarise, 
+      KD = sum(WT, na.rm=T),
+      Control = sum(Ser.Sb, na.rm=T),
+      Total = as.integer(sum(Total)))
+
+summarised.data.gendered$pval <-rep(NA, dim(summarised.data.gendered)[1])
+for (n in seq(1,dim(summarised.data.gendered)[1])) {   
+  values <- summarised.data.gendered[n,4:5]
+  test <- chisq.test(values, p=rep(1,2), rescale.p=T)
+  summarised.data.gendered[n,]$pval <- test$p.value  
+}
+summarised.data.gendered$padj <- p.adjust(summarised.data.gendered$pval, method="BH")
+@
+
+So far this analysis includes \textbf{\Sexpr{sum(all.flies)}} flies from \Sexpr{length(levels(data$Cross))} crosses.  Statistics are based on a Chi Squared Test, and are  adjusted for multiple observation by the method of Benjamini and Hochberg.  Counts and p-values are shown in Table \ref{tab:gene_summarised_data}, \ref{tab:driver_summarised_data} and Figure \ref{fig:barplots} for all drivers, Table \ref{tab:summarised_data} for all crosses and Table \ref{tab:gendered_data} with gendered crossed data.  Summarized per cross the data are below
+
+
+<<label=data-tables,echo=FALSE,results=tex>>=
+require(xtable)
+print(xtable(gene.summarised.data, caption="Gene Level Summarised Data", label="tab:gene_summarised_data", digits = c(rep(0,6),5,5)), include.rownames=F)
+print(xtable(driver.summarised.data[order(driver.summarised.data$Driver,driver.summarised.data$UAS),], caption="Driver Level Summarised Data", label="tab:driver_summarised_data", digits = c(rep(0,6),5,5)), include.rownames=F)
+print(xtable(summarised.data[order(summarised.data$Cross),], caption="Cross Level Summarised Data", label="tab:summarised_data", digits = c(rep(0,5),5,5)), include.rownames=F)
+print(xtable(summarised.data.gendered[order(summarised.data.gendered$Driver, summarised.data.gendered$UAS),], caption="Gendered and Cross Level Summarised Data", label="tab:gendered_data", digits = c(rep(0,7),5,5)), include.rownames=F)
+@
+
+
+<<label=24b-figure,include=FALSE, echo=FALSE>>=
+driver.summarised.data$Total.No.WT <- rowSums(driver.summarised.data[,c('KD','Control') ])
+driver.summarised.data$KD.prop <- driver.summarised.data$KD/driver.summarised.data$Total.No.WT
+driver.summarised.data$Control.prop <- driver.summarised.data$Control/driver.summarised.data$Total.No.WT
+
+#calculated standard errors
+driver.summarised.data$KD.err <- with(driver.summarised.data, sqrt((KD.prop*(1-KD.prop)/Total.No.WT)))
+driver.summarised.data$Control.err <- with(driver.summarised.data, sqrt((Control.prop*(1-Control.prop)/Total.No.WT)))
+
+
+
+require(RColorBrewer, quietly=T)
+plot <- barplot(t(as.matrix(driver.summarised.data[driver.summarised.data$Driver=="24B-Gal4",c('KD.prop','Control.prop')])),
+        names.arg=driver.summarised.data[driver.summarised.data$Driver=="24B-Gal4",]$UAS,
+        beside=T,
+        ylab="Proportion of Eclosed Flies",
+        ylim=c(0,1),
+        main="24B-Gal4 Driver")
+abline(a=1/2,b=0, lty=2)
+legend("topleft", c("shRNA/GAL4","GAL4/+ or shRNA/+"), bty="n", fill=grey.colors(2))
+
+superpose.eb <- 
+ function (x, y, ebl, ebu = ebl, length = 0.08, ...) 
+ arrows(x, y + ebu, x, y - ebl, angle = 90, code = 3, 
+ length = length, ...)
+
+superpose.eb(plot, 
+             t(as.matrix(driver.summarised.data[driver.summarised.data$Driver=="24B-Gal4",c('KD.prop','Control.prop')])),
+             t(as.matrix(driver.summarised.data[driver.summarised.data$Driver=="24B-Gal4",c('KD.err','Control.err')])))
+@
+
+\begin{figure}
+\begin{center}
+<<label=24b-figures,fig=TRUE,echo=FALSE>>=
+<<24b-figure>>
+@
+\end{center}
+\caption{Barplot of Relative Phosphorylation}
+\label{fig:barplots}
+\end{figure}
+
+     
+<<bibliography, include=F, echo=F>>=
+require(bibtex)
+write.bib(c(names(sessionInfo()$otherPkgs),'base','stats','utils'), file='birth-references.bib')
+@
+
+The key packages used in this analysis were R \cite{base} and plyr \cite{plyr}
+
+\bibliography{birth-references}
+\bibliographystyle{unsrt}
+
+\section*{Session Information}
+<<sessionInfo, results=tex, echo=F>>=
+toLatex(sessionInfo())
+@
+
+\end{document}
