@@ -4,5 +4,7 @@
 *.bbl
 *.tex
 
+*.RProj*
+.DS_Store
 # Example code in package build process
 *-Ex.R
