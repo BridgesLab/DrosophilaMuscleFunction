@@ -1,11 +1,11 @@
-This is BibTeX, Version 0.99d (TeX Live 2012)
+This is BibTeX, Version 0.99d (TeX Live 2013)
 Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: longevity-analysis.aux
 The style file: unsrt.bst
 Database file #1: death-references.bib
 You've used 5 entries,
             1791 wiz_defined-function locations,
-            473 strings with 4094 characters,
+            472 strings with 4090 characters,
 and the built_in function-call counts, 846 in all, are:
 = -- 77
 > -- 28

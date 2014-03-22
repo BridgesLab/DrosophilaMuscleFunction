@@ -278,7 +278,7 @@ print(xtable(coxph.table.24b.Tsc1.female, digits=c(0,3,3,3,17),caption = "Gene L
 \begin{figure}
 \begin{center}
 <<label=survival-24b-tsc,fig=TRUE,echo=FALSE>>=
-    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Tsc1'&data$Genotype!='Tm3/Tm6B',])
+    data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Tsc1'&data$Genotype!='Tm3,sb/Tm6B',])
     survobj <- with(data.used, Surv(Age, Accidental==FALSE))
     survfit <- survfit(survobj~Genotype, data=data.used)
     plot(survfit, main = 'Survival of Tsc1 shRNA Flies with 24B-GAL4 Driver',
