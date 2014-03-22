@@ -29,7 +29,8 @@ require(plyr, quietly=T)
 data$Cross <- as.factor(paste(data$Male, data$Female, sep=" x "))
 data$Driver <- as.factor(sapply(strsplit(as.character(data$Female), "/"),"[", 1))
 #releveled UAS showing TSC1 then Raptor
-data$UAS <- factor(sapply(strsplit(as.character(data$Male), "/"),"[", 1), levels=c('31039','31314','35144','31528','31529','34814'))
+data$UAS <- as.factor(sapply(strsplit(as.character(data$Male), "/"),"[", 1))
+data$UAS <- factor(data$UAS, levels=c('31039','31314','35144','31528','31529','34814'))
 #merged with gene mapping file
 data <- merge(mapping.data, data, by="UAS")
 #mark crosses as cold
@@ -216,13 +217,14 @@ driver.summarised.data$GAL4.prop <- driver.summarised.data$GAL4/driver.summarise
 driver.summarised.data$KD.err <- with(driver.summarised.data, sqrt((KD.prop*(1-KD.prop)/Total.No.WT)))
 driver.summarised.data$shRNA.err <- with(driver.summarised.data, sqrt((shRNA.prop*(1-shRNA.prop)/Total.No.WT)))
 driver.summarised.data$GAL4.err <- with(driver.summarised.data, sqrt((GAL4.prop*(1-GAL4.prop)/Total.No.WT)))
+driver.summarised.data <- driver.summarised.data[order(driver.summarised.data$KD.prop),]
 
 
 require(RColorBrewer, quietly=T)
 color.scheme <- brewer.pal(3,"Set1")
 plot <- barplot(t(as.matrix(driver.summarised.data[driver.summarised.data$Driver=="24B-Gal4",c('KD.prop','shRNA.prop','GAL4.prop')])),
         names.arg=driver.summarised.data[driver.summarised.data$Driver=="24B-Gal4",]$UAS,
-        beside=T,
+        beside=T,las=2,
         ylab="Proportion of Eclosed Flies",
         ylim=c(0,0.65),
         col=color.scheme,
@@ -254,7 +256,7 @@ driver.summarised.data.18c$GAL4.err <- with(driver.summarised.data.18c, sqrt((GA
 
 plot <- barplot(t(as.matrix(driver.summarised.data.18c[,c('KD.prop','shRNA.prop','GAL4.prop')])),
         names.arg=driver.summarised.data.18c[driver.summarised.data.18c$Driver=="24B-Gal4",]$UAS,
-        beside=T,
+        beside=T,las=2,
         ylab="Proportion of Eclosed Flies",
         ylim=c(0,0.9),
         col=color.scheme,
@@ -271,7 +273,7 @@ superpose.eb(plot,
 <<label=hand-figure,include=FALSE, echo=FALSE>>=
 plot <- barplot(t(as.matrix(driver.summarised.data[driver.summarised.data$Driver=="Hand-Gal4",c('KD.prop','shRNA.prop','GAL4.prop')])),
         names.arg=driver.summarised.data[driver.summarised.data$Driver=="Hand-Gal4",]$UAS,
-        beside=T,
+        beside=T,las=2,
         ylab="Proportion of Eclosed Flies",
         ylim=c(0,0.6),
         col=color.scheme,
@@ -297,7 +299,7 @@ driver.summarised.data.c179$GAL4.err <- with(driver.summarised.data.c179, sqrt((
 
 plot <- barplot(t(as.matrix(driver.summarised.data.c179[,c('KD.prop','GAL4.prop')])),
         names.arg=driver.summarised.data.c179$UAS,
-        beside=T,
+        beside=T,las=2,
         ylab="Proportion of Eclosed Flies",
         ylim=c(0,0.9),
         col=color.scheme[c(1,3)],
@@ -323,7 +325,7 @@ summarised.data.gendered.c179$GAL4.err <- with(summarised.data.gendered.c179, sq
 require(reshape2)
 plot <- barplot(as.matrix(dcast(summarised.data.gendered.c179, Gender~UAS, value.var='KD.prop')[2:4]),
         names.arg=levels(summarised.data.gendered.c179$UAS),
-        beside=T,
+        beside=T,las=2,
         ylab="Proportion of Knockdown Flies Eclosed",
         ylim=c(0,0.5),
         main="C157-Gal4 Driver By Gender")
@@ -390,7 +392,7 @@ superpose.eb(plot,
 
 <<label=generations,include=FALSE, echo=FALSE>>=
 with(data, plot(jitter(Generation),Total,
-                pch=18,
+                pch=18,las=2,
                 ylab="Flies Born Per Generation",
                 xlab="Generation Number"))
 generation.lm <- lm(Total~Generation,data=data)

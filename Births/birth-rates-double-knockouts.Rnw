@@ -115,8 +115,8 @@ print(xtable(summarised.data.gendered[summarised.data.gendered$KD == 0,1:6], cap
 #driver.summarised.data$GAL4.err <- with(driver.summarised.data, sqrt((GAL4.prop*(1-GAL4.prop)/Total.No.WT)))
 
 par(mar=c(12,4.1,4.1,2.1))
-plot <- barplot(as.numeric(gene.summarised.data[3:6]),
-        beside=T,las=2,
+plot <- barplot(as.numeric(gene.summarised.data[gene.summarised.data$Driver=='24B',c(3:6)]),
+        las=2,
         names.arg=names(gene.summarised.data[3:6]),
         ylab="Number of Eclosed Flies",
         main="24B-Gal4 Driver")
