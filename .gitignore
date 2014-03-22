@@ -8,3 +8,6 @@
 .DS_Store
 # Example code in package build process
 *-Ex.R
+
+#large illustrator files
+*.ai
