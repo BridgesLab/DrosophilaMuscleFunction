@@ -1,0 +1,134 @@
+Analysis of Rapamycin Dose Response Experiments
+================================================
+Data Entry
+-----------
+
+These data are stored in `r getwd()` and the script was most recently run on `r date()`. 
+
+```{r data-entry, echo=FALSE}
+input_file <- 'dose-response.csv'
+data <- read.csv(input_file)
+
+data <- data[data$Dose != '2',]
+
+#the stock solution of Rapamycin was 25 mg/mL
+#the volume given here is in equivalent uL in ~5 mL
+#therefore the dose is 1 uL * 25 / 5mL * 1E6 
+#the mwt of rapamycin is 914.172g/mol
+data$Rapamycin <- data$Dose*1E-3/5/914.172* 1E6  #in uM
+data$Days <- cut(data$Days.after, 3)
+data$Dead.Pupa.pct <- data$Dead.Pupa/data$Pupa*100
+library(plyr)
+summary.data <- ddply(data, .(Days, Rapamycin), summarise,
+                      Larva = mean(Larva),
+                      Pupa = mean(Pupa),
+                      Dead.Pupa = mean(Dead.Pupa),
+                      Flies = mean(Flies))
+```
+
+This uses the input file `r input_file`.
+
+Total Flies and Pupae
+----------------------
+
+
+```{r dose-response-calculation, echo=FALSE, message=FALSE}
+library(drc)
+library(reshape2)
+endpoint.data <- data[data$Days.after>16,]
+melted.endpoint.data <- melt(endpoint.data[,c('Rapamycin','Pupa','Flies')], 
+                             id.var='Rapamycin', value.name="Count", variable.name="Measurement")
+melted.endpoint.data <- melted.endpoint.data[complete.cases(melted.endpoint.data),]
+model.endpoint.flies.ll4 <- drm(Count ~ Rapamycin, Measurement, data=melted.endpoint.data, fct=LL.4())
+```
+
+```{r label=model-tables,echo=FALSE,results='asis'}
+library(xtable)
+print(xtable(unlist(summary(model.endpoint.flies.ll4)$coefficients), caption = "EC50 Estimates", label = "tab:ed50-summary", digits=3), type='html')
+```
+
+
+We fitted this data to a 4-parameter log-logistic model for both the number of pupae and flies born.  The b parameter is the EC50 for this model.
+We tested this model's validity by checking for the normality of redisuals with a shapiro test.  According to this the model assumptions were **not** met (p=`r shapiro.test(residuals(model.endpoint.flies.ll4))$p.value`).
+
+```{r dose-response-flies-pupae, dev=c('png','pdf'),echo=FALSE}
+library(reshape2)
+temp.data <- dcast(data, Days~Rapamycin, value.var="Flies", mean)
+flies.df.mean <- as.matrix(temp.data[,2:dim(temp.data)[2]])
+rownames(flies.df.mean) <- temp.data[,1] 
+se <- function(x) sd(x)/sqrt(length(x))
+flies.df.se <- as.matrix(dcast(data, Days~Rapamycin, value.var="Flies", se)[,2:dim(temp.data)[2]])
+
+temp.data <- dcast(data, Days~Rapamycin, value.var="Pupa", mean)
+pupa.df.mean <- as.matrix(temp.data[,2:dim(temp.data)[2]])
+rownames(pupa.df.mean) <- temp.data[,1] 
+
+pupa.df.se <- as.matrix(dcast(data, Days~Rapamycin, value.var="Pupa", se)[,2:dim(temp.data)[2]])
+
+plot(model.endpoint.flies.ll4, col=T, pch=19, cex=0.5, xlab="Dose of Rapamycin (uM)")
+#added error bars
+
+superpose.eb <- function (x, y, ebl, ebu = ebl, length = 0.08, ...)
+  arrows(x, y + ebu, x, y - ebl, angle = 90, code = 3,
+  length = length, ...)
+
+superpose.eb(as.numeric(colnames(pupa.df.mean)), pupa.df.mean[3,],pupa.df.se[3,], col=palette()[1] )
+superpose.eb(as.numeric(colnames(flies.df.mean)), flies.df.mean[3,],flies.df.se[3,], col=palette()[2] )
+```
+
+Dead Pupa
+----------
+
+```{r label=dose-response-dead-pupa-pct,dev=c('pdf','png'),echo=FALSE}
+temp.data <- dcast(data, Days~Rapamycin, value.var="Dead.Pupa.pct", mean)
+pupa.df.mean <- as.matrix(temp.data[,2:dim(temp.data)[2]])
+rownames(pupa.df.mean) <- temp.data[,1] 
+
+pupa.df.se <- as.matrix(dcast(data, Days~Rapamycin, value.var="Dead.Pupa.pct", se)[,2:dim(temp.data)[2]])
+
+scatter.smooth(pupa.df.mean[3,]~as.numeric(colnames(pupa.df.mean)),
+               pch=18, ylab="Percent of Dead Pupae", xlab="Dose of Rapamycin (uM)", las=2, 
+               xlim=c(0,0.6), ylim=c(0,70), span=0.8)
+superpose.eb(as.numeric(colnames(pupa.df.mean)), pupa.df.mean[3,],pupa.df.se[3,] )
+```
+
+```{r label=dose-response-dead-pupa,dev=c('pdf','png'),echo=FALSE}
+temp.data <- dcast(data, Days~Rapamycin, value.var="Dead.Pupa", mean)
+pupa.df.mean <- as.matrix(temp.data[,2:dim(temp.data)[2]])
+rownames(pupa.df.mean) <- temp.data[,1] 
+
+pupa.df.se <- as.matrix(dcast(data, Days~Rapamycin, value.var="Dead.Pupa", se)[,2:dim(temp.data)[2]])
+
+scatter.smooth(pupa.df.mean[3,]~as.numeric(colnames(pupa.df.mean)),
+               pch=18, ylab="Number of Dead Pupae", xlab="Dose of Rapamycin (uM)", las=2, 
+               xlim=c(0,0.6), ylim=c(0,30), span=0.8)
+superpose.eb(as.numeric(colnames(pupa.df.mean)), pupa.df.mean[3,],pupa.df.se[3,] )
+```
+
+Larvae
+-------
+
+```{r dose-response-larvae,fig=TRUE,echo=FALSE}
+temp.data <- dcast(data, Days~Rapamycin, value.var="Larva", mean)
+larvae.df.mean <- as.matrix(temp.data[,2:dim(temp.data)[2]])
+rownames(larvae.df.mean) <- temp.data[,1] 
+
+larvae.df.se <- as.matrix(dcast(data, Days~Rapamycin, value.var="Larva", se)[,2:dim(temp.data)[2]])
+
+larvae.data <- data[data$Days.after<12,]
+melted.larvae.data <- melt(larvae.data[,c('Rapamycin','Larva')], 
+                             id.var='Rapamycin', value.name="Count", variable.name="Measurement")
+melted.larvae.data <- melted.larvae.data[complete.cases(melted.larvae.data),]
+model.larvae.ll4 <- drm(Count ~ Rapamycin, Measurement, data=melted.larvae.data, fct=LL.4())
+plot(model.larvae.ll4, col=T, pch=19, cex=0.5, xlab="Dose of Rapamycin (uM)")
+
+superpose.eb(as.numeric(colnames(larvae.df.mean)), larvae.df.mean[1,],larvae.df.se[1,], col=palette()[1] )
+```
+
+
+Session Information
+---------------------
+
+```{r sessionInfo, echo=F}
+sessionInfo()
+```
