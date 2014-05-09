@@ -1,0 +1,243 @@
+\documentclass{article}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\title{combined pcr data}
+\maketitle
+
+<<data-entry>>=
+input_file <- 'qRT-PCR combined data.csv'
+#import our data
+data <- read.csv(input_file)
+
+genes.of.interest <- c("Actb","Cdkn1a","Mef2c","Myf5","Myod1","Myog" )
+#remove genes that we are not interested in
+data.of.interest <- droplevels(subset(data, gene %in% genes.of.interest))
+data.of.interest$Rapamycin <- grepl("RAPA", data.of.interest$treatment)
+@
+
+This uses the input file \Sexpr{input_file}.  This is located in \verb+\Sexpr{getwd()}+.  It was most recently run on \Sexpr{date()}.
+
+<<statistics>>=
+#make the table
+shapiro.results <- data.frame(row.names=levels(data.of.interest$gene),
+                              pval.dmso = rep(NA, length(levels(data.of.interest$gene))),
+                              pval.rapa = rep(NA, length(levels(data.of.interest$gene))))
+#first we subset to get data frame with just actin and dmso
+#subset(data.of.interest, gene=='Actb'&treatment=="DMSO")
+#get only the expression values
+#subset(data.of.interest, gene=='Actb'&treatment=="DMSO")$value
+#run a shaprio test on those values shapiro.test(subset(data.of.interest, gene=='Actb'&treatment=="DMSO")$value)
+#shapiro.test(subset(data.of.interest, gene=='Actb'&treatment=="DMSO")$value)$p.value
+
+#create a loop for DMSO
+for (test.gene in levels(data.of.interest$gene)) {
+  shapiro.results[test.gene, 'pval.dmso'] <- shapiro.test(subset(data.of.interest, gene==test.gene&Rapamycin==FALSE)$value)$p.value
+  shapiro.results[test.gene, 'pval.rapa'] <- shapiro.test(subset(data.of.interest, gene==test.gene&Rapamycin==TRUE)$value)$p.value
+}
+
+shapiro.results$Normal <- apply(shapiro.results, 1, min) > 0.05
+shapiro.results
+#test equal variance with Levene's test
+library(car)
+
+#make a table for results
+levene.results <- data.frame(row.names=levels(data.of.interest$gene),
+                              pval = rep(NA, length(levels(data.of.interest$gene))))
+
+for (gene.of.interest in levels(data.of.interest$gene)) {
+    levene.results[gene.of.interest, 'pval'] <- with(subset(data.of.interest, gene==gene.of.interest), leveneTest(value, Rapamycin))$`Pr(>F)`[1]
+}
+levene.results$Equal.Variance <- apply(levene.results, 1, min) > 0.05
+levene.results
+#do a t-test
+#first see if there is a normal distribution, if there is then could do a t-test.  If not do a Wilcoxon Rank Sum test.  If there is, do a Levene's test for equal variance and if variance is equal then run a t-test if not run a Welch's T-Test.
+
+test.results <- data.frame(row.names=levels(data.of.interest$gene),
+                              pval = rep(NA, length(levels(data.of.interest$gene))),
+                              test = rep(NA, length(levels(data.of.interest$gene))))
+
+for (gene.of.interest in levels(data.of.interest$gene)) {
+if (!(shapiro.results[gene.of.interest,'Normal'])) {
+  test.results[gene.of.interest, 'pval'] <- wilcox.test(value~Rapamycin, data=subset(data.of.interest, gene==gene.of.interest))$p.value
+  test.results[gene.of.interest, 'test'] <- 'Wilcoxon Rank Sum Test'
+}
+  else {
+    if (levene.results[gene.of.interest, 'Equal.Variance']){
+        test.results[gene.of.interest, 'pval'] <- t.test(value~Rapamycin, data=subset(data.of.interest, gene==gene.of.interest, var.equal=TRUE))$p.value
+        test.results[gene.of.interest, 'test'] <- 'Welch T-Test' 
+    }
+    else {
+  test.results[gene.of.interest, 'pval'] <- t.test(value~Rapamycin, data=subset(data.of.interest, gene==gene.of.interest, , var.equal=FALSE))$p.value
+  test.results[gene.of.interest, 'test'] <- 'Student T-Test'
+  }
+}
+}
+
+#run a one-way anova on all treatment groups from each experiment to see if they vary
+treatment.aov <- aov(value~gene * treatment*Exp, data=data.of.interest)
+summary (treatment.aov)
+treatment.aov
+#because there is an interaction among all of the variables we need to perform a two way anova for each experiment seperately looking at effect of treatment and gene
+
+summary(data.of.interest$Exp)
+
+summary(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2')))
+summary(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='mar7 plate 2')))
+summary(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='Mar7 plate1')))
+summary(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='dose response ')))
+summary(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='20-Feb')))
+
+#test that the data are normally distributed
+#run shapiro
+shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))))
+shapiro.test(residuals(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))))
+#run levene's test for equal variance 
+library(car)
+leveneTest(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))
+#so the assumptions for this model are OK
+summary(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2')))
+
+#pos hoc testing for this model
+feb28.t.tests <- data.frame(row.names=levels(data.of.interest$gene))
+for (test.gene in levels(data.of.interest$gene)) {
+feb28.t.tests[test.gene,'pval'] <- t.test(log(value)~treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'&gene==test.gene),  var.equal=T)$p.value
+}
+feb28.t.tests
+
+shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='mar7 plate 2'))))
+shapiro.test(residuals(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='mar7 plate 2'))))
+leveneTest(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='mar7 plate 2'))
+#assumptions for this model are OK
+summary(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='mar7 plate 2')))
+
+#post hoc testing for this model
+mar7.2.t.tests <- data.frame(row.names=levels(data.of.interest$gene))
+for (test.gene in levels(data.of.interest$gene)) {
+mar7.2.t.tests[test.gene,'pval'] <- t.test(log(value)~treatment, data=subset(data.of.interest, Exp=='mar7 plate 2'&gene==test.gene),  var.equal=T)$p.value
+}
+mar7.2.t.tests
+
+
+#
+shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='Mar7 plate1'))))
+leveneTest(value~gene*treatment, data=subset(data.of.interest, Exp=='Mar7 plate1'))
+#assumptions for this model are OK (no log transform needed)
+summary(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='Mar7 plate1')))
+#post hoc testing for this model
+mar7.1.t.tests <- data.frame(row.names=levels(data.of.interest$gene))
+for (test.gene in levels(data.of.interest$gene)) {
+mar7.1.t.tests[test.gene,'pval'] <- t.test(value~treatment, data=subset(data.of.interest, Exp=='Mar7 plate1'&gene==test.gene), var.equal=T)$p.value
+}
+mar7.1.t.tests
+
+
+shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='20-Feb'))))
+shapiro.test(residuals(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='20-Feb'))))
+leveneTest(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='20-Feb'))
+#assumptions for this model are OK
+summary(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='20-Feb')))
+
+#pos hoc testing for this model
+feb20.t.tests <- data.frame(row.names=levels(data.of.interest$gene))
+for (test.gene in levels(data.of.interest$gene)) {
+feb20.t.tests[test.gene,'pval'] <- t.test(log(value)~treatment, data=subset(data.of.interest, Exp=='20-Feb'&gene==test.gene),  var.equal=T)$p.value
+}
+feb20.t.tests
+
+shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='dose response '))))
+shapiro.test(residuals(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='dose response '))))
+leveneTest(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='dose response '))
+#does not meet levenes test for equal variance so must run Welch's...?
+#dose response need to do anova instead of t-test due to 3 different groups
+dose.response.aov <- data.frame(row.names=levels(data.of.interest$gene))
+
+kruskal.test(value~treatment, data=subset(data.of.interest, Exp=='dose response '&gene==test.gene))$p.value
+for (test.gene in  c("Actb","Mef2c","Myod1","Myog" )) {
+dose.response.aov[test.gene,'pval-low'] <- t.test(mu=1, subset(data.of.interest, Exp=='dose response '&gene==test.gene& treatment=='RAPA (low)')$value)$p.value
+dose.response.aov[test.gene,'pval-high'] <- t.test(mu=1, subset(data.of.interest, Exp=='dose response '&gene==test.gene& treatment=='RAPA (high)')$value)$p.value
+}
+dose.response.aov
+@
+
+<<summary-statistics>>=
+library(plyr)
+complete.experiments <- c('20-Feb','feb28 plate 2','mar7 plate 2', 'Mar7 plate1')
+summary.data <- ddply(subset(data.of.interest, Exp %in% complete.experiments), .(gene, Rapamycin), summarise,
+                      mean = mean(value),
+                      sd = sd(value),
+                      se = sd(value)/sqrt(length(value)),
+                      n = length(value))
+
+@
+
+\begin{figure}
+\begin{center}
+<<label=combined-data-barplots,fig=TRUE,echo=FALSE>>=
+require(reshape2)
+summary.means <- dcast(summary.data, Rapamycin~gene, value.var='mean')
+summary.errors <- dcast(summary.data, Rapamycin~gene, value.var='se')
+
+plot <- barplot(as.matrix(summary.means[,2:7]), beside=T, las=1, ylab="mRNA Expression/GAPDH", ylim=c(0,2.8))
+legend("topright", c("DMSO","Rapamycin"), fill=grey.colors(2), bty="n")
+
+superpose.eb <- function (x, y, ebl, ebu = ebl, length = 0.08, ...)
+  arrows(x, y + ebu, x, y - ebl, angle = 90, code = 3,
+  length = length, ...)
+
+superpose.eb(plot, as.matrix(summary.means[,2:7]), as.matrix(summary.errors[,2:7]))
+@
+\end{center}
+\caption{Combined Data from All Experiments}
+\label{fig:combined-data-barplots}
+\end{figure}
+
+
+\begin{figure}
+\begin{center}
+<<label=separated-data-barplots,fig=TRUE,echo=FALSE>>=
+par(mfrow=c(4,1))
+for (experiment in complete.experiments){
+  summary.data <- ddply(subset(data.of.interest, Exp ==experiment), .(gene, Rapamycin), summarise,
+                      mean = mean(value),
+                      sd = sd(value),
+                      se = sd(value)/sqrt(length(value)),
+                      n = length(value))
+  summary.means <- dcast(summary.data, Rapamycin~gene, value.var='mean')
+  summary.errors <- dcast(summary.data, Rapamycin~gene, value.var='se')
+ymax <- max(summary.means[,3:dim(summary.means)[2]], na.rm=T) + max(summary.errors[,3:dim(summary.means)[2]], na.rm=T)
+plot <- barplot(as.matrix(summary.means[,3:dim(summary.means)[2]]), beside=T, las=2, ylab="mRNA Expression/GAPDH", ylim=c(0,ymax), main=experiment)
+#legend("topleft", c("DMSO","Rapamycin"), fill=grey.colors(2), bty="n")
+superpose.eb(plot, as.matrix(summary.means[,3:dim(summary.means)[2]]), as.matrix(summary.errors[,3:dim(summary.means)[2]]))
+}
+@
+\end{center}
+\caption{Data for Each Experiment}
+\label{fig:separated-data-barplots}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=barplots-feb28,fig=TRUE,echo=FALSE>>=
+require(reshape2)
+  summary.data <- ddply(subset(data.of.interest, Exp =='feb28 plate 2'), .(gene, Rapamycin), summarise,
+                      mean = mean(value),
+                      sd = sd(value),
+                      se = sd(value)/sqrt(length(value)),
+                      n = length(value))
+summary.means <- dcast(summary.data, Rapamycin~gene, value.var='mean')
+summary.errors <- dcast(summary.data, Rapamycin~gene, value.var='se')
+
+plot <- barplot(as.matrix(summary.means[,3:7]), beside=T, las=1, ylab="mRNA Expression/GAPDH", ylim=c(0,1.2))
+legend("topright", c("DMSO","Rapamycin"), fill=grey.colors(2), bty="n")
+
+superpose.eb(plot, as.matrix(summary.means[,3:7]), as.matrix(summary.errors[,3:7]))
+@
+\end{center}
+\caption{Feb 28 Data}
+\label{fig:barplots-feb28}
+\end{figure}
+
+
+\end{document}
