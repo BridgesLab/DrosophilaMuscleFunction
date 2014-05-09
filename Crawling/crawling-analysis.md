@@ -4,9 +4,10 @@ Crawling Assays
 
 
 
-The raw data saved in ../Data/Crawling Data.csv.  This script was most recently run on Fri May  9 14:52:58 2014.
+The raw data saved in ../Data/Crawling Data.csv.  This script was most recently run on Fri May  9 15:37:12 2014.
 
-\section*{Analysis}
+Analysis
+---------
 
 
 
@@ -19,13 +20,16 @@ The raw data saved in ../Data/Crawling Data.csv.  This script was most recently 
 ![plot of chunk barplot](figure/barplot.png) 
 
 
+![plot of chunk barplot-raptor](figure/barplot-raptor.png) 
+
+
 ![plot of chunk barplot-gender](figure/barplot-gender.png) 
 
 
 ![plot of chunk barplot-time-limit](figure/barplot-time-limit.png) 
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Fri May  9 14:53:00 2014 -->
+<!-- Fri May  9 15:37:13 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of Crawling Times per Cross </CAPTION>
 <TR> <TH> Age.Range </TH> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -54,50 +58,49 @@ The raw data saved in ../Data/Crawling Data.csv.  This script was most recently 
 Statistical Analysis
 ----------------------
 
-To test this effect, first we tested a model in which first the age range was taken into account, and then the uas was included.  To test whether there was an interaction between the UAS and the age range on crawling time, we compared these models and did a test.  The p-value for this is 1.1116 &times; 10<sup>-13</sup> so we ignored the interaction.
+To test this effect, first we tested a model in which first the age range was taken into account, and then the uas was included as an interaction.  We tested the assumptions of this model by Shapiro-Wilk (p=8.9059 &times; 10<sup>-16</sup>) and found it did not have normally distributed residuals.  We therefore split the data into the three age bins and looked at them individually.
 
-Using this model we did an ANOVA testing for whether the Age has an effect on crawling speed.  The p-value for that comparason is 1.6526 &times; 10<sup>-113</sup>.
 
-We next tested if CrossName has an effect on the crawling speed.  The p-value for that comparason is 4.7713 &times; 10<sup>-11</sup>.  We then performed a Dunnett's test comparing each cross to the *C179-GAL4/+* control .  
+
+
+We then checked whether these had normally distributed residuals and they did not (p=1.6191 &times; 10<sup>-51</sup>, 5.7246 &times; 10<sup>-36</sup> and 8.2443 &times; 10<sup>-26</sup>).  We therefore did individual Wilcoxon-Rank Sum Tests comparing each genotype to the control group.
+
+
+
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Fri May  9 14:53:00 2014 -->
+<!-- Fri May  9 15:37:14 2014 -->
 <TABLE border=1>
-<CAPTION ALIGN="bottom"> ANOVA of Crawling Times per UAS </CAPTION>
-<TR> <TH>  </TH> <TH> Df </TH> <TH> Sum Sq </TH> <TH> Mean Sq </TH> <TH> F value </TH> <TH> Pr(&gt;F) </TH>  </TR>
-  <TR> <TD> Assay.Date </TD> <TD align="right"> 1 </TD> <TD align="right"> 2796790.48 </TD> <TD align="right"> 2796790.48 </TD> <TD align="right"> 665.24 </TD> <TD align="right"> 0.0000 </TD> </TR>
-  <TR> <TD> Age.Range </TD> <TD align="right"> 2 </TD> <TD align="right"> 298012.10 </TD> <TD align="right"> 149006.05 </TD> <TD align="right"> 35.44 </TD> <TD align="right"> 0.0000 </TD> </TR>
-  <TR> <TD> UAS </TD> <TD align="right"> 5 </TD> <TD align="right"> 233920.39 </TD> <TD align="right"> 46784.08 </TD> <TD align="right"> 11.13 </TD> <TD align="right"> 0.0000 </TD> </TR>
-  <TR> <TD> Residuals </TD> <TD align="right"> 1899 </TD> <TD align="right"> 7983786.57 </TD> <TD align="right"> 4204.21 </TD> <TD align="right">  </TD> <TD align="right">  </TD> </TR>
-   <A NAME=tab:anova></A>
+<CAPTION ALIGN="bottom"> Wilcoxon Rank-Sum Tests for each group compared to the control, not adjusted for multiple observations </CAPTION>
+<TR> <TH>  </TH> <TH> (2,19] </TH> <TH> (19,45] </TH> <TH> (45,73] </TH>  </TR>
+  <TR> <TD align="right"> 36304 </TD> <TD align="right"> 1.00000 </TD> <TD align="right"> 1.00000 </TD> <TD align="right"> 1.00000 </TD> </TR>
+  <TR> <TD align="right"> 31039 </TD> <TD align="right"> 0.01350 </TD> <TD align="right"> 0.01478 </TD> <TD align="right"> 0.68313 </TD> </TR>
+  <TR> <TD align="right"> 31314 </TD> <TD align="right"> 0.00030 </TD> <TD align="right"> 0.00000 </TD> <TD align="right"> 0.00002 </TD> </TR>
+  <TR> <TD align="right"> 31528 </TD> <TD align="right"> 0.00019 </TD> <TD align="right"> 0.01128 </TD> <TD align="right"> 0.44563 </TD> </TR>
+  <TR> <TD align="right"> 31529 </TD> <TD align="right"> 0.00113 </TD> <TD align="right"> 0.06633 </TD> <TD align="right"> 0.00000 </TD> </TR>
+  <TR> <TD align="right"> 34814 </TD> <TD align="right"> 0.00004 </TD> <TD align="right">  </TD> <TD align="right"> 0.05888 </TD> </TR>
+   <A NAME=tab:wilcoxon-tests></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Fri May  9 14:53:00 2014 -->
+<!-- Fri May  9 15:37:14 2014 -->
 <TABLE border=1>
-<CAPTION ALIGN="bottom"> Dunnet Tests of Crawling Times per shRNA </CAPTION>
-<TR> <TH>  </TH> <TH> Effect Size (s) </TH> <TH> p-value </TH>  </TR>
-  <TR> <TD align="right"> 31039 - 36304 </TD> <TD align="right"> 1.59 </TD> <TD align="right"> 1.00 </TD> </TR>
-  <TR> <TD align="right"> 31314 - 36304 </TD> <TD align="right"> 22.32 </TD> <TD align="right"> 0.00 </TD> </TR>
-  <TR> <TD align="right"> 31528 - 36304 </TD> <TD align="right"> 5.40 </TD> <TD align="right"> 0.77 </TD> </TR>
-  <TR> <TD align="right"> 31529 - 36304 </TD> <TD align="right"> 13.24 </TD> <TD align="right"> 0.12 </TD> </TR>
-  <TR> <TD align="right"> 34814 - 36304 </TD> <TD align="right"> -31.37 </TD> <TD align="right"> 0.02 </TD> </TR>
-   <A NAME=tab:dunnett></A>
+<CAPTION ALIGN="bottom"> Raptor Knockdown Wilcoxon Rank-Sum tests for each UAS compared to the control, adjusted by the method of Benjamini and Hochberg </CAPTION>
+<TR> <TH>  </TH> <TH> UAS </TH> <TH> age group </TH> <TH> pval </TH> <TH> padj </TH>  </TR>
+  <TR> <TD align="right"> 1 </TD> <TD> 31528 </TD> <TD> (2,19] </TD> <TD align="right"> 0.00019 </TD> <TD align="right"> 0.00051 </TD> </TR>
+  <TR> <TD align="right"> 2 </TD> <TD> 31529 </TD> <TD> (2,19] </TD> <TD align="right"> 0.00113 </TD> <TD align="right"> 0.00225 </TD> </TR>
+  <TR> <TD align="right"> 3 </TD> <TD> 34814 </TD> <TD> (2,19] </TD> <TD align="right"> 0.00004 </TD> <TD align="right"> 0.00016 </TD> </TR>
+  <TR> <TD align="right"> 4 </TD> <TD> 31528 </TD> <TD> (19,45] </TD> <TD align="right"> 0.01128 </TD> <TD align="right"> 0.01805 </TD> </TR>
+  <TR> <TD align="right"> 5 </TD> <TD> 31529 </TD> <TD> (19,45] </TD> <TD align="right"> 0.06633 </TD> <TD align="right"> 0.07580 </TD> </TR>
+  <TR> <TD align="right"> 6 </TD> <TD> 34814 </TD> <TD> (19,45] </TD> <TD align="right">  </TD> <TD align="right">  </TD> </TR>
+  <TR> <TD align="right"> 7 </TD> <TD> 31528 </TD> <TD> (45,73] </TD> <TD align="right"> 0.44563 </TD> <TD align="right"> 0.44563 </TD> </TR>
+  <TR> <TD align="right"> 8 </TD> <TD> 31529 </TD> <TD> (45,73] </TD> <TD align="right"> 0.00000 </TD> <TD align="right"> 0.00001 </TD> </TR>
+  <TR> <TD align="right"> 9 </TD> <TD> 34814 </TD> <TD> (45,73] </TD> <TD align="right"> 0.05888 </TD> <TD align="right"> 0.07580 </TD> </TR>
+   <A NAME=tab:raptor-wilcoxon-tests></A>
 </TABLE>
+
+
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Fri May  9 14:53:00 2014 -->
-<TABLE border=1>
-<CAPTION ALIGN="bottom"> Percent of Flies Which Do Not Crawl 4cm in 10 Seconds </CAPTION>
-<TR> <TH> Gene </TH> <TH> UAS </TH> <TH> (2,19] </TH> <TH> (19,45] </TH> <TH> (45,73] </TH>  </TR>
-  <TR> <TD> Control </TD> <TD> 36304 </TD> <TD align="right"> 3.64 </TD> <TD align="right"> 17.14 </TD> <TD align="right"> 66.67 </TD> </TR>
-  <TR> <TD> Raptor </TD> <TD> 31528 </TD> <TD align="right"> 9.60 </TD> <TD align="right"> 31.67 </TD> <TD align="right"> 64.38 </TD> </TR>
-  <TR> <TD> Raptor </TD> <TD> 31529 </TD> <TD align="right"> 10.89 </TD> <TD align="right"> 38.10 </TD> <TD align="right"> 92.68 </TD> </TR>
-  <TR> <TD> Raptor </TD> <TD> 34814 </TD> <TD align="right"> 13.89 </TD> <TD align="right">  </TD> <TD align="right"> 74.19 </TD> </TR>
-  <TR> <TD> Tsc1 </TD> <TD> 31039 </TD> <TD align="right"> 9.23 </TD> <TD align="right"> 16.05 </TD> <TD align="right"> 64.96 </TD> </TR>
-  <TR> <TD> Tsc1 </TD> <TD> 31314 </TD> <TD align="right"> 17.89 </TD> <TD align="right"> 38.68 </TD> <TD align="right"> 81.77 </TD> </TR>
-   <A NAME=tab:time-limit-summary></A>
-</TABLE>
-<!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Fri May  9 14:53:00 2014 -->
+<!-- Fri May  9 15:37:14 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Fisher's Exact Test For Flies Which Do Not Crawl 4cm in 10 Seconds </CAPTION>
 <TR> <TH>  </TH> <TH> (2,19] </TH> <TH> (19,45] </TH> <TH> (45,73] </TH>  </TR>
