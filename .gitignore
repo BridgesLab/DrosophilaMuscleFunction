@@ -10,4 +10,4 @@
 *-Ex.R
 
 #large illustrator files
-*.ai
+#*.ai
