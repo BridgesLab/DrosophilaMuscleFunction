@@ -12,7 +12,8 @@ mapping.data <- read.csv(mapping_file)
 
 The raw data saved in `r data_file_name`.  This script was most recently run on `r date()`.
 
-\section*{Analysis}
+Analysis
+---------
 
 ```{r data-analysis, echo=FALSE, message=FALSE}
 library(reshape2)
@@ -91,7 +92,7 @@ annotated.crawling.summary.table <- annotated.crawling.summary.table[order(annot
 annotated.crawling.summary.error <- annotated.crawling.summary.error[,c('Gene','UAS', levels(annotated_crawling_data$Age.Range))]
 annotated.crawling.summary.error <- annotated.crawling.summary.error[order(annotated.crawling.summary.error$Gene),]
 
-uas.anova <- aov(Time~Age.Range+UAS, data=subset(annotated_crawling_data, Driver == 'C179-Gal4'))
+uas.anova <- aov(log(Time)~Age.Range+UAS, data=subset(annotated_crawling_data, Driver == 'C179-Gal4'))
 uas.anova.date <- aov(Time~Assay.Date+Age.Range+UAS, data=subset(annotated_crawling_data, Driver == 'C179-Gal4'))
 uas.anova.int <- aov(Time~Age.Range*UAS, data=subset(annotated_crawling_data, Driver == 'C179-Gal4'))
 
@@ -141,6 +142,29 @@ par(mfrow=c(1,length(levels(uas.summary$Age.Range))))
 for (range in levels(uas.summary$Age.Range)){
 data.used <- subset(uas.summary,Age.Range==range)
 par( mar=c(8,4.1,4.1,2.1))
+ymax <- max(data.used$mean+data.used$se, na.rm=T)
+plot <- barplot(data.used $mean,
+        beside=T, las=2,
+        ylim=c(0,ymax),
+        names.arg=data.used$UAS,
+        col=data.used$Gene,
+        ylab="Time to Crawl 4cm (s)",
+        xlab="shRNA Clone",
+        main=sprintf("Age Range- %s",range))
+
+legend("topleft", levels(data.used$Gene), fill= palette()[1:length(levels(data.used$Gene))], bty='n')
+
+superpose.eb(plot, 
+             data.used$mean,
+             data.used$se)
+}
+```
+
+```{r barplot-raptor,dev=c('png','pdf'),echo=FALSE}
+par(mfrow=c(1,length(levels(uas.summary$Age.Range))))
+for (range in levels(uas.summary$Age.Range)){
+data.used <- droplevels(subset(uas.summary,Age.Range==range&Gene%in%c('Control','Raptor')))
+par( mar=c(10,4.1,4.1,2.1))
 ymax <- max(data.used$mean+data.used$se, na.rm=T)
 plot <- barplot(data.used $mean,
         beside=T, las=2,
@@ -230,16 +254,38 @@ print(xtable(uas.summary, caption="Summary of Crawling Times per Cross", label="
 Statistical Analysis
 ----------------------
 
-To test this effect, first we tested a model in which first the age range was taken into account, and then the uas was included.  To test whether there was an interaction between the UAS and the age range on crawling time, we compared these models and did a test.  The p-value for this is `r anova(uas.anova, uas.anova.int, test="Chisq")$"Pr(>Chi)"[2]` so we ignored the interaction.
+To test this effect, first we tested a model in which first the age range was taken into account, and then the uas was included as an interaction.  We tested the assumptions of this model by Shapiro-Wilk (p=`r shapiro.test(residuals(uas.anova))$p.value`) and found it did not have normally distributed residuals.  We therefore split the data into the three age bins and looked at them individually.
 
-Using this model we did an ANOVA testing for whether the Age has an effect on crawling speed.  The p-value for that comparason is `r summary(uas.anova)[[1]][["Pr(>F)"]][1]`.
+```{r statistics-grouped, echo=FALSE}
+uas.aov.group.1 <- aov(Time~UAS, data=subset(annotated_crawling_data, Driver == 'C179-Gal4'&Age.Range==levels(annotated_crawling_data$Age.Range)[1]))
+uas.aov.group.2 <- aov(Time~UAS, data=subset(annotated_crawling_data, Driver == 'C179-Gal4'&Age.Range==levels(annotated_crawling_data$Age.Range)[2]))
+uas.aov.group.3 <- aov(Time~UAS, data=subset(annotated_crawling_data, Driver == 'C179-Gal4'&Age.Range==levels(annotated_crawling_data$Age.Range)[3]))
+```
 
-We next tested if CrossName has an effect on the crawling speed.  The p-value for that comparason is `r summary(uas.anova)[[1]][["Pr(>F)"]][2]`.  We then performed a Dunnett's test comparing each cross to the *C179-GAL4/+* control .  
+We then checked whether these had normally distributed residuals and they did not (p=`r shapiro.test(residuals(uas.aov.group.1))$p.value`, `r shapiro.test(residuals(uas.aov.group.2))$p.value` and `r shapiro.test(residuals(uas.aov.group.3))$p.value`).  We therefore did individual Wilcoxon-Rank Sum Tests comparing each genotype to the control group.
 
-```{r crawling-statistics-tables,echo=FALSE,results='asis', message=FALSE}
-print(xtable(uas.anova.date, caption="ANOVA of Crawling Times per UAS", label="tab:anova"), type='html')
-print(xtable(uas.dunnett.summary, caption="Dunnet Tests of Crawling Times per shRNA", label="tab:dunnett"), type='html')
-print(xtable(annotated.crawling.summary.table, caption=sprintf("Percent of Flies Which Do Not Crawl 4cm in %s Seconds", time.limit), label='tab:time-limit-summary'), include.rownames=F, type='html')
+```{r wilcoxon-tests, echo=FALSE, message=FALSE}
+wilcoxon.tables <- data.frame(row.names=levels(annotated_crawling_data$UAS))
+for (test.group in levels(annotated_crawling_data$Age.Range)){
+for (test.uas in levels(annotated_crawling_data$UAS)) {
+  try(wilcoxon.tables[test.uas,test.group] <- wilcox.test(
+    annotated_crawling_data[annotated_crawling_data$UAS=='36304'&annotated_crawling_data$Driver=='C179-Gal4'&annotated_crawling_data$Age.Range==test.group,]$Time,
+    annotated_crawling_data[annotated_crawling_data$UAS==test.uas&annotated_crawling_data$Driver=='C179-Gal4'&annotated_crawling_data$Age.Range==test.group,]$Time)$p.value, silent=T)
+}
+}
+
+raptor.wilcoxon.tables <- wilcoxon.tables[rownames(wilcoxon.tables)%in%mapping.data[mapping.data$Gene=='Raptor','UAS'],]
+raptor.wilcoxon.tables$UAS <- rownames(raptor.wilcoxon.tables)
+melted.raptor.wilcoxon.tables <- melt(raptor.wilcoxon.tables, value.name='pval', variable.name='age group')
+melted.raptor.wilcoxon.tables$padj <- p.adjust(melted.raptor.wilcoxon.tables$pval, method="BH")
+```  
+
+```{r crawling-wilcoxon-tables,echo=FALSE,results='asis', message=FALSE}
+print(xtable(wilcoxon.tables, caption="Wilcoxon Rank-Sum Tests for each group compared to the control, not adjusted for multiple observations", label='tab:wilcoxon-tests', digits=5), include.rownames=T, type='html')
+print(xtable(melted.raptor.wilcoxon.tables, caption="Raptor Knockdown Wilcoxon Rank-Sum tests for each UAS compared to the control, adjusted by the method of Benjamini and Hochberg", label='tab:raptor-wilcoxon-tests', digits=5), include.rownames=T, type='html')
+```
+
+```{r crawling-fisher-tables,echo=FALSE,results='asis', message=FALSE}
 print(xtable(crawling.fisher.tests, caption=sprintf("Fisher's Exact Test For Flies Which Do Not Crawl 4cm in %s Seconds", time.limit), label='tab:fisher-test-summary'), type='html')
 ```
 
