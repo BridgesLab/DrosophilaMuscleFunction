@@ -33,9 +33,13 @@ Since we saw an interaction between the experiment and gene and treatment terms 
 <<statistics, echo=FALSE>>=
 print('feb28 plate 2')
 summary(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2')))
+print('mar7 plate 2')
 summary(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='mar7 plate 2')))
+print('Mar7 plate1')
 summary(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='Mar7 plate1')))
+print('dose response ')
 summary(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='dose response ')))
+print('20-Feb')
 summary(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='20-Feb')))
 @
 
@@ -46,28 +50,36 @@ We next tested our ANOVA analyses for normality and equal variance by first look
 <<shapiro-tests, echo=FALSE>>=
 #test that the data are normally distributed
 #run shapiro
+print('feb28 plate 2')
 shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))))
+print('log transformed')
 shapiro.test(residuals(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))))
 #run levene's test for equal variance 
 library(car)
 leveneTest(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))
 #so the assumptions for this model are OK
+print('ANOVA')
 summary(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2')))
 
 #pos hoc testing for this model
+print('post hoc T-test')
 feb28.t.tests <- data.frame(row.names=levels(data.of.interest$gene))
 for (test.gene in levels(data.of.interest$gene)) {
 feb28.t.tests[test.gene,'pval'] <- t.test(log(value)~treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'&gene==test.gene),  var.equal=T)$p.value
 }
 feb28.t.tests
 
+print('mar7 plate 2')
 shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='mar7 plate 2'))))
+print('log tansformed')
 shapiro.test(residuals(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='mar7 plate 2'))))
 leveneTest(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='mar7 plate 2'))
 #assumptions for this model are OK
+print('ANOVA')
 summary(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='mar7 plate 2')))
 
 #post hoc testing for this model
+print('post hoc T-test')
 mar7.2.t.tests <- data.frame(row.names=levels(data.of.interest$gene))
 for (test.gene in levels(data.of.interest$gene)) {
 mar7.2.t.tests[test.gene,'pval'] <- t.test(log(value)~treatment, data=subset(data.of.interest, Exp=='mar7 plate 2'&gene==test.gene),  var.equal=T)$p.value
@@ -76,35 +88,47 @@ mar7.2.t.tests
 
 
 #
+print('Mar7 plate1')
 shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='Mar7 plate1'))))
+print('no need for log transform')
 leveneTest(value~gene*treatment, data=subset(data.of.interest, Exp=='Mar7 plate1'))
 #assumptions for this model are OK (no log transform needed)
+print('ANOVA')
 summary(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='Mar7 plate1')))
 #post hoc testing for this model
+print('post hoc T-test')
 mar7.1.t.tests <- data.frame(row.names=levels(data.of.interest$gene))
 for (test.gene in levels(data.of.interest$gene)) {
 mar7.1.t.tests[test.gene,'pval'] <- t.test(value~treatment, data=subset(data.of.interest, Exp=='Mar7 plate1'&gene==test.gene), var.equal=T)$p.value
 }
 mar7.1.t.tests
 
-
+print('20-Feb')
 shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='20-Feb'))))
+print('log transformed')
 shapiro.test(residuals(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='20-Feb'))))
 leveneTest(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='20-Feb'))
 #assumptions for this model are OK
+print('ANOVA')
 summary(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='20-Feb')))
 
 #pos hoc testing for this model
+print('post hoc T-test')
 feb20.t.tests <- data.frame(row.names=levels(data.of.interest$gene))
 for (test.gene in levels(data.of.interest$gene)) {
 feb20.t.tests[test.gene,'pval'] <- t.test(log(value)~treatment, data=subset(data.of.interest, Exp=='20-Feb'&gene==test.gene),  var.equal=T)$p.value
 }
 feb20.t.tests
 
+print('dose response ')
 shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='dose response '))))
+print('log transformed')
 shapiro.test(residuals(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='dose response '))))
 leveneTest(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='dose response '))
-#does not meet levenes test for equal variance so must run Welch's...?
+@
+Since we did not meet the assumption for equal variance we had to run a Kruskal-Wallis test instead of a normal ANOVA. We were not able to run a T-test since there are 3 groups in this experiment
+
+<<shapiro-tests, echo=FALSE>>=
 #dose response need to do anova instead of t-test due to 3 different groups
 dose.response.aov <- data.frame(row.names=levels(data.of.interest$gene))
 
@@ -116,7 +140,7 @@ dose.response.aov[test.gene,'pval-high'] <- t.test(mu=1, subset(data.of.interest
 dose.response.aov
 @
 
-<<summary-statistics>>=
+<<summary-statistics, echo=FALSE>>=
 library(plyr)
 complete.experiments <- c('20-Feb','feb28 plate 2','mar7 plate 2', 'Mar7 plate1')
 summary.data <- ddply(subset(data.of.interest, Exp %in% complete.experiments), .(gene, Rapamycin), summarise,
