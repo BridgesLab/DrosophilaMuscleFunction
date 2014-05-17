@@ -4,141 +4,94 @@ Effect of Rapamycin on Expression of Differentiation Markers
 
 
 
-This uses the input file qRT-PCR combined data.csv.  This is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/CellCulture.  It was most recently run on Sat May 17 07:12:02 2014.
+This uses the input file qRT-PCR combined data.csv.  This is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/CellCulture.  It was most recently run on Sat May 17 07:41:45 2014.
 
 Omnibums ANOVA, All Experiments Combined
 ------------------------------------------
 
+
+
+
+
 First we did an ANOVA looking at all of the genes, treatments and experiments together.  These results are shown below:
 
 
+
+
+<!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
+<!-- Sat May 17 07:41:46 2014 -->
+<TABLE border=1>
+<CAPTION ALIGN="bottom"> 3-Way ANOVA with Interactions for Genes, Treatments and Experiments affecting the  mRNA Levels </CAPTION>
+<TR> <TH>  </TH> <TH> Df </TH> <TH> Sum Sq </TH> <TH> Mean Sq </TH> <TH> F value </TH> <TH> Pr(&gt;F) </TH>  </TR>
+  <TR> <TD> gene </TD> <TD align="right"> 5.0 </TD> <TD align="right"> 18.4 </TD> <TD align="right"> 3.7 </TD> <TD align="right"> 39.4 </TD> <TD align="right"> 0.000000000000000000000153 </TD> </TR>
+  <TR> <TD> treatment </TD> <TD align="right"> 3.0 </TD> <TD align="right"> 2.7 </TD> <TD align="right"> 0.9 </TD> <TD align="right"> 9.6 </TD> <TD align="right"> 0.000011754921370598551714 </TD> </TR>
+  <TR> <TD> Exp </TD> <TD align="right"> 4.0 </TD> <TD align="right"> 1.7 </TD> <TD align="right"> 0.4 </TD> <TD align="right"> 4.6 </TD> <TD align="right"> 0.001794477758054346342581 </TD> </TR>
+  <TR> <TD> gene:treatment </TD> <TD align="right"> 13.0 </TD> <TD align="right"> 15.7 </TD> <TD align="right"> 1.2 </TD> <TD align="right"> 13.0 </TD> <TD align="right"> 0.000000000000000179356240 </TD> </TR>
+  <TR> <TD> gene:Exp </TD> <TD align="right"> 18.0 </TD> <TD align="right"> 2.6 </TD> <TD align="right"> 0.1 </TD> <TD align="right"> 1.5 </TD> <TD align="right"> 0.096578006151232673182072 </TD> </TR>
+  <TR> <TD> treatment:Exp </TD> <TD align="right"> 4.0 </TD> <TD align="right"> 2.0 </TD> <TD align="right"> 0.5 </TD> <TD align="right"> 5.5 </TD> <TD align="right"> 0.000492087900824711367738 </TD> </TR>
+  <TR> <TD> gene:treatment:Exp </TD> <TD align="right"> 16.0 </TD> <TD align="right"> 2.0 </TD> <TD align="right"> 0.1 </TD> <TD align="right"> 1.3 </TD> <TD align="right"> 0.199912065582318276835139 </TD> </TR>
+  <TR> <TD> Residuals </TD> <TD align="right"> 104.0 </TD> <TD align="right"> 9.7 </TD> <TD align="right"> 0.1 </TD> <TD align="right">  </TD> <TD align="right">  </TD> </TR>
+   </TABLE>
+
+
+
 ```
-##                     Df Sum Sq Mean Sq F value  Pr(>F)    
-## gene                 5  18.38    3.68   39.43 < 2e-16 ***
-## treatment            3   2.69    0.90    9.61 1.2e-05 ***
-## Exp                  4   1.72    0.43    4.62 0.00179 ** 
-## gene:treatment      13  15.70    1.21   12.96 < 2e-16 ***
-## gene:Exp            18   2.56    0.14    1.52 0.09658 .  
-## treatment:Exp        4   2.04    0.51    5.47 0.00049 ***
-## gene:treatment:Exp  16   1.97    0.12    1.32 0.19991    
-## Residuals          104   9.70    0.09                    
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## Loading required package: reshape2
 ```
 
+![plot of chunk combined-data-barplots](figure/combined-data-barplots.pdf) 
 
-Since we saw an interaction between the experiment and gene and treatment terms we separated out the experiments and did 2-way ANOVA analyses on each.  These results are below:
+
+Since we saw an interaction between the experiment and treatment terms we separated out the experiments and did 2-way ANOVA analyses on each.  These results are below:
 
 
-Testing ANOVA Assumptions
+Separated ANOVA Analyses
 ----------------------------
+
+
+
+
+![plot of chunk separated-data-barplots](figure/separated-data-barplots.png) 
+
 
 We next tested our ANOVA analyses for normality and equal variance by first looking at a Shapiro-Wilk test and then potentially a log-transformed Shapiro-Wilk test, followed by a Levene's Test.  Based on these results we did Student's T-Tests for each gene
 
 ### Feb 28 Experiment
 
 
-```r
-# test that the data are normally distributed run shapiro
-shapiro.test(residuals(aov(value ~ gene * treatment, data = subset(data.of.interest, 
-    Exp == "feb28 plate 2"))))
-```
 
-```
-## 
-## 	Shapiro-Wilk normality test
-## 
-## data:  residuals(aov(value ~ gene * treatment, data = subset(data.of.interest,     Exp == "feb28 plate 2")))
-## W = 0.8009, p-value = 1.699e-05
-```
+**This experiment was chosen as the representative experiment for all the others**.
+We first did a Shapiro-Wilk test on the groups, based on an ANOVA.  The p-value from this was 1.6986 &times; 10<sup>-5</sup>.  Based on this, we log-transformed the expression levels and re-did the Shapiro-Wilk Test (now p=0.6229), so the assumptions of normality can be met.  We then tested for equal variance using a Levene's test (p=0.815).  Since both the equal variance and normality assumptions were met we did a two-way ANOVA:
 
-```r
-print("log transformed")
-```
+<!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
+<!-- Sat May 17 07:41:46 2014 -->
+<TABLE border=1>
+<CAPTION ALIGN="bottom"> 2-Way ANOVA with Interactions for Treatment and Genes Affecting the log transformed mRNA Levels </CAPTION>
+<TR> <TH>  </TH> <TH> Df </TH> <TH> Sum Sq </TH> <TH> Mean Sq </TH> <TH> F value </TH> <TH> Pr(&gt;F) </TH>  </TR>
+  <TR> <TD> gene </TD> <TD align="right"> 5.0 </TD> <TD align="right"> 7.4 </TD> <TD align="right"> 1.5 </TD> <TD align="right"> 36.3 </TD> <TD align="right"> 0.00000000020 </TD> </TR>
+  <TR> <TD> treatment </TD> <TD align="right"> 1.0 </TD> <TD align="right"> 2.4 </TD> <TD align="right"> 2.4 </TD> <TD align="right"> 59.8 </TD> <TD align="right"> 0.00000005726 </TD> </TR>
+  <TR> <TD> gene:treatment </TD> <TD align="right"> 5.0 </TD> <TD align="right"> 7.4 </TD> <TD align="right"> 1.5 </TD> <TD align="right"> 36.2 </TD> <TD align="right"> 0.00000000020 </TD> </TR>
+  <TR> <TD> Residuals </TD> <TD align="right"> 24.0 </TD> <TD align="right"> 1.0 </TD> <TD align="right"> 0.0 </TD> <TD align="right">  </TD> <TD align="right">  </TD> </TR>
+   </TABLE>
 
-```
-## [1] "log transformed"
-```
+Based on the interaction between the treatment term and the gene factor, we did individual Student's T-Tests for each gene:
 
-```r
-shapiro.test(residuals(aov(log(value) ~ gene * treatment, data = subset(data.of.interest, 
-    Exp == "feb28 plate 2"))))
-```
+<!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
+<!-- Sat May 17 07:41:46 2014 -->
+<TABLE border=1>
+<CAPTION ALIGN="bottom"> Student's T-Tests for Feb 28 Experiment, Adjusted by Benjamini and Hochberg </CAPTION>
+<TR> <TH>  </TH> <TH> pval </TH> <TH> padj </TH> <TH> significant </TH>  </TR>
+  <TR> <TD align="right"> Actb </TD> <TD align="right"> 0.0221 </TD> <TD align="right"> 0.0268 </TD> <TD> TRUE </TD> </TR>
+  <TR> <TD align="right"> Cdkn1a </TD> <TD align="right"> 0.0073 </TD> <TD align="right"> 0.0146 </TD> <TD> TRUE </TD> </TR>
+  <TR> <TD align="right"> Mef2c </TD> <TD align="right"> 0.0009 </TD> <TD align="right"> 0.0028 </TD> <TD> TRUE </TD> </TR>
+  <TR> <TD align="right"> Myf5 </TD> <TD align="right"> 0.0223 </TD> <TD align="right"> 0.0268 </TD> <TD> TRUE </TD> </TR>
+  <TR> <TD align="right"> Myod1 </TD> <TD align="right"> 0.1806 </TD> <TD align="right"> 0.1806 </TD> <TD> FALSE </TD> </TR>
+  <TR> <TD align="right"> Myog </TD> <TD align="right"> 0.0007 </TD> <TD align="right"> 0.0028 </TD> <TD> TRUE </TD> </TR>
+   </TABLE>
 
-```
-## 
-## 	Shapiro-Wilk normality test
-## 
-## data:  residuals(aov(log(value) ~ gene * treatment, data = subset(data.of.interest,     Exp == "feb28 plate 2")))
-## W = 0.9764, p-value = 0.6229
-```
 
-```r
-# run levene's test for equal variance
-library(car)
-leveneTest(log(value) ~ gene * treatment, data = subset(data.of.interest, Exp == 
-    "feb28 plate 2"))
-```
 
-```
-## Levene's Test for Homogeneity of Variance (center = median)
-##       Df F value Pr(>F)
-## group 11    0.59   0.81
-##       24
-```
-
-```r
-# so the assumptions for this model are OK
-print("ANOVA")
-```
-
-```
-## [1] "ANOVA"
-```
-
-```r
-summary(aov(log(value) ~ gene * treatment, data = subset(data.of.interest, Exp == 
-    "feb28 plate 2")))
-```
-
-```
-##                Df Sum Sq Mean Sq F value  Pr(>F)    
-## gene            5   7.43   1.485    36.3 2.0e-10 ***
-## treatment       1   2.44   2.445    59.8 5.7e-08 ***
-## gene:treatment  5   7.40   1.481    36.2 2.0e-10 ***
-## Residuals      24   0.98   0.041                    
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-```
-
-```r
-
-# pos hoc testing for this model
-print("post hoc T-test")
-```
-
-```
-## [1] "post hoc T-test"
-```
-
-```r
-feb28.t.tests <- data.frame(row.names = levels(data.of.interest$gene))
-for (test.gene in levels(data.of.interest$gene)) {
-    feb28.t.tests[test.gene, "pval"] <- t.test(log(value) ~ treatment, data = subset(data.of.interest, 
-        Exp == "feb28 plate 2" & gene == test.gene), var.equal = T)$p.value
-}
-feb28.t.tests
-```
-
-```
-##             pval
-## Actb   0.0220569
-## Cdkn1a 0.0072971
-## Mef2c  0.0009336
-## Myf5   0.0223319
-## Myod1  0.1805853
-## Myog   0.0007129
-```
+![plot of chunk barplots-feb28](figure/barplots-feb28.png) 
 
 
 ### March 7 Plate 2 Experiment
@@ -533,27 +486,6 @@ dose.response.aov
 ```
 
 
-Summary Graphs
-----------------
-
-
-
-
-
-```
-## Loading required package: reshape2
-```
-
-![plot of chunk combined-data-barplots](figure/combined-data-barplots.pdf) 
-
-
-
-![plot of chunk separated-data-barplots](figure/separated-data-barplots.png) 
-
-
-![plot of chunk barplots-feb28](figure/barplots-feb28.png) 
-
-
 Session Information
 --------------------
 
@@ -573,7 +505,7 @@ sessionInfo()
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] reshape2_1.4 plyr_1.8.1   car_2.0-20   knitr_1.5   
+## [1] car_2.0-20   reshape2_1.4 xtable_1.7-3 plyr_1.8.1   knitr_1.5   
 ## 
 ## loaded via a namespace (and not attached):
 ## [1] evaluate_0.5.5 formatR_0.10   MASS_7.3-33    nnet_7.3-8    

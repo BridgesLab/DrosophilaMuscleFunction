@@ -17,45 +17,123 @@ This uses the input file `r input_file`.  This is located in `r getwd()`.  It wa
 Omnibums ANOVA, All Experiments Combined
 ------------------------------------------
 
+
+```{r summary-statistics, echo=FALSE}
+library(plyr)
+complete.experiments <- c('20-Feb','feb28 plate 2','mar7 plate 2', 'Mar7 plate1')
+summary.data <- ddply(subset(data.of.interest, Exp %in% complete.experiments), .(gene, Rapamycin), summarise,
+                      mean = mean(value),
+                      sd = sd(value),
+                      se = sd(value)/sqrt(length(value)),
+                      n = length(value))
+
+```
+
 First we did an ANOVA looking at all of the genes, treatments and experiments together.  These results are shown below:
 
 ```{r anova, echo=FALSE}
 #run a one-way anova on all treatment groups from each experiment to see if they vary
 treatment.aov <- aov(value~gene * treatment*Exp, data=data.of.interest)
 #because there is an interaction among all of the variables we need to perform a two way anova for each experiment seperately looking at effect of treatment and gene
-summary(treatment.aov)
+#summary(treatment.aov)
 ```
 
-Since we saw an interaction between the experiment and gene and treatment terms we separated out the experiments and did 2-way ANOVA analyses on each.  These results are below:
+```{r omnibus-aov, echo=FALSE, results='asis'}
+library(xtable)
+print(xtable(treatment.aov, caption="3-Way ANOVA with Interactions for Genes, Treatments and Experiments affecting the  mRNA Levels", digits=c(0,1,1,1,1,24)), type='html')
+```
+
+```{r combined-data-barplots,dev=c('pdf','png'),echo=FALSE}
+require(reshape2)
+summary.means <- dcast(summary.data, Rapamycin~gene, value.var='mean')
+summary.errors <- dcast(summary.data, Rapamycin~gene, value.var='se')
+
+plot <- barplot(as.matrix(summary.means[,2:7]), beside=T, las=1, ylab="mRNA Expression/GAPDH", ylim=c(0,2.8))
+legend("topright", c("DMSO","Rapamycin"), fill=grey.colors(2), bty="n")
+
+superpose.eb <- function (x, y, ebl, ebu = ebl, length = 0.08, ...)
+  arrows(x, y + ebu, x, y - ebl, angle = 90, code = 3,
+  length = length, ...)
+
+superpose.eb(plot, as.matrix(summary.means[,2:7]), as.matrix(summary.errors[,2:7]))
+```
+
+Since we saw an interaction between the experiment and treatment terms we separated out the experiments and did 2-way ANOVA analyses on each.  These results are below:
 
 
-Testing ANOVA Assumptions
+Separated ANOVA Analyses
 ----------------------------
+
+
+
+
+```{r separated-data-barplots,dev=c('png','pdf'),echo=FALSE}
+par(mfrow=c(4,1))
+for (experiment in complete.experiments){
+  summary.data <- ddply(subset(data.of.interest, Exp ==experiment), .(gene, Rapamycin), summarise,
+                      mean = mean(value),
+                      sd = sd(value),
+                      se = sd(value)/sqrt(length(value)),
+                      n = length(value))
+  summary.means <- dcast(summary.data, Rapamycin~gene, value.var='mean')
+  summary.errors <- dcast(summary.data, Rapamycin~gene, value.var='se')
+ymax <- max(summary.means[,3:dim(summary.means)[2]], na.rm=T) + max(summary.errors[,3:dim(summary.means)[2]], na.rm=T)
+plot <- barplot(as.matrix(summary.means[,3:dim(summary.means)[2]]), beside=T, las=2, ylab="mRNA Expression/GAPDH", ylim=c(0,ymax), main=experiment)
+#legend("topleft", c("DMSO","Rapamycin"), fill=grey.colors(2), bty="n")
+superpose.eb(plot, as.matrix(summary.means[,3:dim(summary.means)[2]]), as.matrix(summary.errors[,3:dim(summary.means)[2]]))
+}
+```
 
 We next tested our ANOVA analyses for normality and equal variance by first looking at a Shapiro-Wilk test and then potentially a log-transformed Shapiro-Wilk test, followed by a Levene's Test.  Based on these results we did Student's T-Tests for each gene
 
 ### Feb 28 Experiment
 
-```{r feb-28}, echo=TRUE}
+```{r feb-28}, echo=FALSE}
 #test that the data are normally distributed
 #run shapiro
-shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))))
-print('log transformed')
-shapiro.test(residuals(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))))
+#shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))))$p.value
+#print('log transformed')
+#shapiro.test(residuals(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))))$p.value
 #run levene's test for equal variance 
 library(car)
-leveneTest(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))
+#leveneTest(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))
 #so the assumptions for this model are OK
-print('ANOVA')
-summary(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2')))
+aov.feb28 <- aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))
 
 #pos hoc testing for this model
-print('post hoc T-test')
 feb28.t.tests <- data.frame(row.names=levels(data.of.interest$gene))
 for (test.gene in levels(data.of.interest$gene)) {
-feb28.t.tests[test.gene,'pval'] <- t.test(log(value)~treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'&gene==test.gene),  var.equal=T)$p.value
+feb28.t.tests[test.gene,'pval'] <- t.test(log(value)~treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'&gene==test.gene),  var.equal=T)$p.value #note equal variance
 }
-feb28.t.tests
+feb28.t.tests$padj <- p.adjust(feb28.t.tests$pval, method="BH")
+feb28.t.tests$significant <- feb28.t.tests$padj < 0.05
+```
+**This experiment was chosen as the representative experiment for all the others**.
+We first did a Shapiro-Wilk test on the groups, based on an ANOVA.  The p-value from this was `r shapiro.test(residuals(aov(value~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))))$p.value`.  Based on this, we log-transformed the expression levels and re-did the Shapiro-Wilk Test (now p=`r shapiro.test(residuals(aov(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))))$p.value`), so the assumptions of normality can be met.  We then tested for equal variance using a Levene's test (p=`r leveneTest(log(value)~gene*treatment, data=subset(data.of.interest, Exp=='feb28 plate 2'))$"Pr(>F)"[1]`).  Since both the equal variance and normality assumptions were met we did a two-way ANOVA:
+
+```{r feb-28-aov, echo=FALSE, results='asis'}
+print(xtable(aov.feb28, caption="2-Way ANOVA with Interactions for Treatment and Genes Affecting the log transformed mRNA Levels", digits=c(0,1,1,1,1,11)), type='html')
+```
+Based on the interaction between the treatment term and the gene factor, we did individual Student's T-Tests for each gene:
+
+```{r feb-28-t-tests, echo=FALSE, results='asis'}
+print(xtable(feb28.t.tests, caption="Student's T-Tests for Feb 28 Experiment, Adjusted by Benjamini and Hochberg", digits=4), type='html')
+```
+
+
+```{r barplots-feb28,dev=c('png','pdf'),echo=FALSE}
+  summary.data <- ddply(subset(data.of.interest, Exp =='feb28 plate 2'), .(gene, Rapamycin), summarise,
+                      mean = mean(value),
+                      sd = sd(value),
+                      se = sd(value)/sqrt(length(value)),
+                      n = length(value))
+summary.means <- dcast(summary.data, Rapamycin~gene, value.var='mean')
+summary.errors <- dcast(summary.data, Rapamycin~gene, value.var='se')
+
+plot <- barplot(as.matrix(summary.means[,3:7]), beside=T, las=1, ylab="mRNA Expression/GAPDH", ylim=c(0,1.2))
+legend("topright", c("DMSO","Rapamycin"), fill=grey.colors(2), bty="n")
+
+superpose.eb(plot, as.matrix(summary.means[,3:7]), as.matrix(summary.errors[,3:7]))
 ```
 
 ### March 7 Plate 2 Experiment
@@ -135,69 +213,6 @@ dose.response.aov[test.gene,'pval-low'] <- t.test(mu=1, subset(data.of.interest,
 dose.response.aov[test.gene,'pval-high'] <- t.test(mu=1, subset(data.of.interest, Exp=='dose response '&gene==test.gene& treatment=='RAPA (high)')$value)$p.value
 }
 dose.response.aov
-```
-
-Summary Graphs
-----------------
-
-```{r summary-statistics, echo=FALSE}
-library(plyr)
-complete.experiments <- c('20-Feb','feb28 plate 2','mar7 plate 2', 'Mar7 plate1')
-summary.data <- ddply(subset(data.of.interest, Exp %in% complete.experiments), .(gene, Rapamycin), summarise,
-                      mean = mean(value),
-                      sd = sd(value),
-                      se = sd(value)/sqrt(length(value)),
-                      n = length(value))
-
-```
-
-```{r combined-data-barplots,dev=c('pdf','png'),echo=FALSE}
-require(reshape2)
-summary.means <- dcast(summary.data, Rapamycin~gene, value.var='mean')
-summary.errors <- dcast(summary.data, Rapamycin~gene, value.var='se')
-
-plot <- barplot(as.matrix(summary.means[,2:7]), beside=T, las=1, ylab="mRNA Expression/GAPDH", ylim=c(0,2.8))
-legend("topright", c("DMSO","Rapamycin"), fill=grey.colors(2), bty="n")
-
-superpose.eb <- function (x, y, ebl, ebu = ebl, length = 0.08, ...)
-  arrows(x, y + ebu, x, y - ebl, angle = 90, code = 3,
-  length = length, ...)
-
-superpose.eb(plot, as.matrix(summary.means[,2:7]), as.matrix(summary.errors[,2:7]))
-```
-
-
-```{r separated-data-barplots,dev=c('png','pdf'),echo=FALSE}
-par(mfrow=c(4,1))
-for (experiment in complete.experiments){
-  summary.data <- ddply(subset(data.of.interest, Exp ==experiment), .(gene, Rapamycin), summarise,
-                      mean = mean(value),
-                      sd = sd(value),
-                      se = sd(value)/sqrt(length(value)),
-                      n = length(value))
-  summary.means <- dcast(summary.data, Rapamycin~gene, value.var='mean')
-  summary.errors <- dcast(summary.data, Rapamycin~gene, value.var='se')
-ymax <- max(summary.means[,3:dim(summary.means)[2]], na.rm=T) + max(summary.errors[,3:dim(summary.means)[2]], na.rm=T)
-plot <- barplot(as.matrix(summary.means[,3:dim(summary.means)[2]]), beside=T, las=2, ylab="mRNA Expression/GAPDH", ylim=c(0,ymax), main=experiment)
-#legend("topleft", c("DMSO","Rapamycin"), fill=grey.colors(2), bty="n")
-superpose.eb(plot, as.matrix(summary.means[,3:dim(summary.means)[2]]), as.matrix(summary.errors[,3:dim(summary.means)[2]]))
-}
-```
-
-```{r barplots-feb28,dev=c('png','pdf'),echo=FALSE}
-require(reshape2)
-  summary.data <- ddply(subset(data.of.interest, Exp =='feb28 plate 2'), .(gene, Rapamycin), summarise,
-                      mean = mean(value),
-                      sd = sd(value),
-                      se = sd(value)/sqrt(length(value)),
-                      n = length(value))
-summary.means <- dcast(summary.data, Rapamycin~gene, value.var='mean')
-summary.errors <- dcast(summary.data, Rapamycin~gene, value.var='se')
-
-plot <- barplot(as.matrix(summary.means[,3:7]), beside=T, las=1, ylab="mRNA Expression/GAPDH", ylim=c(0,1.2))
-legend("topright", c("DMSO","Rapamycin"), fill=grey.colors(2), bty="n")
-
-superpose.eb(plot, as.matrix(summary.means[,3:7]), as.matrix(summary.errors[,3:7]))
 ```
 
 Session Information
