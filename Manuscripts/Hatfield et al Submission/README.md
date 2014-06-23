@@ -22,3 +22,5 @@ Figure 5 | Crawling/crawling-analysis.Rmd | Crawling/figure/barplot-raptor.png
 
 
 
+Supplementary Figure 1 | Births/rapamycin-dose-response.Rmd | 
+Supplementary Figure 2 | Births/birth-ratio-analysis.Rmd | Births/figure/24b-births-18c.png
