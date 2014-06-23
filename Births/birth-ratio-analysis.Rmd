@@ -198,7 +198,7 @@ plot <- barplot(t(as.matrix(driver.summarised.data[driver.summarised.data$Driver
         main="24B-Gal4 Driver")
 abline(a=1/3,b=0, lty=2)
 abline(v=12.5)
-legend("topright", c("shRNA/GAL4", "shRNA/+", "GAL4/+"), bty="n", fill=color.scheme)
+legend("topright", c("shRNA/GAL4", "shRNA/Tm3,sb", "GAL4/Tm6B"), bty="n", fill=color.scheme)
 
 superpose.eb <- 
  function (x, y, ebl, ebu = ebl, length = 0.08, ...) 
@@ -234,7 +234,7 @@ plot <- barplot(t(as.matrix(summarised.data.gendered[summarised.data.gendered$Dr
         main=paste("24B-Gal4 Driver", gender, sep="--"))
 abline(a=1/3,b=0, lty=2)
 abline(v=12.5)
-legend("topright", c("shRNA/GAL4", "shRNA/+", "GAL4/+"), bty="n", fill=color.scheme)
+legend("topright", c("shRNA/GAL4", "shRNA/Tm3,sb", "GAL4/Tm6B"), bty="n", fill=color.scheme)
 
 superpose.eb(plot, 
              t(as.matrix(summarised.data.gendered[summarised.data.gendered$Driver=="24B-Gal4"&summarised.data.gendered$Gender==gender,c('KD.prop','shRNA.prop','GAL4.prop')])),
@@ -269,7 +269,7 @@ plot <- barplot(t(as.matrix(driver.summarised.data.18c[,c('KD.prop','shRNA.prop'
         col=color.scheme,
         main="24B-Gal4 Driver at 18C")
 abline(a=1/3,b=0, lty=2)
-legend("topright", c("shRNA/GAL4", "shRNA/+", "GAL4/+"), bty="n", fill=color.scheme)
+legend("topright", c("shRNA/GAL4", "shRNA/Tm3,sb", "GAL4/Tm6B"), bty="n", fill=color.scheme)
 
 
 superpose.eb(plot, 
@@ -291,7 +291,7 @@ plot <- barplot(t(as.matrix(driver.summarised.data[driver.summarised.data$Driver
         main="Hand-Gal4 Driver")
 abline(a=1/3,b=0, lty=2)
 abline(v=12.5)
-legend("topright", c("shRNA/GAL4", "shRNA/+", "GAL4/+"), bty="n", fill=color.scheme)
+legend("topright", c("shRNA/GAL4", "shRNA/Tm3,sb", "GAL4/Tm6B"), bty="n", fill=color.scheme)
 
 
 superpose.eb(plot, 
@@ -314,7 +314,7 @@ plot <- barplot(t(as.matrix(summarised.data.gendered[summarised.data.gendered$Dr
         main=paste("Hand-Gal4 Driver", gender, sep="--"))
 abline(a=1/3,b=0, lty=2)
 abline(v=12.5)
-legend("topright", c("shRNA/GAL4", "shRNA/+", "GAL4/+"), bty="n", fill=color.scheme)
+legend("topright", c("shRNA/GAL4", "shRNA/Tm3,sb", "GAL4/Tm6B"), bty="n", fill=color.scheme)
 
 superpose.eb(plot, 
              t(as.matrix(summarised.data.gendered[summarised.data.gendered$Driver=="Hand-Gal4"&summarised.data.gendered$Gender==gender,c('KD.prop','shRNA.prop','GAL4.prop')])),
@@ -349,7 +349,7 @@ plot <- barplot(t(as.matrix(driver.summarised.data.c179[,c('KD.prop','GAL4.prop'
         col=color.scheme[c(1,3)],
         main="C179 Driver")
 abline(a=1/2,b=0, lty=2)
-legend("topleft", c("shRNA/GAL4","GAL4/+"), bty="n", fill=color.scheme[c(1,3)])
+legend("topleft", c("shRNA/GAL4","GAL4/Tm6B"), bty="n", fill=color.scheme[c(1,3)])
 
 
 superpose.eb(plot, 
