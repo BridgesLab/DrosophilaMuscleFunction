@@ -1,22 +1,10 @@
-\documentclass{article}
+Analysis of Birth Ratios
+==========================
 
-\usepackage{fullpage}
-\usepackage[colorlinks=true]{hyperref}
-\usepackage[tableposition=top]{caption}
-\usepackage[utf8]{inputenc}
+Experimental Design
+--------------------
 
-\begin{document}
-\SweaveOpts{concordance=FALSE}
-
-\title{Analysis of Births Ratios from Muscle TSC1/Raptor Flies}
-\author{Isabelle Hatfield and Dave Bridges}
-\date{\today}
-\maketitle
-
-
-\section*{Experimental Design}
-
-<<data-input, echo=FALSE>>=
+```{r data-input, echo=FALSE}
 spreadsheet_location <- 'https://docs.google.com/spreadsheet/pub?key=0Aitfmor6rCjYdFZsdGpxcmhLX2lNd2lNWUN6T014Qnc&single=true&gid=0&output=csv' 
 
 mapping.data <- read.csv('../Data/gene_mapping.csv')
@@ -38,13 +26,14 @@ data$temp18c <- substring(data$CrossName, 1,2) == "x-"
 data.18c <- data[data$temp18c==TRUE,]
 data.c179 <- data[data$Driver=='C179-Gal4',]
 data <- droplevels(data[data$temp18c==FALSE&data$Driver!='C179-Gal4',])
-@
+```
 
-These data are stored in \verb+\Sexpr{getwd()}+, with the raw data saved in \verb+\Sexpr{data_file_name}+.  This script was most recently run on \Sexpr{date()}
+These data are stored with the raw data saved in`r data_file_name`.  This script was most recently run on `r date()`.
 
-\section*{Strain Summaries}
+Strain Summaries
+------------------
 
-<<data-analysis, echo=FALSE>>=
+```{r data-analysis, echo=FALSE}
 gene.summarised.data <- ddply(data, .(Driver,Gene), summarise, 
       KD = sum(WT),
       shRNA = sum(Ser.Sb),
@@ -173,41 +162,42 @@ for (n in seq(1,dim(driver.summarised.data.18c)[1])) {
   driver.summarised.data.18c[n,]$pval <- test$p.value  
 }
 driver.summarised.data.18c$padj <- p.adjust(driver.summarised.data.18c$pval, method="BH")
-@
+```
 
-So far this analysis includes \textbf{\Sexpr{sum(all.flies)}} flies from \Sexpr{length(levels(data$Cross))} crosses.  Statistics are based on a Chi Squared Test, and are  adjusted for multiple observation by the method of Benjamini and Hochberg.  These statistics exclude the genotypically WT (dual balancer chromosome) strains, which have significantly less progeny in nearly all cases (see Table \ref{tab:all_progeny_data}).  Counts and p-values are shown in Table \ref{tab:driver_summarised_data} and Figures \ref{fig:24b-barplot} and \ref{fig:hand-barplot} for all drivers, Table \ref{tab:summarised_data} for all crosses and Table \ref{tab:gendered_data} with gendered crossed data.  Summarized per cross the data are below.
+So far this analysis includes `r sum(all.flies)` flies from `r length(levels(data$Cross))` crosses.  Statistics are based on a Chi Squared Test, and are  adjusted for multiple observation by the method of Benjamini and Hochberg.  These statistics exclude the genotypically WT (dual balancer chromosome) strains, which have significantly less progeny in nearly all cases (see Table \ref{tab:all_progeny_data}).  Counts and p-values are shown in Table \ref{tab:driver_summarised_data} and Figures \ref{fig:24b-barplot} and \ref{fig:hand-barplot} for all drivers, Table \ref{tab:summarised_data} for all crosses and Table \ref{tab:gendered_data} with gendered crossed data.  Summarized per cross the data are below.
 
-\subsection*{Pre-Eclosure Lethality of Raptor Strains with 24B-Gal4}
-The three Raptor knockout strains all had much less progeny than would be expected with 24B-GAL4 driven expression.  The adjusted p-values for these effects are \Sexpr{paste(driver.summarised.data[4:6,'padj'], collapse=", ")} respectively for shRNA's \Sexpr{paste(driver.summarised.data[4:6,'UAS'], collapse=", ")}.
+## Pre-Eclosure Lethality of Raptor Strains with 24B-Gal4
 
-\subsection*{Crosses with C179-Gal4}
+The three Raptor knockout strains all had much less progeny than would be expected with 24B-GAL4 driven expression.  The adjusted p-values for these effects are `r paste(driver.summarised.data[4:6,'padj'], collapse=", ")` respectively for shRNA's `r paste(driver.summarised.data[4:6,'UAS'], collapse=", ")`.
+
+## Crosses with C179-Gal4
 Since there was embryonic lethality of the Raptor strains with 24B-Gal4 we repeated these crosses with C179-Gal4.  These results are shown in Tables \ref{tab:179-all} and \ref{tab:179-gendered} as well as Figure \ref{fig:c157-figure}.  There is a gender specific effect for only one of these crosses (see Table \ref{tab:179-fisher} for Fisher tests comparing gender for each shRNA strain and Figure \ref{fig:179-gendered}).
 
-\subsection*{Effects of 18C}
+### Effects of 18C
 Since we observed few births at 24C, we repeated several crosses at 18C using the TSC shRNA lines.  These data are summarised in Table \ref{tab:18c-data} and Figure \ref{fig:24b-barplot-18c}
 
-<<label=data-tables,echo=FALSE,results=tex>>=
+```{r data-tables,echo=FALSE,results='asis'}
 require(xtable)
-print(xtable(gene.summarised.data, caption="Gene Level Summarised Data", label="tab:gene_summarised_data", digits = c(rep(0,8),5,5)), include.rownames=F)
-print(xtable(driver.summarised.data[order(driver.summarised.data$Driver,driver.summarised.data$UAS),], caption="Driver Level Summarised Data", label="tab:driver_summarised_data", digits = c(rep(0,8),5,5)), include.rownames=F)
-print(xtable(driver.summarised.data.c179, caption="Driver Level Summarized Data for C179-Gal4 Crosses", label="tab:179-all", digits = c(rep(0,8),3,3)), include.rownames=F)
-print(xtable(summarised.data.gendered.c179, caption="Driver Level, Gender Separated Summarized Data for C179-Gal4 Crosses", label="tab:179-gendered", digits = c(rep(0,9),4,4)), include.rownames=F)
-print(xtable(fisher.c179.gender, caption="Fisher Tests Comparing Gender Effects on C157/Raptor shRNA Crosses", label="tab:179-fisher", digits = c(0,4,4)))
-print(xtable(driver.summarised.data.18c, caption="Driver Level Summarized Data for 18C Crosses", label="tab:18c-data", digits = c(rep(0,8),7,7)), include.rownames=F)
-print(xtable(summarised.data[order(summarised.data$Cross),], caption="Cross Level Summarised Data", label="tab:summarised_data", digits = c(rep(0,7),5,5)), include.rownames=F)
-print(xtable(summarised.data.gendered[order(summarised.data.gendered$Driver, summarised.data.gendered$UAS),], caption="Gendered and Cross Level Summarised Data", label="tab:gendered_data", digits = c(rep(0,9),5,5)), include.rownames=F)
-print(xtable(all.progeny.padj, caption="Summarized Data Including Double Balancer Strains", label="tab:all_progeny_data", digits = c(0,5,5)))
-@
+print(xtable(gene.summarised.data, caption="Gene Level Summarised Data", label="tab:gene_summarised_data", digits = c(rep(0,8),5,5)), include.rownames=F, type='html')
+print(xtable(driver.summarised.data[order(driver.summarised.data$Driver,driver.summarised.data$UAS),], caption="Driver Level Summarised Data", label="tab:driver_summarised_data", digits = c(rep(0,8),5,5)), include.rownames=F, type='html')
+print(xtable(driver.summarised.data.c179, caption="Driver Level Summarized Data for C179-Gal4 Crosses", label="tab:179-all", digits = c(rep(0,8),3,3)), include.rownames=F, type='html')
+print(xtable(summarised.data.gendered.c179, caption="Driver Level, Gender Separated Summarized Data for C179-Gal4 Crosses", label="tab:179-gendered", digits = c(rep(0,9),4,4)), include.rownames=F, type='html')
+print(xtable(fisher.c179.gender, caption="Fisher Tests Comparing Gender Effects on C157/Raptor shRNA Crosses", label="tab:179-fisher", digits = c(0,4,4)), type='html')
+print(xtable(driver.summarised.data.18c, caption="Driver Level Summarized Data for 18C Crosses", label="tab:18c-data", digits = c(rep(0,8),7,7)), include.rownames=F, type='html')
+print(xtable(summarised.data[order(summarised.data$Cross),], caption="Cross Level Summarised Data", label="tab:summarised_data", digits = c(rep(0,7),5,5)), include.rownames=F, type='html')
+print(xtable(summarised.data.gendered[order(summarised.data.gendered$Driver, summarised.data.gendered$UAS),], caption="Gendered and Cross Level Summarised Data", label="tab:gendered_data", digits = c(rep(0,9),5,5)), include.rownames=F, type='html')
+print(xtable(all.progeny.padj, caption="Summarized Data Including Double Balancer Strains", label="tab:all_progeny_data", digits = c(0,5,5)), type='html')
+```
 
-\subsection*{Crosses with no Knockdown Progeny}
+## Crosses with no Knockdown Progeny
 
 So far some crosses have produced no knockdown progeny.  These are described in Table \ref{tab:no_kd_flies}
 
-<<label=data-tables-2,echo=FALSE,results=tex>>=
+```{r data-tables-2,echo=FALSE,results='asis'}
 print(xtable(summarised.data.gendered[summarised.data.gendered$KD == 0,1:6], caption="Crosses with no Knockdown Flies", label="tab:no_kd_flies"))
-@
+```
 
-<<label=24b-figure,include=FALSE, echo=FALSE>>=
+```{r 24b-figure, echo=FALSE, dev=c('png','pdf')}
 driver.summarised.data$Total.No.WT <- rowSums(driver.summarised.data[,c('KD','shRNA','GAL4') ])
 driver.summarised.data$KD.prop <- driver.summarised.data$KD/driver.summarised.data$Total.No.WT
 driver.summarised.data$shRNA.prop <- driver.summarised.data$shRNA/driver.summarised.data$Total.No.WT
@@ -241,9 +231,9 @@ superpose.eb <-
 superpose.eb(plot, 
              t(as.matrix(driver.summarised.data[driver.summarised.data$Driver=="24B-Gal4",c('KD.prop','shRNA.prop','GAL4.prop')])),
              t(as.matrix(driver.summarised.data[driver.summarised.data$Driver=="24B-Gal4",c('KD.err','shRNA.err','GAL4.err')])))
-@
+```
 
-<<label=24b-figure-18c,include=FALSE, echo=FALSE>>=
+```{r 24b-figure-18c, echo=FALSE, dev=c('png','pdf')}
 driver.summarised.data.18c$Total.No.WT <- rowSums(driver.summarised.data.18c[,c('KD','shRNA','GAL4') ])
 driver.summarised.data.18c$KD.prop <- driver.summarised.data.18c$KD/driver.summarised.data.18c$Total.No.WT
 driver.summarised.data.18c$shRNA.prop <- driver.summarised.data.18c$shRNA/driver.summarised.data.18c$Total.No.WT
@@ -268,9 +258,9 @@ legend("topright", c("shRNA/GAL4", "shRNA/+", "GAL4/+"), bty="n", fill=color.sch
 superpose.eb(plot, 
              t(as.matrix(driver.summarised.data.18c[,c('KD.prop','shRNA.prop','GAL4.prop')])),
              t(as.matrix(driver.summarised.data.18c[,c('KD.err','shRNA.err','GAL4.err')])))
-@
+```
 
-<<label=hand-figure,include=FALSE, echo=FALSE>>=
+```{r hand-figure, echo=FALSE, dev=c('png','pdf')}
 plot <- barplot(t(as.matrix(driver.summarised.data[driver.summarised.data$Driver=="Hand-Gal4",c('KD.prop','shRNA.prop','GAL4.prop')])),
         names.arg=driver.summarised.data[driver.summarised.data$Driver=="Hand-Gal4",]$UAS,
         beside=T,las=2,
@@ -286,9 +276,9 @@ legend("topright", c("shRNA/GAL4", "shRNA/+", "GAL4/+"), bty="n", fill=color.sch
 superpose.eb(plot, 
              t(as.matrix(driver.summarised.data[driver.summarised.data$Driver=="Hand-Gal4",c('KD.prop','shRNA.prop','GAL4.prop')])),
              t(as.matrix(driver.summarised.data[driver.summarised.data$Driver=="Hand-Gal4",c('KD.err','shRNA.err','GAL4.err')])))
-@
+```
 
-<<label=c179-figure,include=FALSE, echo=FALSE>>=
+```{r c179-figure, echo=FALSE, dev=c('png','pdf')}
 driver.summarised.data.c179$Total.No.WT <- rowSums(driver.summarised.data.c179[,c('KD','shRNA','GAL4') ])
 driver.summarised.data.c179$KD.prop <- driver.summarised.data.c179$KD/driver.summarised.data.c179$Total.No.WT
 driver.summarised.data.c179$GAL4.prop <- driver.summarised.data.c179$GAL4/driver.summarised.data.c179$Total.No.WT
@@ -311,9 +301,9 @@ legend("topleft", c("shRNA/GAL4","GAL4/+"), bty="n", fill=color.scheme[c(1,3)])
 superpose.eb(plot, 
              t(as.matrix(driver.summarised.data.c179[,c('KD.prop','GAL4.prop')])),
              t(as.matrix(driver.summarised.data.c179[,c('KD.err','GAL4.err')])))
-@
+```
 
-<<label=c179-gendered-figure,include=FALSE, echo=FALSE>>=
+```{r c179-gendered-figure, echo=FALSE, dev=c('png','pdf')}
 summarised.data.gendered.c179$Total.No.WT <- rowSums(summarised.data.gendered.c179[,c('KD','GAL4') ])
 summarised.data.gendered.c179$KD.prop <- summarised.data.gendered.c179$KD/summarised.data.gendered.c179$Total.No.WT
 summarised.data.gendered.c179$GAL4.prop <- summarised.data.gendered.c179$GAL4/summarised.data.gendered.c179$Total.No.WT
@@ -336,61 +326,11 @@ legend("topright", levels(summarised.data.gendered.c179$Gender), bty="n", fill=g
 superpose.eb(plot, 
              as.matrix(dcast(summarised.data.gendered.c179, Gender~UAS, value.var='KD.prop')[2:4]),
              as.matrix(dcast(summarised.data.gendered.c179, Gender~UAS, value.var='KD.err')[2:4]))
-@
+```
 
-\begin{figure}
-\begin{center}
-<<label=24b-figure,fig=TRUE,echo=FALSE>>=
-<<24b-figure>>
-@
-\end{center}
-\caption{Distribution of Strains for 24B-Gal4}
-\label{fig:24b-barplot}
-\end{figure}
+## General Traits
 
-\begin{figure}
-\begin{center}
-<<label=24b-figure-18c,fig=TRUE,echo=FALSE>>=
-<<24b-figure-18c>>
-@
-\end{center}
-\caption{Distribution of Strains for 24B-Gal4 at 18C}
-\label{fig:24b-barplot-18c}
-\end{figure}
-
-\begin{figure}
-\begin{center}
-<<label=hand-figure,fig=TRUE,echo=FALSE>>=
-<<hand-figure>>
-@
-\end{center}
-\caption{Distribution of Strains for Hand-Gal4}
-\label{fig:hand-barplot}
-\end{figure}
-
-\begin{figure}
-\begin{center}
-<<label=c179-figure,fig=TRUE,echo=FALSE>>=
-<<c179-figure>>
-@
-\end{center}
-\caption{C179-Gal4 Driven Raptor Knockdown Strains}
-\label{fig:c179-figure}
-\end{figure}
-
-\begin{figure}
-\begin{center}
-<<label=c179-gendered-figure,fig=TRUE,echo=FALSE>>=
-<<c179-gendered-figure>>
-@
-\end{center}
-\caption{Gender Specific Differences Between C517-Gal4 Driven Raptor Knockdown Strains}
-\label{fig:179-gendered}
-\end{figure}
-
-\section*{General Traits}
-
-<<label=generations,include=FALSE, echo=FALSE>>=
+```{r generations, echo=FALSE, dev=c('png','pdf')}
 with(data, plot(jitter(Generation),Total,
                 pch=18,las=2,
                 ylab="Flies Born Per Generation",
@@ -403,50 +343,20 @@ lines(c(1:7),
 lines(c(1:7), 
       predict(generation.lm, newdata=list(Generation=c(1:7)), interval="confidence")[,'upr'], 
       lty=2)
-@
+```
 
-\begin{figure}
-\begin{center}
-<<label=generations,fig=TRUE,echo=FALSE>>=
-<<generations>>
-@
-\end{center}
-\caption{Number of flies eclosed over the course of several generations.  Dashed lines indicate 95\% confidence intervals, Male and female flies are separated in this analysis.}
-\label{fig:generations}
-\end{figure}
 
-<<label=gender,include=FALSE, echo=FALSE>>=
+```{r gender, echo=FALSE, dev=c('png','pdf')}
 boxplot(Total~Gender,data=data, col="grey",
         ylab="Flies Eclosed Per Vial")
-@
+```
 
-\begin{figure}
-\begin{center}
-<<label=gender,fig=TRUE,echo=FALSE>>=
-<<gender>>
-@
-\end{center}
-\caption{Gender distribution of eclosed flies.}
-\label{fig:gender}
-\end{figure}
+To test how many generations we can get out of 10 female flies in a vial, we examined the number of births in a vial, vs the generation of that vial.  These data are in Figure \ref{fig:generations}.  There is no detectable decrease in fecundity over time (p=`r anova(generation.lm, drop1(generation.lm))[1,5]`).
 
-To test how many generations we can get out of 10 female flies in a vial, we examined the number of births in a vial, vs the generation of that vial.  These data are in Figure \ref{fig:generations}.  There is no detectable decrease in fecundity over time (p=\Sexpr{round(anova(generation.lm, drop1(generation.lm))[1,5],3)}).
-
-On the other hand, there was a significant difference between the number of Male flies born vs the number of Female flies born (p=\Sexpr{round(t.test(data$Total~data$Gender)$p.value,5)}).  This is visulized in Figure \ref{fig:gender}
+On the other hand, there was a significant difference between the number of Male flies born vs the number of Female flies born (p=`r t.test(data$Total~data$Gender)$p.value`).  This is visulized in Figure \ref{fig:gender}
      
-<<bibliography, include=F, echo=F>>=
-require(bibtex)
-write.bib(c(names(sessionInfo()$otherPkgs),'base','stats','utils'), file='birth-references.bib')
-@
 
-The key packages used in this analysis were R \cite{base} and plyr \cite{plyr}
-
-\bibliography{birth-references}
-\bibliographystyle{unsrt}
-
-\section*{Session Information}
-<<sessionInfo, results=tex, echo=F>>=
-toLatex(sessionInfo())
-@
-
-\end{document}
+## Session Information
+```{r sessionInfo, echo=F}
+sessionInfo()
+```
