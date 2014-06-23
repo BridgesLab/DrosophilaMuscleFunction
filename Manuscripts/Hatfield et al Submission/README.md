@@ -16,6 +16,8 @@ Data which will be presented in the Hatfield manuscript:
 Figure | Script | Raw File
 --- | --- | --- 
 Supplementary Figure 1 | Births/rapamycin-dose-response.Rmd | Births/figure/dose-response-flies-pupae.png 
+Figure 2A | Births/birth-ratio-analysis.Rmd | Births/figure/hand-births-all.png
+Figure 2B | Births/birth-ratio-analysis.Rmd | Births/figure/24b-births-all.png
 Figure 5 | Crawling/crawling-analysis.Rmd | Crawling/figure/barplot-raptor.png
 
 
