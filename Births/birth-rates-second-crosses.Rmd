@@ -1,24 +1,10 @@
-\documentclass{article}
+# Analysis of Birth Ratios for Muscle TSC1/Raptor Flies -- Second Crosses
 
-\usepackage{fullpage}
-\usepackage[colorlinks=true]{hyperref}
-\usepackage[tableposition=top]{caption}
-\usepackage[utf8]{inputenc}
+## Experimental Design
 
-\begin{document}
-\SweaveOpts{concordance=FALSE}
+This was for the second batch of knockdown crosses in which only homozygous drivers were used.
 
-\title{Analysis of Birth Ratios for Muscle TSC1/Raptor Flies -- Second Crosses}
-\author{Isabelle Hatfield and Dave Bridges}
-\date{\today}
-\maketitle
-
-
-\section*{Experimental Design}
-
-This was for the second batch of \textit{C179-Gal4} + \textit{Raptor/Tsc1} knockdown crosses.
-
-<<data-input, echo=FALSE>>=
+```{r data-input, echo=FALSE}
 births_worksheet_location <- 'https://docs.google.com/spreadsheet/pub?key=0Aitfmor6rCjYdHpHTk1BZVh0MFEtNDV6QVI2V2RWSEE&single=true&gid=0&output=csv' 
 pupae_worksheet_location <- 'https://docs.google.com/spreadsheet/pub?key=0Aitfmor6rCjYdDVMbEVRd2NLbEpTQUM3REpKSEY3ckE&single=true&gid=0&output=csv'
 mapping_file <- '../Data/gene_mapping.csv'
@@ -31,15 +17,15 @@ birth_data <- read.csv(birth_file_name)
 pupae_filename <- '../Data/Pupae Inspection Data.csv'
 download.file(pupae_worksheet_location, pupae_filename, method="curl")
 pupae_data <- read.csv(pupae_filename)
-@
+```
 
-These data are stored in \verb+\Sexpr{getwd()}+, with the raw data saved in \verb+\Sexpr{birth_file_name}+ for the births and \verb+\Sexpr{pupae_filename}+ for the pupae inspection.  This script was most recently run on \Sexpr{date()}.
+These data are the raw data saved in `r birth_file_name` for the births and `r pupae_filename` for the pupae inspection.  This script was most recently run on `r date()`.
 
-\section*{C179-GAL4 Driver}
+## C179-GAL4 Driver
 
 This analysis is just for the C179 Driver.
 
-<<data-collection, echo=False>>=
+```{r data-collection-c179, echo=FALSE}
 library(reshape2)
 combined_pupae_data <- merge(pupae_data, dcast(droplevels(subset(birth_data, Female != 'Mef-Gal4')), Female+Male+CrossName~Gender, value.var='Count', sum), by='CrossName', all=T)
 combined_pupae_data$Live.Flies <- combined_pupae_data$Females + combined_pupae_data$Males
@@ -98,26 +84,24 @@ dead_pupae_summary <- ddply(subset(annotated_pupae_data, Driver=='C179-Gal4'), ~
                         sd = sd(Dead.Pupae.pct, na.rm=T),
                         rel.error = sd(Dead.Pupae.pct, na.rm=T)/mean(Dead.Pupae.pct, na.rm=T)*100,
                         n = length(Dead.Pupae.pct))
-@
+```
 
-<<total-pupae-statistics, echo=FALSE>>=
+```{r c179-total-pupae-statistics, echo=FALSE}
 #perform anova testing first for an effect of the driver, then for an effect of the shRNAs
 total.pupae.aov <- aov(Total.Pupae~Driver*UAS, data=annotated_pupae_data)
-@
+```
 
-\section*{Analysis of Pupae}
+### Analysis of Pupae
 
 We inspected the pupae from vials, 21 days after the cross was set up and counted how many pupae were present, and how many had dead flies in them.  These data are summarized in  Table \ref{tab:total-pupae-summary} and in Figure \ref{fig:total-pupae-barplot}.  To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  The p-value for that comparason is \textbf{\Sexpr{round(summary(total.pupae.aov)[[1]][["Pr(>F)"]][2],3)}} for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-pupae-anova}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and \textit{C179/+} progeny.  The p-value for the Driver having an effect is \textbf{\Sexpr{round(t.test(Total.Pupae~Driver, subset(annotated_pupae_data, UAS==36304))$p.value, 3)}}.  This indicated that there was no significant effect on the number of pupae.
 
-<<label=pupae-summary-tables,echo=FALSE,results=tex>>=
-require(xtable)
-print(xtable(total_pupae_summary, caption="Summary of the Number of Pupae by Driver and UAS for C179-GAL4", label="tab:total-pupae-summary"), include.rownames=F)
-print(xtable(total.pupae.aov, caption="ANOVA for the Number of Pupae by Driver and UAS for C179-GAL4", label="tab:total-pupae-anova"))
-@
+```{r pupae-summary-tables,echo=FALSE,results='asis', message=FALSE}
+library(xtable)
+print(xtable(total_pupae_summary, caption="Summary of the Number of Pupae by Driver and UAS for C179-GAL4", label="tab:total-pupae-summary"), include.rownames=F, type='html')
+print(xtable(total.pupae.aov, caption="ANOVA for the Number of Pupae by Driver and UAS for C179-GAL4", label="tab:total-pupae-anova"), type='html')
+```
 
-\begin{figure}
-\begin{center}
-<<label=total-pupae-barplot,fig=TRUE,echo=FALSE>>=
+```{r c179-total-pupae-barplot,fig=TRUE,echo=FALSE}
 ymax <- max(total_pupae_summary$mean+total_pupae_summary$se, na.rm=T)
 plot <- barplot(total_pupae_summary$mean,
         beside=T, las=1,
@@ -138,18 +122,12 @@ superpose.eb <-
 superpose.eb(plot, 
              total_pupae_summary$mean,
              total_pupae_summary$se)
-@
-\end{center}
-\caption{Total number of pupae counted.  Presented as mean +/- standard error.}
-\label{fig:total-pupae-barplot}
-\end{figure}
+```
 
 
-\section*{Analysis of Dead Pupae}
+### Analysis of Dead Pupae
 
-\begin{figure}
-\begin{center}
-<<label=dead-pupae-barplot,fig=TRUE,echo=FALSE>>=
+```{r c-179-dead-pupae-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
 ymax <- max(dead_pupae_summary$mean+dead_pupae_summary$se, na.rm=T)
 plot <- barplot(dead_pupae_summary$mean,
         beside=T, las=1,
@@ -165,13 +143,9 @@ legend("topleft", levels(dead_pupae_summary$Gene), fill= palette()[1:length(leve
 superpose.eb(plot, 
              dead_pupae_summary$mean,
              dead_pupae_summary$se)
-@
-\end{center}
-\caption{Proportion of pupae with dead flies.  Presented as mean +/- standard error.}
-\label{fig:dead-pupae-barplot}
-\end{figure}
+```
 
-<<dead-pupae-statistics, echo=FALSE>>=
+```{r c179-dead-pupae-statistics, echo=FALSE}
 #perform anova testing first for an effect of the driver, then for an effect of the shRNAs
 pupae.aov <- aov(Dead.Pupae.pct~Driver*UAS, data=annotated_pupae_data)
 pupae.aov.c179 <- aov(Dead.Pupae.pct~UAS, data=subset(annotated_pupae_data, Driver=='C179-Gal4'))
@@ -181,7 +155,7 @@ pupae.dunnett <- glht(pupae.aov.c179, linfct=mcp(UAS="Dunnett"))
 #made a table with the dunnet test results
 pupae.dunnett.summary <- cbind(summary(pupae.dunnett)$test$coefficients, summary(pupae.dunnett)$test$pvalues)
 colnames(pupae.dunnett.summary) <- c("Effect Size (%)", "p-value")
-@
+```
 
 A summary of the percent of dead pupae for each cross is shown in Table \ref{tab:dead-pupae-summary} and in Figure \ref{fig:dead-pupae-barplot}.
 To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  The p-value for that comparason is \textbf{\Sexpr{round(summary(pupae.aov)[[1]][["Pr(>F)"]][2],9)}} for the UAS.  The results of this ANOVA are shown in Table \ref{tab:dead-pupae-anova}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and \textit{C179/+} progeny.  The p-value for the Driver having an effect is \textbf{\Sexpr{round(t.test(Dead.Pupae.pct~Driver, subset(annotated_pupae_data, UAS=36304))$p.value, 6)}}.  We therefore excluded the +/+ progeny from the analysis and compared with the \textit{C179-Gal4/+} progeny as a control.  
@@ -189,17 +163,16 @@ To analyse these data, first we did an ANOVA testing for whether the UAS has an 
 The ANOVA for this comparason yielded a p-value for the UAS of \textbf{\Sexpr{round(summary(pupae.aov.c179)[[1]][["Pr(>F)"]][1],6)}}.  The results of this ANOVA are in Table \ref{tab:dead-pupae-anova-c179}.  Since this ANOVA was significant, we did a post-hoc test to look at each strain relative to the control.  To test for differences compared to the \textit{C179-GAL4/+} control strain, we did a Dunnett's test.  The results of this test are shown in Table \ref{tab:dead-pupae-dunnett}.  
 
 
-<<label=pupae-summary-tables,echo=FALSE,results=tex>>=
-require(xtable)
-print(xtable(dead_pupae_summary, caption="Summary of Percent of Dead Pupae by Driver and UAS for C179-GAL4", label="tab:dead-pupae-summary"), include.rownames=F)
-print(xtable(pupae.aov, caption="ANOVA for Percent of Dead Pupae by Driver and UAS for C179-GAL4", label="tab:dead-pupae-anova"))
-print(xtable(pupae.aov.c179, caption="ANOVA for Percent of Dead Pupae by UAS for C179-GAL4", label="tab:dead-pupae-anova-c179"))
-print(xtable(pupae.dunnett.summary, caption="Dunnett's Test for the Percent of Dead Pupae Comparing to Control (C179-Gal4/+)", label="tab:dead-pupae-dunnett", digits=c(0,1,7)))
-@
+```{r c179-pupae-summary-tables,echo=FALSE,results='asis'}
+print(xtable(dead_pupae_summary, caption="Summary of Percent of Dead Pupae by Driver and UAS for C179-GAL4", label="tab:dead-pupae-summary"), include.rownames=F, type='html')
+print(xtable(pupae.aov, caption="ANOVA for Percent of Dead Pupae by Driver and UAS for C179-GAL4", label="tab:dead-pupae-anova"), type='html')
+print(xtable(pupae.aov.c179, caption="ANOVA for Percent of Dead Pupae by UAS for C179-GAL4", label="tab:dead-pupae-anova-c179"), type='html')
+print(xtable(pupae.dunnett.summary, caption="Dunnett's Test for the Percent of Dead Pupae Comparing to Control (C179-Gal4/+)", label="tab:dead-pupae-dunnett", digits=c(0,1,7)), type='html')
+```
      
-\section*{Analysis of Total Number of Flies}
+### Analysis of Total Number of Flies
 
-<<total-fly-statistics, echo=FALSE>>=
+```{r c179-total-fly-statistics, echo=FALSE}
 #perform anova testing first for an effect of the driver, then for an effect of the shRNAs
 total.flies.aov <- aov(Live.Flies~Driver*UAS, data=annotated_pupae_data)
 restricted.flies.aov <- aov(Live.Flies~UAS, data=subset(annotated_pupae_data, Driver=='C179-Gal4'))
@@ -207,11 +180,9 @@ total.flies.dunnett <- glht(restricted.flies.aov , linfct=mcp(UAS="Dunnett"))
 #made a table with the dunnet test results
 fly.dunnett.summary <- cbind(summary(total.flies.dunnett)$test$coefficients, summary(total.flies.dunnett)$test$pvalues)
 colnames(fly.dunnett.summary) <- c("Effect Size (%)", "p-value")
-@
+```
 
-\begin{figure}
-\begin{center}
-<<label=total-fly-barplot,fig=TRUE,echo=FALSE>>=
+```{r c179-total-fly-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
 ymax <- max(total_fly_summary$mean+total_fly_summary$se, na.rm=T)
 plot <- barplot(total_fly_summary$mean,
         beside=T, las=1,
@@ -227,25 +198,21 @@ legend("top", levels(total_fly_summary$Gene), fill= palette()[1:length(levels(to
 superpose.eb(plot, 
              total_fly_summary$mean,
              total_fly_summary$se)
-@
-\end{center}
-\caption{Total number of flies counted.  Presented as mean +/- standard error.}
-\label{fig:total-flies-barplot}
-\end{figure}
+```
 
 We inspected the total number of flies eclosed up to 21 days after the cross was set up.  These data are summarized in  Table \ref{tab:total-flies-summary} and in Figure \ref{fig:total-flies-barplot}.  To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  The p-value for that comparason is \textbf{\Sexpr{round(summary(total.flies.aov)[[1]][["Pr(>F)"]][2],4)}} for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-flies-anova}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and \textit{C179/+} progeny.  The p-value for the Driver having an effect is \textbf{\Sexpr{round(t.test(Live.Flies~Driver, subset(annotated_pupae_data, UAS=36304))$p.value, 3)}}.  
 
 Due to the significant ANOVA we performed a post-hoc Dunnett's test using the \textit{C179/+} progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of \textbf{\Sexpr{round(summary(restricted.flies.aov)[[1]][["Pr(>F)"]][1],7)}} for the UAS.  The results of that test are in Table \ref{tab:total-flies-dunnett}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of flies.
 
-<<label=total-fly-summary-tables,echo=FALSE,results=tex>>=
-print(xtable(total_fly_summary, caption="Summary of the Number of Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-summary"), include.rownames=F)
-print(xtable(total.flies.aov, caption="ANOVA for the Number of Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-anova"))
-print(xtable(fly.dunnett.summary, caption="Dunnett's Test for the Number of Flies Comparing to Control (C179-Gal4/+)", label="tab:total-flies-dunnett", digits=c(0,1,7)))
-@
+```{r c179-total-fly-summary-tables,echo=FALSE,results='asis'}
+print(xtable(total_fly_summary, caption="Summary of the Number of Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-summary"), include.rownames=F, type='html')
+print(xtable(total.flies.aov, caption="ANOVA for the Number of Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-anova"), type='html')
+print(xtable(fly.dunnett.summary, caption="Dunnett's Test for the Number of Flies Comparing to Control (C179-Gal4/+)", label="tab:total-flies-dunnett", digits=c(0,1,7)), type='html')
+```
 
-\subsection*{Analysis of Number of Flies by Gender}
+### Analysis of Number of Flies by Gender
 
-<<total-fly-statistics-gender, echo=FALSE>>=
+```{r c179-total-fly-statistics-gender, echo=FALSE}
 #perform anova testing first for an effect of the driver, then for an effect of the shRNAs
 total.flies.aov.males <- aov(Males~Driver*UAS, data=annotated_pupae_data)
 total.flies.aov.females <- aov(Females~Driver*UAS, data=annotated_pupae_data)
@@ -261,7 +228,7 @@ fly.dunnett.summary.gendered <- cbind(summary(total.flies.dunnett.males)$test$co
                              summary(total.flies.dunnett.females)$test$coefficients, 
                              summary(total.flies.dunnett.females)$test$pvalues)
 colnames(fly.dunnett.summary.gendered) <- c("Male Effect Size (%)", "Male p-value","Female Effect Size (%)", "Female p-value")
-@
+```
 
 For the flies which had been born, we could separate these data based on gender.  The separated data is summarized in Tables \ref{tab:total-flies-summary-males} and \ref{tab:total-flies-summary-females}.  These data are graphed in Figure \ref{fig:total-flies-barplot-gendered}.  
 
@@ -271,17 +238,15 @@ For Females, first we did an ANOVA testing for whether the UAS has an effect on 
 
 Due to the significant ANOVA we performed a post-hoc Dunnett's test using the \textit{C179/+} progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of \textbf{\Sexpr{round(summary(restricted.flies.aov.males)[[1]][["Pr(>F)"]][1],9)}} for the UAS for males and a p-value of \textbf{\Sexpr{round(summary(restricted.flies.aov.females)[[1]][["Pr(>F)"]][1],5)}} for the UAS for the females.  The results of that test are in Tables \ref{tab:total-flies-dunnett-gendered}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of male flies, but only 34814 had significantly less females.
 
-<<label=total-fly-summary-gender-tables,echo=FALSE,results=tex>>=
-print(xtable(total_fly_summary_males, caption="Summary of the Number of Male Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-summary-males"), include.rownames=F)
-print(xtable(total_fly_summary_females, caption="Summary of the Number of Female Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-summary-females"), include.rownames=F)
-print(xtable(total.flies.aov.males, caption="ANOVA for the Number of Male Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-anova-males"))
-print(xtable(total.flies.aov.females, caption="ANOVA for the Number of Female Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-anova-females"))
-print(xtable(fly.dunnett.summary.gendered, caption="Dunnett's Test for the Number of Males and Females Comparing to Control (C179-Gal4/+)", label="tab:total-flies-dunnett-gendered", digits=c(0,1,7,1,7)))
-@
+```{r c179-total-fly-summary-gender-tables,echo=FALSE,results='asis'}
+print(xtable(total_fly_summary_males, caption="Summary of the Number of Male Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-summary-males"), include.rownames=F, type='html')
+print(xtable(total_fly_summary_females, caption="Summary of the Number of Female Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-summary-females"), include.rownames=F, type='html')
+print(xtable(total.flies.aov.males, caption="ANOVA for the Number of Male Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-anova-males"), type='html')
+print(xtable(total.flies.aov.females, caption="ANOVA for the Number of Female Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-anova-females"), type='html')
+print(xtable(fly.dunnett.summary.gendered, caption="Dunnett's Test for the Number of Males and Females Comparing to Control (C179-Gal4/+)", label="tab:total-flies-dunnett-gendered", digits=c(0,1,7,1,7)), type='html')
+```
 
-\begin{figure}
-\begin{center}
-<<label=total-fly-barplot-gendered,fig=TRUE,echo=FALSE>>=
+```{r total-fly-barplot-gendered,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
 par(mfrow=c(2,1))
 ymax <- max(total_fly_summary_males$mean+total_fly_summary_males$se, na.rm=T)
 plot <- barplot(total_fly_summary_males$mean,
@@ -312,19 +277,14 @@ plot <- barplot(total_fly_summary_females$mean,
 superpose.eb(plot, 
              total_fly_summary_females$mean,
              total_fly_summary_females$se)
-@
-\end{center}
-\caption{Total number of flies counted, separated by gender.  Presented as mean +/- standard error.}
-\label{fig:total-flies-barplot-gendered}
-\end{figure}
-\pagebreak
+```
      
-\section*{Mef-GAL4 Driver}
+## Mef-GAL4 Driver
 
 
-This analysis is just for the \textit{Mef1c-GAL4} Driver.
+This analysis is just for the *Mef2-GAL4* Driver.
 
-<<data-collection-mef, echo=False>>=
+```{r data-collection-mef, echo=FALSE}
 combined_pupae_data_mef <- merge(pupae_data, dcast(droplevels(subset(birth_data, Female != 'C179-Gal4')), Female+Male+CrossName~Gender, value.var='Count', sum), by='CrossName', all=T)
 combined_pupae_data_mef$Live.Flies <- combined_pupae_data_mef$Females + combined_pupae_data_mef$Males
 combined_pupae_data_mef$Total.Pupae <- combined_pupae_data_mef$Dead.Flies + combined_pupae_data_mef$Empty.Larvae
@@ -380,29 +340,25 @@ dead_pupae_summary_mef <- ddply(subset(annotated_pupae_data_mef, Driver=='Mef-Ga
                         mean = mean(Dead.Pupae.pct, na.rm=T),
                         se = sd(Dead.Pupae.pct, na.rm=T)/sqrt(length(Dead.Pupae.pct)),
                         sd = sd(Dead.Pupae.pct, na.rm=T),
-                        rel.error = sd(Dead.Pupae.pct, na.rm=T)/mean(Dead.Pupae.pct, na.rm=T)*100,
-                        n = length(Dead.Pupae.pct))
-@
+                        rel.error = sd(Dead.Pupae.pct, na.rm=T)/mean(Dead.Pupae.pct, na.rm=T)*100)
+```
 
-<<total-pupae-statistics, echo=FALSE>>=
+```{r mef-total-pupae-statistics, echo=FALSE}
 #perform anova testing first for an effect of the driver, then for an effect of the shRNAs
 total.pupae.aov_mef <- aov(Total.Pupae~Driver*UAS, data=annotated_pupae_data_mef)
-@
+```
 
-\pagebreak
-\section*{Analysis of Pupae}
+## Analysis of Pupae
 
 We inspected the pupae from vials, 21 days after the cross was set up and counted how many pupae were present, and how many had dead flies in them.  These data are summarized in  Table \ref{tab:total-pupae-summary-mef} and in Figure \ref{fig:total-pupae-barplot-mef}.  To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  The p-value for that comparason is \textbf{\Sexpr{round(summary(total.pupae.aov_mef)[[1]][["Pr(>F)"]][2],3)}} for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-pupae-anova-mef}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and \textit{Mef/+} progeny.  The p-value for the Driver having an effect is \textbf{\Sexpr{round(t.test(Total.Pupae~Driver, subset(annotated_pupae_data_mef, UAS==36304))$p.value, 3)}}.  This indicated that there was no significant effect on the number of pupae.
 
-<<label=pupae-summary-tables,echo=FALSE,results=tex>>=
+```{r mef-pupae-summary-tables,echo=FALSE,results='asis'}
 require(xtable)
-print(xtable(total_pupae_summary_mef, caption="Summary of the Number of Pupae by Driver and UAS for Mef-GAL4", label="tab:total-pupae-summary-mef"), include.rownames=F)
-print(xtable(total.pupae.aov_mef, caption="ANOVA for the Number of Pupae by Driver and UAS for Mef-GAL4", label="tab:total-pupae-anova-mef"))
-@
+print(xtable(total_pupae_summary_mef, caption="Summary of the Number of Pupae by Driver and UAS for Mef-GAL4", label="tab:total-pupae-summary-mef"), include.rownames=F, type='html')
+print(xtable(total.pupae.aov_mef, caption="ANOVA for the Number of Pupae by Driver and UAS for Mef-GAL4", label="tab:total-pupae-anova-mef"), type='html')
+```
 
-\begin{figure}
-\begin{center}
-<<label=total-pupae-barplot-mef,fig=TRUE,echo=FALSE>>=
+```{r mef-total-pupae-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
 ymax <- max(total_pupae_summary_mef$mean+total_pupae_summary_mef$se, na.rm=T)
 plot <- barplot(total_pupae_summary_mef$mean,
         beside=T, las=1,
@@ -418,18 +374,12 @@ legend("top", levels(total_pupae_summary_mef$Gene), fill= palette()[1:length(lev
 superpose.eb(plot, 
              total_pupae_summary_mef$mean,
              total_pupae_summary_mef$se)
-@
-\end{center}
-\caption{Total number of pupae counted.  Presented as mean +/- standard error.}
-\label{fig:total-pupae-barplot-mef}
-\end{figure}
+```
 
-\pagebreak
-\section*{Analysis of Dead Pupae}
 
-\begin{figure}
-\begin{center}
-<<label=dead-pupae-barplot-mef,fig=TRUE,echo=FALSE>>=
+### Analysis of Dead Pupae
+
+```{r dead-pupae-barplot-mef,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
 ymax <- max(100)
 plot <- barplot(dead_pupae_summary_mef$mean,
         beside=T, las=1,
@@ -445,13 +395,9 @@ legend("topleft", levels(dead_pupae_summary_mef$Gene), fill= palette()[1:length(
 superpose.eb(plot, 
              dead_pupae_summary_mef$mean,
              dead_pupae_summary_mef$se)
-@
-\end{center}
-\caption{Proportion of pupae with dead flies.  Presented as mean +/- standard error.}
-\label{fig:dead-pupae-barplot-mef}
-\end{figure}
+```
 
-<<dead-pupae-statistics-mef, echo=FALSE>>=
+```{r mef-dead-pupae-statistics, echo=FALSE}
 #perform anova testing first for an effect of the driver, then for an effect of the shRNAs
 pupae.aov_mef <- aov(Dead.Pupae.pct~Driver*UAS, data=annotated_pupae_data_mef)
 pupae.aov.Mef_mef <- aov(Dead.Pupae.pct~UAS, data=subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'))
@@ -461,7 +407,7 @@ pupae.dunnett_mef <- glht(pupae.aov.Mef_mef, linfct=mcp(UAS="Dunnett"))
 #made a table with the dunnet test results
 pupae.dunnett.summary_mef <- cbind(summary(pupae.dunnett_mef)$test$coefficients, summary(pupae.dunnett_mef)$test$pvalues)
 colnames(pupae.dunnett.summary_mef) <- c("Effect Size (%)", "p-value")
-@
+```
 
 A summary of the percent of dead pupae for each cross is shown in Table \ref{tab:dead-pupae-summary-mef} and in Figure \ref{fig:dead-pupae-barplot}.
 To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  The p-value for that comparason is \textbf{\Sexpr{round(summary(pupae.aov_mef)[[1]][["Pr(>F)"]][2],3)}} for the UAS.  The results of this ANOVA are shown in Table \ref{tab:dead-pupae-anova-mef}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and \textit{Mef/+} progeny.  The p-value for the Driver having an effect is \textbf{\Sexpr{round(t.test(Dead.Pupae.pct~Driver, subset(annotated_pupae_data_mef, UAS=36304))$p.value, 3)}}.  We therefore excluded the +/+ progeny from the analysis and compared with the \textit{Mef-Gal4/+} progeny as a control.  
@@ -469,17 +415,16 @@ To analyse these data, first we did an ANOVA testing for whether the UAS has an 
 The ANOVA for this comparason yielded a p-value for the UAS of \textbf{\Sexpr{round(summary(pupae.aov.Mef_mef)[[1]][["Pr(>F)"]][1],3)}}.  The results of this ANOVA are in Table \ref{tab:dead-pupae-anova-Mef}.  Since this ANOVA was significant, we did a post-hoc test to look at each strain relative to the control.  To test for differences compared to the \textit{Mef-GAL4/+} control strain, we did a Dunnett's test.  The results of this test are shown in Table \ref{tab:dead-pupae-dunnett-mef}.  
 
 
-<<label=pupae-summary-tables,echo=FALSE,results=tex>>=
-require(xtable)
-print(xtable(dead_pupae_summary_mef, caption="Summary of Percent of Dead Pupae by Driver and UAS for Mef-GAL4", label="tab:dead-pupae-summary-mef"), include.rownames=F)
-print(xtable(pupae.aov_mef, caption="ANOVA for Percent of Dead Pupae by Driver and UAS for Mef-GAL4", label="tab:dead-pupae-anova-mef"))
-print(xtable(pupae.aov.Mef_mef, caption="ANOVA for Percent of Dead Pupae by UAS for Mef-GAL4", label="tab:dead-pupae-anova-Mef"))
-print(xtable(pupae.dunnett.summary_mef, caption="Dunnett's Test for the Percent of Dead Pupae Comparing to Control (Mef-Gal4/+)", label="tab:dead-pupae-dunnett-mef", digits=c(0,1,7)))
-@
-\pagebreak
-\section*{Analysis of Total Number of Flies}
+```{r mef-dead-pupae-summary-tables,echo=FALSE,results='asis', message=FALSE}
+print(xtable(dead_pupae_summary_mef, caption="Summary of Percent of Dead Pupae by Driver and UAS for Mef-GAL4", label="tab:dead-pupae-summary-mef"), include.rownames=F, type='html')
+print(xtable(pupae.aov_mef, caption="ANOVA for Percent of Dead Pupae by Driver and UAS for Mef-GAL4", label="tab:dead-pupae-anova-mef"), type='html')
+print(xtable(pupae.aov.Mef_mef, caption="ANOVA for Percent of Dead Pupae by UAS for Mef-GAL4", label="tab:dead-pupae-anova-Mef"), type='html')
+print(xtable(pupae.dunnett.summary_mef, caption="Dunnett's Test for the Percent of Dead Pupae Comparing to Control (Mef-Gal4/+)", label="tab:dead-pupae-dunnett-mef", digits=c(0,1,7)), type='html')
+```
 
-<<total-fly-statistics-mef, echo=FALSE>>=
+### Analysis of Total Number of Flies}
+
+```{r mef-total-fly-statistics, echo=FALSE}
 #perform anova testing first for an effect of the driver, then for an effect of the shRNAs
 total.flies.aov_mef <- aov(Live.Flies~Driver*UAS, data=annotated_pupae_data_mef)
 restricted.flies.aov_mef <- aov(Live.Flies~UAS, data=subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'))
@@ -487,11 +432,9 @@ total.flies.dunnett_mef <- glht(restricted.flies.aov_mef , linfct=mcp(UAS="Dunne
 #made a table with the dunnet test results
 fly.dunnett.summary_mef <- cbind(summary(total.flies.dunnett_mef)$test$coefficients, summary(total.flies.dunnett_mef)$test$pvalues)
 colnames(fly.dunnett.summary_mef) <- c("Effect Size (%)", "p-value")
-@
+```
 
-\begin{figure}
-\begin{center}
-<<label=total-fly-barplot-mef,fig=TRUE,echo=FALSE>>=
+```{r mef-total-fly-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
 ymax <- max(total_fly_summary_mef$mean+total_fly_summary_mef$se, na.rm=T)
 plot <- barplot(total_fly_summary_mef$mean,
         beside=T, las=1,
@@ -507,25 +450,21 @@ legend("top", levels(total_fly_summary_mef$Gene), fill= palette()[1:length(level
 superpose.eb(plot, 
              total_fly_summary_mef$mean,
              total_fly_summary_mef$se)
-@
-\end{center}
-\caption{Total number of flies counted.  Presented as mean +/- standard error.}
-\label{fig:total-flies-barplot-mef}
-\end{figure}
+```
 
 We inspected the total number of flies eclosed up to 21 days after the cross was set up.  These data are summarized in  Table \ref{tab:total-flies-summary-mef} and in Figure \ref{fig:total-flies-barplot-mef}.  To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  The p-value for that comparason is \textbf{\Sexpr{round(summary(total.flies.aov_mef)[[1]][["Pr(>F)"]][2],3)}} for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-flies-anova}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and \textit{Mef/+} progeny.  The p-value for the Driver having an effect is \textbf{\Sexpr{round(t.test(Live.Flies~Driver, subset(annotated_pupae_data_mef, UAS=36304))$p.value, 3)}}.  
 
 Due to the significant ANOVA we performed a post-hoc Dunnett's test using the \textit{Mef/+} progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of \textbf{\Sexpr{round(summary(restricted.flies.aov_mef)[[1]][["Pr(>F)"]][1],3)}} for the UAS.  The results of that test are in Table \ref{tab:total-flies-dunnett-mef}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of flies.
 
-<<label=total-fly-summary-tables-mef,echo=FALSE,results=tex>>=
-print(xtable(total_fly_summary_mef, caption="Summary of the Number of Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-summary-mef"), include.rownames=F)
-print(xtable(total.flies.aov_mef, caption="ANOVA for the Number of Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-anova-mef"))
-print(xtable(fly.dunnett.summary_mef, caption="Dunnett's Test for the Number of Flies Comparing to Control (Mef-Gal4/+)", label="tab:total-flies-dunnett-mef", digits=c(0,1,7)))
-@
+```{r mef-total-fly-summary-tables,echo=FALSE,results='asis'}
+print(xtable(total_fly_summary_mef, caption="Summary of the Number of Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-summary-mef"), include.rownames=F, type='html')
+print(xtable(total.flies.aov_mef, caption="ANOVA for the Number of Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-anova-mef"), type='html')
+print(xtable(fly.dunnett.summary_mef, caption="Dunnett's Test for the Number of Flies Comparing to Control (Mef-Gal4/+)", label="tab:total-flies-dunnett-mef", digits=c(0,1,7)), type='html')
+```
 
-\subsection*{Analysis of Number of Flies by Gender}
+### Analysis of Number of Flies by Gender
 
-<<total-fly-statistics-gender, echo=FALSE>>=
+```{r mef-total-fly-statistics-gender, echo=FALSE}
 #perform anova testing first for an effect of the driver, then for an effect of the shRNAs
 total.flies.aov.males_mef <- aov(Males~Driver*UAS, data=annotated_pupae_data_mef)
 total.flies.aov.females_mef <- aov(Females~Driver*UAS, data=annotated_pupae_data_mef)
@@ -541,7 +480,7 @@ fly.dunnett.summary.gendered_mef <- cbind(summary(total.flies.dunnett.males_mef)
                              summary(total.flies.dunnett.females_mef)$test$coefficients, 
                              summary(total.flies.dunnett.females_mef)$test$pvalues)
 colnames(fly.dunnett.summary.gendered_mef) <- c("Male Effect Size (%)", "Male p-value","Female Effect Size (%)", "Female p-value")
-@
+```
 
 For the flies which had been born, we could separate these data based on gender.  The separated data is summarized in Tables \ref{tab:total-flies-summary-males} and \ref{tab:total-flies-summary-females}.  These data are graphed in Figure \ref{fig:total-flies-barplot-gendered}.  
 
@@ -551,17 +490,15 @@ For Females, first we did an ANOVA testing for whether the UAS has an effect on 
 
 Due to the significant ANOVA we performed a post-hoc Dunnett's test using the \textit{Mef/+} progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of \textbf{\Sexpr{round(summary(restricted.flies.aov.males_mef)[[1]][["Pr(>F)"]][1],3)}} for the UAS for males and a p-value of \textbf{\Sexpr{round(summary(restricted.flies.aov.females_mef)[[1]][["Pr(>F)"]][1],3)}} for the UAS for the females.  The results of that test are in Tables \ref{tab:total-flies-dunnett-gendered}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of male flies, but only 34814 had significantly less females.
 
-<<label=total-fly-summary-gender-tables-mef,echo=FALSE,results=tex>>=
-print(xtable(total_fly_summary_males_mef, caption="Summary of the Number of Male Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-summary-males-mef"), include.rownames=F)
-print(xtable(total_fly_summary_females_mef, caption="Summary of the Number of Female Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-summary-females-mef"), include.rownames=F)
-print(xtable(total.flies.aov.males_mef, caption="ANOVA for the Number of Male Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-anova-males-mef"))
-print(xtable(total.flies.aov.females_mef, caption="ANOVA for the Number of Female Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-anova-females-mef"))
-print(xtable(fly.dunnett.summary.gendered_mef, caption="Dunnett's Test for the Number of Males and Females Comparing to Control (Mef-Gal4/+)", label="tab:total-flies-dunnett-gendered-mef", digits=c(0,1,7,1,7)))
-@
+```{r mef-total-fly-summary-gender-tables,echo=FALSE,results='asis'}
+print(xtable(total_fly_summary_males_mef, caption="Summary of the Number of Male Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-summary-males-mef"), include.rownames=F, type='html')
+print(xtable(total_fly_summary_females_mef, caption="Summary of the Number of Female Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-summary-females-mef"), include.rownames=F, type='html')
+print(xtable(total.flies.aov.males_mef, caption="ANOVA for the Number of Male Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-anova-males-mef"), type='html')
+print(xtable(total.flies.aov.females_mef, caption="ANOVA for the Number of Female Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-anova-females-mef"), type='html')
+print(xtable(fly.dunnett.summary.gendered_mef, caption="Dunnett's Test for the Number of Males and Females Comparing to Control (Mef-Gal4/+)", label="tab:total-flies-dunnett-gendered-mef", digits=c(0,1,7,1,7)), type='html')
+```
 
-\begin{figure}
-\begin{center}
-<<label=total-fly-barplot-gendered-mef,fig=TRUE,echo=FALSE>>=
+```{r mef-total-fly-barplot-gendered,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
 par(mfrow=c(2,1))
 ymax <- max(total_fly_summary_males_mef$mean+total_fly_summary_males_mef$se, na.rm=T)
 plot <- barplot(total_fly_summary_males_mef$mean,
@@ -592,26 +529,9 @@ plot <- barplot(total_fly_summary_females_mef$mean,
 superpose.eb(plot, 
              total_fly_summary_females_mef$mean,
              total_fly_summary_females_mef$se)
-@
-\end{center}
-\caption{Total number of flies counted, separated by gender.  Presented as mean +/- standard error.}
-\label{fig:total-flies-barplot-gendered-mef}
-\end{figure}
-     
-     
-<<bibliography, include=F, echo=F>>=
-require(bibtex)
-write.bib(c(names(sessionInfo()$otherPkgs),'base','stats','utils'), file='birth-references.bib')
-@
+```
 
-The key packages used in this analysis were R \cite{base}, plyr \cite{plyr}, reshape2 \cite{reshape2} and multcomp \cite{multcomp}.
-
-\bibliography{birth-references}
-\bibliographystyle{unsrt}
-
-\section*{Session Information}
-<<sessionInfo, results=tex, echo=F>>=
-toLatex(sessionInfo())
-@
-
-\end{document}
+## Session Information
+```{r sessionInfo, echo=F}
+sessionInfo()
+```
