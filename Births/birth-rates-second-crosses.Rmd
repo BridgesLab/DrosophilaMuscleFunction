@@ -387,6 +387,13 @@ total_pupae_summary_mef <- ddply(subset(annotated_pupae_data_mef, Driver=='Mef-G
                         rel.error = sd(Total.Pupae, na.rm=T)/mean(Total.Pupae, na.rm=T)*100,                              
                         n = length(Total.Pupae))
 
+total_pupae_summary_mef_raptor <- ddply(subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'&Gene%in%c('Control','Raptor')), ~Gene+UAS, summarize,
+                        mean = mean(Total.Pupae, na.rm=T),
+                        se = sd(Total.Pupae, na.rm=T)/sqrt(length(Total.Pupae)),
+                        sd = sd(Total.Pupae, na.rm=T),
+                        rel.error = sd(Total.Pupae, na.rm=T)/mean(Total.Pupae, na.rm=T)*100,                              
+                        n = length(Total.Pupae))
+
 #this calcualtes the summary statistics for dead pupae 
 dead_pupae_summary_mef <- ddply(subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'), ~Gene+UAS, summarize,
                         mean = mean(Dead.Pupae.pct, na.rm=T),
@@ -397,18 +404,18 @@ dead_pupae_summary_mef <- ddply(subset(annotated_pupae_data_mef, Driver=='Mef-Ga
 
 ```{r mef-total-pupae-statistics, echo=FALSE}
 #perform anova testing first for an effect of the driver, then for an effect of the shRNAs
-total.pupae.aov_mef <- aov(Total.Pupae~Driver*UAS, data=annotated_pupae_data_mef)
+total.pupae.mef.aov <- aov(Total.Pupae~Driver*UAS, data=annotated_pupae_data_mef)
+total.pupae.mef.raptor.aov <- aov(Total.Pupae~Driver*UAS, data=subset(annotated_pupae_data_mef, Gene%in%c('Control','Raptor')))
 ```
 
 ## Analysis of Pupae
 
-We inspected the pupae from vials, 21 days after the cross was set up and counted how many pupae were present, and how many had dead flies in them.  These data are summarized in  Table \ref{tab:total-pupae-summary-mef} and in Figure \ref{fig:total-pupae-barplot-mef}.  To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  The p-value for that comparason is **`r summary(total.pupae.aov_mef)[[1]][["Pr(>F)"]][2]`** for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-pupae-anova-mef}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *Mef/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Total.Pupae~Driver, subset(annotated_pupae_data_mef, UAS==36304))$p.value`**.  This indicated that there was no significant effect on the number of pupae.
+We inspected the pupae from vials, 21 days after the cross was set up and counted how many pupae were present, and how many had dead flies in them.  These data are summarized below:
 
 ```{r mef-pupae-summary-tables,echo=FALSE,results='asis'}
-require(xtable)
 print(xtable(total_pupae_summary_mef, caption="Summary of the Number of Pupae by Driver and UAS for Mef-GAL4", label="tab:total-pupae-summary-mef"), include.rownames=F, type='html')
-print(xtable(total.pupae.aov_mef, caption="ANOVA for the Number of Pupae by Driver and UAS for Mef-GAL4", label="tab:total-pupae-anova-mef"), type='html')
 ```
+
 
 ```{r mef-total-pupae-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
 ymax <- max(total_pupae_summary_mef$mean+total_pupae_summary_mef$se, na.rm=T)
@@ -427,6 +434,40 @@ superpose.eb(plot,
              total_pupae_summary_mef$mean,
              total_pupae_summary_mef$se)
 ```
+
+To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  We then checked wither the residuals were normally distributed.  The p-value for that Shapiro-Wilk test was p=`r shapiro.test(residuals(total.pupae.mef.aov))$p.value`.  We also checked for equal variance between groups.  The p-value for that Levene's test was `r leveneTest(Total.Pupae~Driver*UAS, data=annotated_pupae_data_mef)$"Pr(>F)"[1]`.  
+
+Based on this the ANOVA assumptions were met.  Therefore the p-value for that comparason is **`r summary(total.pupae.mef.aov)[[1]][["Pr(>F)"]][2]`** for the UAS.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *Mef/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Total.Pupae~Driver, subset(annotated_pupae_data_mef, UAS==36304))$p.value`**.  This indicated that there was no significant effect on the number of pupae.
+
+### Raptor Knockdown Only
+Looking only at *Raptor* knockdown flies separate from *Tsc1* knockdown flies we see the following.
+
+```{r pupae-summary-tables-mef-raptor,echo=FALSE,results='asis', message=FALSE}
+print(xtable(total_pupae_summary_mef_raptor, caption="Summary of the Number of Pupae by Driver and UAS for C179-GAL4", label="tab:total-pupae-summary"), include.rownames=F, type='html')
+```
+
+```{r mef-raptor-total-pupae-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
+ymax <- max(total_pupae_summary_mef_raptor$mean+total_pupae_summary_mef_raptor$se, na.rm=T)
+plot <- barplot(total_pupae_summary_mef_raptor$mean,
+        beside=T, las=1,
+        ylim=c(0,ymax),
+        names.arg=total_pupae_summary_mef_raptor$UAS,
+        col=total_pupae_summary_c179_raptor$Gene,
+        ylab="Total Number of Pupae",
+        xlab="shRNA Clone",
+        main="Total Number of Pupae Using the Mef-GAL4 Driver")
+
+legend("topleft", levels(total_pupae_summary_mef_raptor$Gene)[1:2], fill= palette()[1:2], bty='n')
+
+superpose.eb(plot, 
+             total_pupae_summary_mef_raptor$mean,
+             total_pupae_summary_mef_raptor$se)
+```
+
+
+To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  We then checked wither the residuals were normally distributed.  The p-value for that Shapiro-Wilk test was p=`r shapiro.test(residuals(total.pupae.mef.raptor.aov))$p.value`.  We also checked for equal variance between groups.  The p-value for that Levene's test was `r leveneTest(Total.Pupae~Driver*UAS, data=subset(annotated_pupae_data_mef,Gene%in%c('Control','Raptor')))$"Pr(>F)"[1]`.  
+
+Based on this the ANOVA assumptions were met.  Therefore the p-value for effect of genotype on total pupae is **`r summary(total.pupae.mef.raptor.aov)[[1]][["Pr(>F)"]][2]`** for the UAS.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *C179/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Total.Pupae~Driver, subset(annotated_pupae_data_mef, UAS==36304&Gene%in%c('Control','Raptor')))$p.value`**.  These data indicatee that there was no significant effect on the number of pupae.
 
 
 ### Analysis of Dead Pupae
