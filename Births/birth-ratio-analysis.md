@@ -6,7 +6,7 @@ Experimental Design
 
 
 
-These data are stored with the raw data saved in../Data/birth_worksheet.csv.  This script was most recently run on Mon Jun 23 11:43:07 2014.
+These data are stored with the raw data saved in../Data/birth_worksheet.csv.  This script was most recently run on Wed Jun 25 09:13:02 2014.
 
 Strain Summaries
 ------------------
@@ -16,7 +16,7 @@ Strain Summaries
 So far this analysis includes 6488 flies from 18 crosses.  Statistics are based on a Chi Squared Test, and are  adjusted for multiple observation by the method of Benjamini and Hochberg.  These statistics exclude the genotypically WT (dual balancer chromosome) strains, which have significantly less progeny in nearly all cases (see Table below):
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Mon Jun 23 11:43:07 2014 -->
+<!-- Wed Jun 25 09:13:02 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summarized Data Including Double Balancer Strains.  The values are all significant because including the double balancer strain is sublethal in every case </CAPTION>
 <TR> <TH>  </TH> <TH> pval </TH> <TH> padj </TH>  </TR>
@@ -44,7 +44,7 @@ So far this analysis includes 6488 flies from 18 crosses.  Statistics are based 
 After excluding the double balancer strains from the analysis, counts and p-values are shown in the table and figures below for all genes:
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Mon Jun 23 11:43:07 2014 -->
+<!-- Wed Jun 25 09:13:02 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Gene Level Summarised Data </CAPTION>
 <TR> <TH> Driver </TH> <TH> Gene </TH> <TH> KD </TH> <TH> shRNA </TH> <TH> GAL4 </TH> <TH> WT </TH> <TH> Total </TH> <TH> pval </TH> <TH> padj </TH>  </TR>
@@ -58,7 +58,7 @@ After excluding the double balancer strains from the analysis, counts and p-valu
 And summarized at the level of the shRNA clone
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Mon Jun 23 11:43:07 2014 -->
+<!-- Wed Jun 25 09:13:02 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Driver Level Summarised Data </CAPTION>
 <TR> <TH> Driver </TH> <TH> UAS </TH> <TH> KD </TH> <TH> shRNA </TH> <TH> GAL4 </TH> <TH> WT </TH> <TH> Total </TH> <TH> pval </TH> <TH> padj </TH>  </TR>
@@ -89,7 +89,7 @@ We observed nearly no flies born from this cross, either from males or females.
 Since we observed few births at 24C, we repeated several crosses at 18C using the TSC shRNA lines.  These data are summarised in Table and Figure below:
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Mon Jun 23 11:43:07 2014 -->
+<!-- Wed Jun 25 09:13:02 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Driver Level Summarized Data for 18C Crosses </CAPTION>
 <TR> <TH> Driver </TH> <TH> UAS </TH> <TH> KD </TH> <TH> shRNA </TH> <TH> GAL4 </TH> <TH> WT </TH> <TH> Total </TH> <TH> pval </TH> <TH> padj </TH>  </TR>
@@ -117,7 +117,7 @@ And separated out by gender:
 There was also complete lethality observed for C179 driven knockdowns.  Below is the data shown at the shRNA and shRNA/gendered levels
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Mon Jun 23 11:43:07 2014 -->
+<!-- Wed Jun 25 09:13:03 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Driver Level Summarized Data for C179-Gal4 Crosses </CAPTION>
 <TR> <TH> Driver </TH> <TH> UAS </TH> <TH> KD </TH> <TH> shRNA </TH> <TH> GAL4 </TH> <TH> WT </TH> <TH> Total </TH> <TH> pval </TH> <TH> padj </TH>  </TR>
@@ -127,7 +127,7 @@ There was also complete lethality observed for C179 driven knockdowns.  Below is
    <A NAME=tab:179-all></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Mon Jun 23 11:43:07 2014 -->
+<!-- Wed Jun 25 09:13:03 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Driver Level, Gender Separated Summarized Data for C179-Gal4 Crosses </CAPTION>
 <TR> <TH> UAS </TH> <TH> Driver </TH> <TH> Gender </TH> <TH> KD </TH> <TH> shRNA </TH> <TH> GAL4 </TH> <TH> WT </TH> <TH> Total </TH> <TH> pval </TH> <TH> padj </TH>  </TR>
