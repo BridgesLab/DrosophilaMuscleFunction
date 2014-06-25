@@ -20,8 +20,10 @@ Figure 2A | Births/birth-ratio-analysis.Rmd | Births/figure/hand-births-all.png
 Figure 2B | Births/birth-ratio-analysis.Rmd | Births/figure/24b-births-all.png
 Figure 2C | Births/birth-ratio-analysis.Rmd | Births/figure/c179-births-all.png
 Figure 2D | Births/birth-ratio-analysis.Rmd | Births/figure/c179-births-gendered.png
+Figure 3A | |
+Figure 3B | |
+Figure 3C | Births/birth-rates-second-crosses.Rmd | Births/figure/c179-raptor-total-pupae-barplot.png 
+Figure 3D | Births/birth-rates-second-crosses.Rmd | Births/figure/mef-raptor-total-pupae-barplot.png
 Figure 5 | Crawling/crawling-analysis.Rmd | Crawling/figure/barplot-raptor.png
-
-
 Supplementary Figure 1 | Births/rapamycin-dose-response.Rmd | 
 Supplementary Figure 2 | Births/birth-ratio-analysis.Rmd | Births/figure/24b-births-18c.png
