@@ -6,7 +6,7 @@ This was for the second batch of knockdown crosses in which only homozygous driv
 
 
 
-These data are the raw data saved in ../Data/Birth Data.csv for the births and ../Data/Pupae Inspection Data.csv for the pupae inspection.  This script was most recently run on Wed Jun 25 12:27:44 2014.
+These data are the raw data saved in ../Data/Birth Data.csv for the births and ../Data/Pupae Inspection Data.csv for the pupae inspection.  This script was most recently run on Thu Jun 26 16:49:15 2014.
 
 ## C179-GAL4 Driver
 
@@ -23,7 +23,7 @@ These aggregaged and annotated data are written out to the file ../data/processe
 We inspected the pupae from vials, 21 days after the cross was set up and counted how many pupae were present, and how many had dead flies in them.  These data are summarized below:
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:45 2014 -->
+<!-- Thu Jun 26 16:49:16 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of the Number of Pupae by Driver and UAS for C179-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -48,7 +48,7 @@ Based on this the ANOVA assumptions were met.  Therefore the p-value for effect 
 Looking only at *Raptor* knockdown flies separate from *Tsc1* knockdown flies we see the following.
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:45 2014 -->
+<!-- Thu Jun 26 16:49:16 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of the Number of Pupae by Driver and UAS for C179-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -76,7 +76,7 @@ We next analysed how many pupae were dead, as a percentage of the total number o
 A summary of the percent of dead pupae for each cross is shown below:
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:45 2014 -->
+<!-- Thu Jun 26 16:49:16 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of Percent of Dead Pupae by Driver and UAS for C179-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -100,7 +100,7 @@ Therefore rather than an ANOVA, we did a Kruskal-Wallis test.  The p-value for t
 Since this ANOVA was significant, we did post-hoc Wilcoxon-Rank Sum Tests to look at each strain relative to the control.  To test for differences compared to the *C179-GAL4/+* control strain, the results of this test are shown below.
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:45 2014 -->
+<!-- Thu Jun 26 16:49:16 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Wilcoxon Rank Sum Tests for the Percent of Dead Pupae Comparing to Control (C179-Gal4/+) </CAPTION>
 <TR> <TH>  </TH> <TH> pval </TH> <TH> padj </TH>  </TR>
@@ -121,7 +121,7 @@ Since this ANOVA was significant, we did post-hoc Wilcoxon-Rank Sum Tests to loo
 A summary of the percent of dead pupae for each cross is shown below:
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:46 2014 -->
+<!-- Thu Jun 26 16:49:16 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of Percent of Dead Pupae by Driver and UAS for C179-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -139,10 +139,10 @@ To analyse these data, first we did an ANOVA testing for whether the UAS has an 
 
 Therefore rather than an ANOVA, we did a Kruskal-Wallis test.  The p-value for that comparason is **9.3852 &times; 10<sup>-6</sup>** for the UAS.  To test if the driver alone had an effect with did a Wilcoxon Rank Sum Test comparing the +/+ and *C179/+* progeny.  The p-value for the Driver having an effect is **0.0155**.  We therefore excluded the +/+ progeny from the analysis and compared with the *C179-Gal4/+* progeny as a control.  
 
-Since this ANOVA was significant, we did post-hoc Wilcoxon-Rank Sum Tests to look at each strain relative to the*C179-GAL4/+* control strain.  The results of these tests are shown below.
+Since this ANOVA was significant, we did post-hoc Wilcoxon-Rank Sum Tests to look at each strain relative to the *C179-GAL4/+* control strain.  The range was 2.9567-11.3844 times more dead pupae.  The results of these tests are shown below.
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:46 2014 -->
+<!-- Thu Jun 26 16:49:16 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Wilcoxon Rank Sum Tests for the Percent of Dead Pupae Comparing to Control (C179-Gal4/+) </CAPTION>
 <TR> <TH>  </TH> <TH> pval </TH> <TH> padj </TH>  </TR>
@@ -157,14 +157,11 @@ Since this ANOVA was significant, we did post-hoc Wilcoxon-Rank Sum Tests to loo
 
 
 
-![plot of chunk c179-total-fly-barplot](figure/c179-total-fly-barplot.png) 
 
-We inspected the total number of flies eclosed up to 21 days after the cross was set up.  These data are summarized in  Table \ref{tab:total-flies-summary} and in Figure \ref{fig:total-flies-barplot}.  To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  The p-value for that comparason is **4.257 &times; 10<sup>-6</sup>** for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-flies-anova}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *C179/+* progeny.  The p-value for the Driver having an effect is **0.0631**.  
-
-Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C179/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **2.1537 &times; 10<sup>-5</sup>** for the UAS.  The results of that test are in Table \ref{tab:total-flies-dunnett}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of flies.
+We inspected the total number of flies eclosed up to 21 days after the cross was set up.  These data are summarized in the table and figure below:
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:46 2014 -->
+<!-- Thu Jun 26 16:49:17 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of the Number of Flies by Driver and UAS for C179-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -177,29 +174,12 @@ Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C
   <TR> <TD> Tsc1 </TD> <TD> 35144 </TD> <TD align="right"> 92.60 </TD> <TD align="right"> 4.39 </TD> <TD align="right"> 9.81 </TD> <TD align="right"> 10.60 </TD> <TD align="right">   5 </TD> </TR>
    <A NAME=tab:total-flies-summary></A>
 </TABLE>
-<!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:46 2014 -->
-<TABLE border=1>
-<CAPTION ALIGN="bottom"> ANOVA for the Number of Flies by Driver and UAS for C179-GAL4 </CAPTION>
-<TR> <TH>  </TH> <TH> Df </TH> <TH> Sum Sq </TH> <TH> Mean Sq </TH> <TH> F value </TH> <TH> Pr(&gt;F) </TH>  </TR>
-  <TR> <TD> Driver </TD> <TD align="right"> 1 </TD> <TD align="right"> 5865.15 </TD> <TD align="right"> 5865.15 </TD> <TD align="right"> 4.97 </TD> <TD align="right"> 0.0328 </TD> </TR>
-  <TR> <TD> UAS </TD> <TD align="right"> 6 </TD> <TD align="right"> 67665.63 </TD> <TD align="right"> 11277.61 </TD> <TD align="right"> 9.55 </TD> <TD align="right"> 0.0000 </TD> </TR>
-  <TR> <TD> Residuals </TD> <TD align="right"> 33 </TD> <TD align="right"> 38968.24 </TD> <TD align="right"> 1180.86 </TD> <TD align="right">  </TD> <TD align="right">  </TD> </TR>
-   <A NAME=tab:total-flies-anova></A>
-</TABLE>
-<!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:46 2014 -->
-<TABLE border=1>
-<CAPTION ALIGN="bottom"> Dunnett's Test for the Number of Flies Comparing to Control (C179-Gal4/+) </CAPTION>
-<TR> <TH>  </TH> <TH> Effect Size (%) </TH> <TH> p-value </TH>  </TR>
-  <TR> <TD align="right"> 31039 - 36304 </TD> <TD align="right"> -13.9 </TD> <TD align="right"> 0.9942047 </TD> </TR>
-  <TR> <TD align="right"> 31314 - 36304 </TD> <TD align="right"> 43.4 </TD> <TD align="right"> 0.0992296 </TD> </TR>
-  <TR> <TD align="right"> 31528 - 36304 </TD> <TD align="right"> -45.9 </TD> <TD align="right"> 0.4348546 </TD> </TR>
-  <TR> <TD align="right"> 31529 - 36304 </TD> <TD align="right"> -76.7 </TD> <TD align="right"> 0.0178482 </TD> </TR>
-  <TR> <TD align="right"> 34814 - 36304 </TD> <TD align="right"> -94.4 </TD> <TD align="right"> 0.0009180 </TD> </TR>
-  <TR> <TD align="right"> 35144 - 36304 </TD> <TD align="right"> -18.8 </TD> <TD align="right"> 0.8906019 </TD> </TR>
-   <A NAME=tab:total-flies-dunnett></A>
-</TABLE>
+
+![plot of chunk c179-total-fly-barplot](figure/c179-total-fly-barplot.png) 
+
+Table \ref{tab:total-flies-summary} and in Figure \ref{fig:total-flies-barplot}.  To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  The p-value for that comparason is **4.257 &times; 10<sup>-6</sup>** for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-flies-anova}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *C179/+* progeny.  The p-value for the Driver having an effect is **0.0631**.  
+
+Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C179/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **2.1537 &times; 10<sup>-5</sup>** for the UAS.  The results of that test are in Table \ref{tab:total-flies-dunnett}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of flies.
 
 ### Analysis of Number of Flies by Gender
 
@@ -214,7 +194,7 @@ For Females, first we did an ANOVA testing for whether the UAS has an effect on 
 Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C179/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **1.9151 &times; 10<sup>-5</sup>** for the UAS for males and a p-value of **6.1458 &times; 10<sup>-5</sup>** for the UAS for the females.  The results of that test are in Tables \ref{tab:total-flies-dunnett-gendered}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of male flies, but only 34814 had significantly less females.
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:46 2014 -->
+<!-- Thu Jun 26 16:49:17 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of the Number of Male Flies by Driver and UAS for C179-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -228,7 +208,7 @@ Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C
    <A NAME=tab:total-flies-summary-males></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:46 2014 -->
+<!-- Thu Jun 26 16:49:17 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of the Number of Female Flies by Driver and UAS for C179-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -242,7 +222,7 @@ Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C
    <A NAME=tab:total-flies-summary-females></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:46 2014 -->
+<!-- Thu Jun 26 16:49:17 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> ANOVA for the Number of Male Flies by Driver and UAS for C179-GAL4 </CAPTION>
 <TR> <TH>  </TH> <TH> Df </TH> <TH> Sum Sq </TH> <TH> Mean Sq </TH> <TH> F value </TH> <TH> Pr(&gt;F) </TH>  </TR>
@@ -252,7 +232,7 @@ Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C
    <A NAME=tab:total-flies-anova-males></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:46 2014 -->
+<!-- Thu Jun 26 16:49:17 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> ANOVA for the Number of Female Flies by Driver and UAS for C179-GAL4 </CAPTION>
 <TR> <TH>  </TH> <TH> Df </TH> <TH> Sum Sq </TH> <TH> Mean Sq </TH> <TH> F value </TH> <TH> Pr(&gt;F) </TH>  </TR>
@@ -262,16 +242,16 @@ Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C
    <A NAME=tab:total-flies-anova-females></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:46 2014 -->
+<!-- Thu Jun 26 16:49:17 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Dunnett's Test for the Number of Males and Females Comparing to Control (C179-Gal4/+) </CAPTION>
 <TR> <TH>  </TH> <TH> Male Effect Size (%) </TH> <TH> Male p-value </TH> <TH> Female Effect Size (%) </TH> <TH> Female p-value </TH>  </TR>
-  <TR> <TD align="right"> 31039 - 36304 </TD> <TD align="right"> -10.9 </TD> <TD align="right"> 0.9658171 </TD> <TD align="right"> -3.0 </TD> <TD align="right"> 0.9999517 </TD> </TR>
-  <TR> <TD align="right"> 31314 - 36304 </TD> <TD align="right"> 17.6 </TD> <TD align="right"> 0.3304487 </TD> <TD align="right"> 25.7 </TD> <TD align="right"> 0.0386807 </TD> </TR>
-  <TR> <TD align="right"> 31528 - 36304 </TD> <TD align="right"> -39.4 </TD> <TD align="right"> 0.0775314 </TD> <TD align="right"> -6.5 </TD> <TD align="right"> 0.9961496 </TD> </TR>
-  <TR> <TD align="right"> 31529 - 36304 </TD> <TD align="right"> -54.9 </TD> <TD align="right"> 0.0014915 </TD> <TD align="right"> -21.8 </TD> <TD align="right"> 0.3387017 </TD> </TR>
-  <TR> <TD align="right"> 34814 - 36304 </TD> <TD align="right"> -48.9 </TD> <TD align="right"> 0.0018169 </TD> <TD align="right"> -45.5 </TD> <TD align="right"> 0.0016190 </TD> </TR>
-  <TR> <TD align="right"> 35144 - 36304 </TD> <TD align="right"> -10.1 </TD> <TD align="right"> 0.8994809 </TD> <TD align="right"> -8.7 </TD> <TD align="right"> 0.9231485 </TD> </TR>
+  <TR> <TD align="right"> 31039 - 36304 </TD> <TD align="right"> -10.9 </TD> <TD align="right"> 0.9657791 </TD> <TD align="right"> -3.0 </TD> <TD align="right"> 0.9999517 </TD> </TR>
+  <TR> <TD align="right"> 31314 - 36304 </TD> <TD align="right"> 17.6 </TD> <TD align="right"> 0.3304758 </TD> <TD align="right"> 25.7 </TD> <TD align="right"> 0.0386941 </TD> </TR>
+  <TR> <TD align="right"> 31528 - 36304 </TD> <TD align="right"> -39.4 </TD> <TD align="right"> 0.0775075 </TD> <TD align="right"> -6.5 </TD> <TD align="right"> 0.9961442 </TD> </TR>
+  <TR> <TD align="right"> 31529 - 36304 </TD> <TD align="right"> -54.9 </TD> <TD align="right"> 0.0015324 </TD> <TD align="right"> -21.8 </TD> <TD align="right"> 0.3388221 </TD> </TR>
+  <TR> <TD align="right"> 34814 - 36304 </TD> <TD align="right"> -48.9 </TD> <TD align="right"> 0.0017706 </TD> <TD align="right"> -45.5 </TD> <TD align="right"> 0.0016562 </TD> </TR>
+  <TR> <TD align="right"> 35144 - 36304 </TD> <TD align="right"> -10.1 </TD> <TD align="right"> 0.8995416 </TD> <TD align="right"> -8.7 </TD> <TD align="right"> 0.9231246 </TD> </TR>
    <A NAME=tab:total-flies-dunnett-gendered></A>
 </TABLE>
 
@@ -291,7 +271,7 @@ This analysis is just for the *Mef2-GAL4* Driver.
 We inspected the pupae from vials, 21 days after the cross was set up and counted how many pupae were present, and how many had dead flies in them.  These data are summarized below:
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:46 2014 -->
+<!-- Thu Jun 26 16:49:17 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of the Number of Pupae by Driver and UAS for Mef-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -315,7 +295,7 @@ Based on this the ANOVA assumptions were met.  Therefore the p-value for that co
 Looking only at *Raptor* knockdown flies separate from *Tsc1* knockdown flies we see the following.
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:46 2014 -->
+<!-- Thu Jun 26 16:49:17 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of the Number of Pupae by Driver and UAS for C179-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -347,11 +327,11 @@ Based on this the ANOVA assumptions were met.  Therefore the p-value for effect 
 A summary of the percent of dead pupae for each cross is shown in Table \ref{tab:dead-pupae-summary-mef} and in Figure \ref{fig:dead-pupae-barplot}.
 To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  The p-value for that comparason is **1.1958 &times; 10<sup>-30</sup>** for the UAS.  The results of this ANOVA are shown in Table \ref{tab:dead-pupae-anova-mef}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *Mef/+* progeny.  The p-value for the Driver having an effect is **0.0015**.  We therefore excluded the +/+ progeny from the analysis and compared with the *Mef-Gal4/+* progeny as a control.  
 
-The ANOVA for this comparason yielded a p-value for the UAS of **2.7585 &times; 10<sup>-16</sup>**.  The results of this ANOVA are in Table \ref{tab:dead-pupae-anova-Mef}.  Since this ANOVA was significant, we did a post-hoc test to look at each strain relative to the control.  To test for differences compared to the *Mef-GAL4/+* control strain, we did a Dunnett's test.  The results of this test are shown in Table \ref{tab:dead-pupae-dunnett-mef}.  
+The ANOVA for this comparason yielded a p-value for the UAS of **2.7585 &times; 10<sup>-16</sup>**.  The results of this ANOVA are in Table \ref{tab:dead-pupae-anova-Mef}.  Since this ANOVA was significant, we did a post-hoc test to look at each strain relative to the control.  To test for differences compared to the *Mef-GAL4/+* control strain, we did a Dunnett's test.  The range was 14.8155-14.999 times more dead pupae. The results of this test are shown in Table \ref{tab:dead-pupae-dunnett-mef}.  
 
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:47 2014 -->
+<!-- Thu Jun 26 16:49:17 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of Percent of Dead Pupae by Driver and UAS for Mef-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH>  </TR>
@@ -364,7 +344,7 @@ The ANOVA for this comparason yielded a p-value for the UAS of **2.7585 &times; 
    <A NAME=tab:dead-pupae-summary-mef></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:47 2014 -->
+<!-- Thu Jun 26 16:49:17 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> ANOVA for Percent of Dead Pupae by Driver and UAS for Mef-GAL4 </CAPTION>
 <TR> <TH>  </TH> <TH> Df </TH> <TH> Sum Sq </TH> <TH> Mean Sq </TH> <TH> F value </TH> <TH> Pr(&gt;F) </TH>  </TR>
@@ -374,7 +354,7 @@ The ANOVA for this comparason yielded a p-value for the UAS of **2.7585 &times; 
    <A NAME=tab:dead-pupae-anova-mef></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:47 2014 -->
+<!-- Thu Jun 26 16:49:17 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> ANOVA for Percent of Dead Pupae by UAS for Mef-GAL4 </CAPTION>
 <TR> <TH>  </TH> <TH> Df </TH> <TH> Sum Sq </TH> <TH> Mean Sq </TH> <TH> F value </TH> <TH> Pr(&gt;F) </TH>  </TR>
@@ -383,12 +363,12 @@ The ANOVA for this comparason yielded a p-value for the UAS of **2.7585 &times; 
    <A NAME=tab:dead-pupae-anova-Mef></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:47 2014 -->
+<!-- Thu Jun 26 16:49:17 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Dunnett's Test for the Percent of Dead Pupae Comparing to Control (Mef-Gal4/+) </CAPTION>
 <TR> <TH>  </TH> <TH> Effect Size (%) </TH> <TH> p-value </TH>  </TR>
-  <TR> <TD align="right"> 31039 - 36304 </TD> <TD align="right"> -3.9 </TD> <TD align="right"> 0.4185090 </TD> </TR>
-  <TR> <TD align="right"> 31314 - 36304 </TD> <TD align="right"> -0.5 </TD> <TD align="right"> 0.9996272 </TD> </TR>
+  <TR> <TD align="right"> 31039 - 36304 </TD> <TD align="right"> -3.9 </TD> <TD align="right"> 0.4185834 </TD> </TR>
+  <TR> <TD align="right"> 31314 - 36304 </TD> <TD align="right"> -0.5 </TD> <TD align="right"> 0.9996273 </TD> </TR>
   <TR> <TD align="right"> 31528 - 36304 </TD> <TD align="right"> 92.6 </TD> <TD align="right"> 0.0000000 </TD> </TR>
   <TR> <TD align="right"> 34814 - 36304 </TD> <TD align="right"> 93.7 </TD> <TD align="right"> 0.0000000 </TD> </TR>
    <A NAME=tab:dead-pupae-dunnett-mef></A>
@@ -405,7 +385,7 @@ We inspected the total number of flies eclosed up to 21 days after the cross was
 Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *Mef/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **0.177** for the UAS.  The results of that test are in Table \ref{tab:total-flies-dunnett-mef}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of flies.
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:47 2014 -->
+<!-- Thu Jun 26 16:49:18 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of the Number of Flies by Driver and UAS for Mef-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -418,7 +398,7 @@ Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *M
    <A NAME=tab:total-flies-summary-mef></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:47 2014 -->
+<!-- Thu Jun 26 16:49:18 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> ANOVA for the Number of Flies by Driver and UAS for Mef-GAL4 </CAPTION>
 <TR> <TH>  </TH> <TH> Df </TH> <TH> Sum Sq </TH> <TH> Mean Sq </TH> <TH> F value </TH> <TH> Pr(&gt;F) </TH>  </TR>
@@ -428,13 +408,13 @@ Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *M
    <A NAME=tab:total-flies-anova-mef></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:47 2014 -->
+<!-- Thu Jun 26 16:49:18 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Dunnett's Test for the Number of Flies Comparing to Control (Mef-Gal4/+) </CAPTION>
 <TR> <TH>  </TH> <TH> Effect Size (%) </TH> <TH> p-value </TH>  </TR>
-  <TR> <TD align="right"> 31039 - 36304 </TD> <TD align="right"> -24.2 </TD> <TD align="right"> 0.2450590 </TD> </TR>
-  <TR> <TD align="right"> 31314 - 36304 </TD> <TD align="right"> 2.5 </TD> <TD align="right"> 0.9975232 </TD> </TR>
-  <TR> <TD align="right"> 35144 - 36304 </TD> <TD align="right"> -20.5 </TD> <TD align="right"> 0.2198754 </TD> </TR>
+  <TR> <TD align="right"> 31039 - 36304 </TD> <TD align="right"> -24.2 </TD> <TD align="right"> 0.2449918 </TD> </TR>
+  <TR> <TD align="right"> 31314 - 36304 </TD> <TD align="right"> 2.5 </TD> <TD align="right"> 0.9975228 </TD> </TR>
+  <TR> <TD align="right"> 35144 - 36304 </TD> <TD align="right"> -20.5 </TD> <TD align="right"> 0.2199077 </TD> </TR>
    <A NAME=tab:total-flies-dunnett-mef></A>
 </TABLE>
 
@@ -451,7 +431,7 @@ For Females, first we did an ANOVA testing for whether the UAS has an effect on 
 Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *Mef/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **0.0818** for the UAS for males and a p-value of **0.2561** for the UAS for the females.  The results of that test are in Tables \ref{tab:total-flies-dunnett-gendered}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of male flies, but only 34814 had significantly less females.
 
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:47 2014 -->
+<!-- Thu Jun 26 16:49:18 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of the Number of Male Flies by Driver and UAS for Mef-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -464,7 +444,7 @@ Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *M
    <A NAME=tab:total-flies-summary-males-mef></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:47 2014 -->
+<!-- Thu Jun 26 16:49:18 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of the Number of Female Flies by Driver and UAS for Mef-GAL4 </CAPTION>
 <TR> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -477,7 +457,7 @@ Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *M
    <A NAME=tab:total-flies-summary-females-mef></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:47 2014 -->
+<!-- Thu Jun 26 16:49:18 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> ANOVA for the Number of Male Flies by Driver and UAS for Mef-GAL4 </CAPTION>
 <TR> <TH>  </TH> <TH> Df </TH> <TH> Sum Sq </TH> <TH> Mean Sq </TH> <TH> F value </TH> <TH> Pr(&gt;F) </TH>  </TR>
@@ -487,7 +467,7 @@ Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *M
    <A NAME=tab:total-flies-anova-males-mef></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:47 2014 -->
+<!-- Thu Jun 26 16:49:18 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> ANOVA for the Number of Female Flies by Driver and UAS for Mef-GAL4 </CAPTION>
 <TR> <TH>  </TH> <TH> Df </TH> <TH> Sum Sq </TH> <TH> Mean Sq </TH> <TH> F value </TH> <TH> Pr(&gt;F) </TH>  </TR>
@@ -497,13 +477,13 @@ Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *M
    <A NAME=tab:total-flies-anova-females-mef></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Wed Jun 25 12:27:47 2014 -->
+<!-- Thu Jun 26 16:49:18 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Dunnett's Test for the Number of Males and Females Comparing to Control (Mef-Gal4/+) </CAPTION>
 <TR> <TH>  </TH> <TH> Male Effect Size (%) </TH> <TH> Male p-value </TH> <TH> Female Effect Size (%) </TH> <TH> Female p-value </TH>  </TR>
-  <TR> <TD align="right"> 31039 - 36304 </TD> <TD align="right"> -10.7 </TD> <TD align="right"> 0.2046254 </TD> <TD align="right"> -13.5 </TD> <TD align="right"> 0.3365931 </TD> </TR>
-  <TR> <TD align="right"> 31314 - 36304 </TD> <TD align="right"> -4.3 </TD> <TD align="right"> 0.8642756 </TD> <TD align="right"> 6.8 </TD> <TD align="right"> 0.8540538 </TD> </TR>
-  <TR> <TD align="right"> 35144 - 36304 </TD> <TD align="right"> -12.7 </TD> <TD align="right"> 0.0457575 </TD> <TD align="right"> -7.8 </TD> <TD align="right"> 0.5956847 </TD> </TR>
+  <TR> <TD align="right"> 31039 - 36304 </TD> <TD align="right"> -10.7 </TD> <TD align="right"> 0.2045741 </TD> <TD align="right"> -13.5 </TD> <TD align="right"> 0.3365954 </TD> </TR>
+  <TR> <TD align="right"> 31314 - 36304 </TD> <TD align="right"> -4.3 </TD> <TD align="right"> 0.8642251 </TD> <TD align="right"> 6.8 </TD> <TD align="right"> 0.8539822 </TD> </TR>
+  <TR> <TD align="right"> 35144 - 36304 </TD> <TD align="right"> -12.7 </TD> <TD align="right"> 0.0459302 </TD> <TD align="right"> -7.8 </TD> <TD align="right"> 0.5956470 </TD> </TR>
    <A NAME=tab:total-flies-dunnett-gendered-mef></A>
 </TABLE>
 
