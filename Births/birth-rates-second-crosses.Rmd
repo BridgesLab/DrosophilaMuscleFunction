@@ -297,7 +297,7 @@ To analyse these data, first we did an ANOVA testing for whether the UAS has an 
 
 Therefore rather than an ANOVA, we did a Kruskal-Wallis test.  The p-value for that comparason is **`r dead.pupae.c179.kw$p.value`** for the UAS.  To test if the driver alone had an effect with did a Wilcoxon Rank Sum Test comparing the +/+ and *C179/+* progeny.  The p-value for the Driver having an effect is **`r wilcox.test(Dead.Pupae.pct~Driver, subset(annotated_pupae_data, UAS=36304))$p.value`**.  We therefore excluded the +/+ progeny from the analysis and compared with the *C179-Gal4/+* progeny as a control.  
 
-Since this ANOVA was significant, we did post-hoc Wilcoxon-Rank Sum Tests to look at each strain relative to the*C179-GAL4/+* control strain.  The results of these tests are shown below.
+Since this ANOVA was significant, we did post-hoc Wilcoxon-Rank Sum Tests to look at each strain relative to the *C179-GAL4/+* control strain.  The range was `r (min(dead_pupae_summary_c179_raptor$mean[2:4])-dead_pupae_summary_c179_raptor$mean[1])/dead_pupae_summary_c179_raptor$mean[1]`-`r (max(dead_pupae_summary_c179_raptor$mean[2:4])-dead_pupae_summary_c179_raptor$mean[1])/dead_pupae_summary_c179_raptor$mean[1]` times more dead pupae.  The results of these tests are shown below.
 
 ```{r c179-raptor-pupae-dunnett-tables,echo=FALSE,results='asis'}
 print(xtable(dead.pupae.raptor.wilcoxon, caption="Wilcoxon Rank Sum Tests for the Percent of Dead Pupae Comparing to Control (C179-Gal4/+)", label="tab:dead-pupae-wilcoxon", digits=c(0,5,5)), type='html')
@@ -313,6 +313,13 @@ total.flies.dunnett <- glht(restricted.flies.aov , linfct=mcp(UAS="Dunnett"))
 #made a table with the dunnet test results
 fly.dunnett.summary <- cbind(summary(total.flies.dunnett)$test$coefficients, summary(total.flies.dunnett)$test$pvalues)
 colnames(fly.dunnett.summary) <- c("Effect Size (%)", "p-value")
+```
+
+
+We inspected the total number of flies eclosed up to 21 days after the cross was set up.  These data are summarized in the table and figure below:
+
+```{r c179-total-fly-summary-tables,echo=FALSE,results='asis'}
+print(xtable(total_fly_summary, caption="Summary of the Number of Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-summary"), include.rownames=F, type='html')
 ```
 
 ```{r c179-total-fly-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
@@ -333,15 +340,9 @@ superpose.eb(plot,
              total_fly_summary$se)
 ```
 
-We inspected the total number of flies eclosed up to 21 days after the cross was set up.  These data are summarized in  Table \ref{tab:total-flies-summary} and in Figure \ref{fig:total-flies-barplot}.  To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  The p-value for that comparason is **`r summary(total.flies.aov)[[1]][["Pr(>F)"]][2]`** for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-flies-anova}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *C179/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Live.Flies~Driver, subset(annotated_pupae_data, UAS=36304))$p.value`**.  
+Table \ref{tab:total-flies-summary} and in Figure \ref{fig:total-flies-barplot}.  To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  The p-value for that comparason is **`r summary(total.flies.aov)[[1]][["Pr(>F)"]][2]`** for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-flies-anova}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *C179/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Live.Flies~Driver, subset(annotated_pupae_data, UAS=36304))$p.value`**.  
 
 Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C179/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **`r summary(restricted.flies.aov)[[1]][["Pr(>F)"]][1]`** for the UAS.  The results of that test are in Table \ref{tab:total-flies-dunnett}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of flies.
-
-```{r c179-total-fly-summary-tables,echo=FALSE,results='asis'}
-print(xtable(total_fly_summary, caption="Summary of the Number of Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-summary"), include.rownames=F, type='html')
-print(xtable(total.flies.aov, caption="ANOVA for the Number of Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-anova"), type='html')
-print(xtable(fly.dunnett.summary, caption="Dunnett's Test for the Number of Flies Comparing to Control (C179-Gal4/+)", label="tab:total-flies-dunnett", digits=c(0,1,7)), type='html')
-```
 
 ### Analysis of Number of Flies by Gender
 
@@ -586,7 +587,7 @@ colnames(pupae.dunnett.summary_mef) <- c("Effect Size (%)", "p-value")
 A summary of the percent of dead pupae for each cross is shown in Table \ref{tab:dead-pupae-summary-mef} and in Figure \ref{fig:dead-pupae-barplot}.
 To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  The p-value for that comparason is **`r summary(pupae.aov_mef)[[1]][["Pr(>F)"]][2]`** for the UAS.  The results of this ANOVA are shown in Table \ref{tab:dead-pupae-anova-mef}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *Mef/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Dead.Pupae.pct~Driver, subset(annotated_pupae_data_mef, UAS=36304))$p.value`**.  We therefore excluded the +/+ progeny from the analysis and compared with the *Mef-Gal4/+* progeny as a control.  
 
-The ANOVA for this comparason yielded a p-value for the UAS of **`r summary(pupae.aov.Mef_mef)[[1]][["Pr(>F)"]][1]`**.  The results of this ANOVA are in Table \ref{tab:dead-pupae-anova-Mef}.  Since this ANOVA was significant, we did a post-hoc test to look at each strain relative to the control.  To test for differences compared to the *Mef-GAL4/+* control strain, we did a Dunnett's test.  The results of this test are shown in Table \ref{tab:dead-pupae-dunnett-mef}.  
+The ANOVA for this comparason yielded a p-value for the UAS of **`r summary(pupae.aov.Mef_mef)[[1]][["Pr(>F)"]][1]`**.  The results of this ANOVA are in Table \ref{tab:dead-pupae-anova-Mef}.  Since this ANOVA was significant, we did a post-hoc test to look at each strain relative to the control.  To test for differences compared to the *Mef-GAL4/+* control strain, we did a Dunnett's test.  The range was `r (min(dead_pupae_summary_mef$mean[2:3])-dead_pupae_summary_mef$mean[1])/dead_pupae_summary_mef$mean[1]`-`r (max(dead_pupae_summary_mef$mean[2:3])-dead_pupae_summary_mef$mean[1])/dead_pupae_summary_mef$mean[1]` times more dead pupae. The results of this test are shown in Table \ref{tab:dead-pupae-dunnett-mef}.  
 
 
 ```{r mef-dead-pupae-summary-tables,echo=FALSE,results='asis', message=FALSE}
