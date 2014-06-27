@@ -32,7 +32,7 @@ combined_pupae_data$Live.Flies <- combined_pupae_data$Females + combined_pupae_d
 combined_pupae_data$Total.Pupae <- combined_pupae_data$Dead.Flies + combined_pupae_data$Empty.Larvae
 
 #sets a sum of zero to be NA if the total number of alive flies was zero
-combined_pupae_data[combined_pupae_data$Live.Flies==0&!(is.na(combined_pupae_data$Live.Flies)),]$Live.Flies <- NA
+#combined_pupae_data[combined_pupae_data$Live.Flies==0&!(is.na(combined_pupae_data$Live.Flies)),]$Live.Flies <- NA
 combined_pupae_data[is.na(combined_pupae_data$Live.Flies),]$Females <- NA
 combined_pupae_data[is.na(combined_pupae_data$Live.Flies),]$Males <- NA
 
@@ -50,6 +50,13 @@ annotated_pupae_data$UAS <- relevel(annotated_pupae_data$UAS, ref='36304')
 #this calculates the summary statistics for total number of flies
 library(plyr)
 total_fly_summary <- ddply(subset(annotated_pupae_data, Driver=='C179-Gal4'), ~Gene+UAS, summarize,
+                        mean = mean(Live.Flies, na.rm=T),
+                        se = sd(Live.Flies, na.rm=T)/sqrt(length(Live.Flies)),
+                        sd = sd(Live.Flies, na.rm=T),
+                        rel.error = sd(Live.Flies, na.rm=T)/mean(Live.Flies, na.rm=T)*100,                          
+                        n = length(Live.Flies))
+
+total_fly_summary_raptor <- ddply(subset(annotated_pupae_data, Driver=='C179-Gal4'&Gene %in% c("Control","Raptor")), ~Gene+UAS, summarize,
                         mean = mean(Live.Flies, na.rm=T),
                         se = sd(Live.Flies, na.rm=T)/sqrt(length(Live.Flies)),
                         sd = sd(Live.Flies, na.rm=T),
@@ -214,7 +221,7 @@ print(xtable(dead_pupae_summary_c179, caption="Summary of Percent of Dead Pupae 
 ```
 
 
-```{r c-179-dead-pupae-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
+```{r c179-dead-pupae-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
 ymax <- max(dead_pupae_summary_c179$mean+dead_pupae_summary_c179$se, na.rm=T)
 plot <- barplot(dead_pupae_summary_c179$mean,
         beside=T, las=1,
@@ -275,7 +282,7 @@ print(xtable(dead_pupae_summary_c179_raptor, caption="Summary of Percent of Dead
 ```
 
 
-```{r c-179-raptor-dead-pupae-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
+```{r c179-raptor-dead-pupae-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
 ymax <- max(dead_pupae_summary_c179_raptor$mean+dead_pupae_summary_c179_raptor$se, na.rm=T)
 plot <- barplot(dead_pupae_summary_c179_raptor$mean,
         beside=T, las=1,
@@ -308,11 +315,19 @@ print(xtable(dead.pupae.raptor.wilcoxon, caption="Wilcoxon Rank Sum Tests for th
 ```{r c179-total-fly-statistics, echo=FALSE}
 #perform anova testing first for an effect of the driver, then for an effect of the shRNAs
 total.flies.aov <- aov(Live.Flies~Driver*UAS, data=annotated_pupae_data)
+total.flies.raptor.aov <- aov(Live.Flies~Driver*UAS, data=subset(annotated_pupae_data, Gene %in% c("Control","Raptor")))
 restricted.flies.aov <- aov(Live.Flies~UAS, data=subset(annotated_pupae_data, Driver=='C179-Gal4'))
+restricted.flies.raptor.aov <- aov(Live.Flies~UAS, data=subset(annotated_pupae_data, Driver=='C179-Gal4'&Gene %in% c("Control","Raptor")))
 total.flies.dunnett <- glht(restricted.flies.aov , linfct=mcp(UAS="Dunnett"))
 #made a table with the dunnet test results
 fly.dunnett.summary <- cbind(summary(total.flies.dunnett)$test$coefficients, summary(total.flies.dunnett)$test$pvalues)
 colnames(fly.dunnett.summary) <- c("Effect Size (%)", "p-value")
+
+#for raptor only
+total.flies.raptor.dunnett <- glht(restricted.flies.raptor.aov , linfct=mcp(UAS="Dunnett"))
+#made a table with the dunnet test results
+fly.dunnett.summary.raptor <- cbind(summary(total.flies.raptor.dunnett)$test$coefficients, summary(total.flies.raptor.dunnett)$test$pvalues)
+colnames(fly.dunnett.summary.raptor) <- c("Effect Size (%)", "p-value")
 ```
 
 
@@ -340,9 +355,49 @@ superpose.eb(plot,
              total_fly_summary$se)
 ```
 
-Table \ref{tab:total-flies-summary} and in Figure \ref{fig:total-flies-barplot}.  To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  The p-value for that comparason is **`r summary(total.flies.aov)[[1]][["Pr(>F)"]][2]`** for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-flies-anova}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *C179/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Live.Flies~Driver, subset(annotated_pupae_data, UAS=36304))$p.value`**.  
+To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  We checked the residuals for this ANOVA by Shapiro-Wilk test (p=`r shapiro.test(residuals(total.flies.aov))$p.value`), so the data can be assumed to be normally distributed.  A Levene's test had a p-value of `r leveneTest(Live.Flies~Driver*UAS, data=annotated_pupae_data)$"Pr(>F)"[1]`, therefore both ANOVA assumptions can be accepted.  
 
-Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C179/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **`r summary(restricted.flies.aov)[[1]][["Pr(>F)"]][1]`** for the UAS.  The results of that test are in Table \ref{tab:total-flies-dunnett}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of flies.
+The p-value for the ANOVA is **`r summary(total.flies.aov)[[1]][["Pr(>F)"]][2]`** for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-flies-anova}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *C179/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Live.Flies~Driver, subset(annotated_pupae_data, UAS=36304))$p.value`**.  
+
+Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C179/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **`r summary(restricted.flies.aov)[[1]][["Pr(>F)"]][1]`** for the UAS.  The results of that test are in the Table below.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of flies.
+
+```{r c179-total-fly-dunnett-gender-tables,echo=FALSE,results='asis'}
+print(xtable(fly.dunnett.summary, caption="Dunnett's Test for the Number of Males and Females Comparing to Control (C179-Gal4/+)", label="tab:total-flies-dunnett-gendered", digits=c(0,1,7)), type='html')
+```
+
+### Only Raptor Knockdown Flies
+
+```{r c179-raptor-total-fly-summary-tables,echo=FALSE,results='asis'}
+print(xtable(total_fly_summary_raptor, caption="Summary of the Number of Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-summary"), include.rownames=F, type='html')
+```
+
+```{r c179-raptor-total-fly-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
+ymax <- max(total_fly_summary_raptor$mean+total_fly_summary_raptor$se, na.rm=T)
+plot <- barplot(total_fly_summary_raptor$mean,
+        beside=T, las=1,
+        ylim=c(0,ymax),
+        names.arg=total_fly_summary_raptor$UAS,
+        col=total_fly_summary_raptor$Gene,
+        ylab="Total Number of Flies",
+        xlab="shRNA Clone",
+        main="Total Number of Flies for the C179-GAL4 Driver")
+
+legend("top", levels(total_fly_summary_raptor$Gene)[1:2], fill= palette()[1:2], bty='n')
+
+superpose.eb(plot, 
+             total_fly_summary_raptor$mean,
+             total_fly_summary_raptor$se)
+```
+
+To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  We checked the residuals for this ANOVA by Shapiro-Wilk test (p=`r shapiro.test(residuals(total.flies.raptor.aov))$p.value`), so the data can be assumed to be normally distributed.  A Levene's test had a p-value of `r leveneTest(Live.Flies~Driver*UAS, data=subset(annotated_pupae_data, Gene %in% c("Control", "Raptor")))$"Pr(>F)"[1]`, therefore both ANOVA assumptions can be accepted.  
+
+The p-value for the ANOVA is **`r summary(total.flies.aov)[[1]][["Pr(>F)"]][2]`** for the UAS.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *C179/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Live.Flies~Driver, subset(annotated_pupae_data, UAS=36304), var.equal=F)$p.value`**.  
+
+Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C179/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **`r summary(restricted.flies.aov)[[1]][["Pr(>F)"]][1]`** for the UAS.  The results of that test are in the Table below.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of flies.  There was between a `r (total_fly_summary_raptor$mean[1]-max(total_fly_summary_raptor$mean[2:4]))/total_fly_summary_raptor$mean[1]*100` and `r (total_fly_summary_raptor$mean[1]-min(total_fly_summary_raptor$mean[2:4]))/total_fly_summary_raptor$mean[1]*100`% decrease in the number of eclosed flies depending on the strain.
+
+```{r c179-raptor-total-fly-dunnett-gender-tables,echo=FALSE,results='asis'}
+print(xtable(fly.dunnett.summary.raptor, caption="Dunnett's Test for the Number of Males and Females Comparing to Control (C179-Gal4/+)", label="tab:total-flies-dunnett-raptor", digits=c(0,1,7)), type='html')
+```
 
 ### Analysis of Number of Flies by Gender
 
@@ -370,7 +425,7 @@ For Males, first we did an ANOVA testing for whether the UAS has an effect on th
 
 For Females, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  The p-value for that comparason is **`r summary(total.flies.aov.females)[[1]][["Pr(>F)"]][2]`** for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-flies-anova-females}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *C179/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Females~Driver, subset(annotated_pupae_data, UAS=36304))$p.value`**. 
 
-Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C179/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **`r summary(restricted.flies.aov.males)[[1]][["Pr(>F)"]][1]`** for the UAS for males and a p-value of **`r summary(restricted.flies.aov.females)[[1]][["Pr(>F)"]][1]`** for the UAS for the females.  The results of that test are in Tables \ref{tab:total-flies-dunnett-gendered}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of male flies, but only 34814 had significantly less females.
+Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *C179/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **`r summary(restricted.flies.aov.males)[[1]][["Pr(>F)"]][1]`** for the UAS for males and a p-value of **`r summary(restricted.flies.aov.females)[[1]][["Pr(>F)"]][1]`** for the UAS for the females.  The results of that test are in the table below.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of male flies, but only 34814 had significantly less females.
 
 ```{r c179-total-fly-summary-gender-tables,echo=FALSE,results='asis'}
 print(xtable(total_fly_summary_males, caption="Summary of the Number of Male Flies by Driver and UAS for C179-GAL4", label="tab:total-flies-summary-males"), include.rownames=F, type='html')
@@ -424,7 +479,7 @@ combined_pupae_data_mef$Live.Flies <- combined_pupae_data_mef$Females + combined
 combined_pupae_data_mef$Total.Pupae <- combined_pupae_data_mef$Dead.Flies + combined_pupae_data_mef$Empty.Larvae
 
 #sets a sum of zero to be NA if the total number of alive flies was zero
-combined_pupae_data_mef[combined_pupae_data_mef$Live.Flies==0&!(is.na(combined_pupae_data_mef$Live.Flies)),]$Live.Flies <- NA
+#combined_pupae_data_mef[combined_pupae_data_mef$Live.Flies==0&!(is.na(combined_pupae_data_mef$Live.Flies)),]$Live.Flies <- NA
 combined_pupae_data_mef[is.na(combined_pupae_data_mef$Live.Flies),]$Females <- NA
 combined_pupae_data_mef[is.na(combined_pupae_data_mef$Live.Flies),]$Males <- NA
 
@@ -440,6 +495,13 @@ annotated_pupae_data_mef$UAS <- relevel(annotated_pupae_data_mef$UAS, ref='36304
 #this calculates the summary statistics for total number of flies
 library(plyr)
 total_fly_summary_mef <- ddply(subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'), ~Gene+UAS, summarize,
+                        mean = mean(Live.Flies, na.rm=T),
+                        se = sd(Live.Flies, na.rm=T)/sqrt(length(Live.Flies)),
+                        sd = sd(Live.Flies, na.rm=T),
+                        rel.error = sd(Live.Flies, na.rm=T)/mean(Live.Flies, na.rm=T)*100,                          
+                        n = length(Live.Flies))
+
+total_fly_summary_mef_raptor <- ddply(subset(annotated_pupae_data_mef, Driver=='Mef-Gal4' & Gene %in% c("Control","Raptor")), ~Gene+UAS, summarize,
                         mean = mean(Live.Flies, na.rm=T),
                         se = sd(Live.Flies, na.rm=T)/sqrt(length(Live.Flies)),
                         sd = sd(Live.Flies, na.rm=T),
@@ -597,16 +659,35 @@ print(xtable(pupae.aov.Mef_mef, caption="ANOVA for Percent of Dead Pupae by UAS 
 print(xtable(pupae.dunnett.summary_mef, caption="Dunnett's Test for the Percent of Dead Pupae Comparing to Control (Mef-Gal4/+)", label="tab:dead-pupae-dunnett-mef", digits=c(0,1,7)), type='html')
 ```
 
-### Analysis of Total Number of Flies}
+### Analysis of Total Number of Flies
 
 ```{r mef-total-fly-statistics, echo=FALSE}
 #perform anova testing first for an effect of the driver, then for an effect of the shRNAs
 total.flies.aov_mef <- aov(Live.Flies~Driver*UAS, data=annotated_pupae_data_mef)
 restricted.flies.aov_mef <- aov(Live.Flies~UAS, data=subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'))
+
+total.flies.raptor.aov_mef <- aov(Live.Flies~Driver*UAS, data=subset(annotated_pupae_data_mef, Gene %in% c('Control','Raptor')))
+restricted.flies.raptor.aov_mef <- aov(Live.Flies~UAS, data=subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'&Gene %in% c('Control','Raptor')))
+
+restricted.flies.raptor.kw_mef <- kruskal.test(Live.Flies~UAS, data=subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'&Gene %in% c('Control','Raptor')))
+
+total.flies.wilcoxon.summary <- data.frame(row.names=c('31528','34814'))
+
+for (uas in c('31528','34814')){
+  total.flies.wilcoxon.summary[uas,'pval'] <- wilcox.test(Live.Flies~UAS, data=subset(annotated_pupae_data_mef, Driver=="Mef-Gal4" & UAS %in% c('36304',uas)))$p.value
+}
+total.flies.wilcoxon.summary$padj <- p.adjust(total.flies.wilcoxon.summary$pval, method="BH")
+
 total.flies.dunnett_mef <- glht(restricted.flies.aov_mef , linfct=mcp(UAS="Dunnett"))
 #made a table with the dunnet test results
 fly.dunnett.summary_mef <- cbind(summary(total.flies.dunnett_mef)$test$coefficients, summary(total.flies.dunnett_mef)$test$pvalues)
 colnames(fly.dunnett.summary_mef) <- c("Effect Size (%)", "p-value")
+```
+
+We inspected the total number of flies eclosed up to 21 days after the cross was set up.  These data are summarized in the  table and figure below:
+
+```{r mef-total-fly-summary-tables,echo=FALSE,results='asis'}
+print(xtable(total_fly_summary_mef, caption="Summary of the Number of Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-summary-mef"), include.rownames=F, type='html')
 ```
 
 ```{r mef-total-fly-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
@@ -627,14 +708,48 @@ superpose.eb(plot,
              total_fly_summary_mef$se)
 ```
 
-We inspected the total number of flies eclosed up to 21 days after the cross was set up.  These data are summarized in  Table \ref{tab:total-flies-summary-mef} and in Figure \ref{fig:total-flies-barplot-mef}.  To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  The p-value for that comparason is **`r summary(total.flies.aov_mef)[[1]][["Pr(>F)"]][2]`** for the UAS.  The results of this ANOVA are shown in Table \ref{tab:total-flies-anova}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *Mef/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Live.Flies~Driver, subset(annotated_pupae_data_mef, UAS=36304))$p.value`**.  
+To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  We did a Shaprio-Wilk test to check for normality (p=`r shapiro.test(residuals(total.flies.aov_mef))$p.value`) and a Levene's Test to check for equal variance (p=`r leveneTest(Live.Flies~Driver*UAS, data=annotated_pupae_data_mef)$"Pr(>F)"[1]`).  A Levene's Test if we remove the +/+ control gives a p-value of `r leveneTest(Live.Flies~UAS, data=subset(annotated_pupae_data_mef, Driver=="Mef-Gal4"))$"Pr(>F)"[1]` and the Shapiro-Wilk test was p=`r shapiro.test(residuals(restricted.flies.aov_mef))$p.value`, so using that model, the assumptions of normality and equal variance are met.
 
-Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *Mef/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **`r summary(restricted.flies.aov_mef)[[1]][["Pr(>F)"]][1]`** for the UAS.  The results of that test are in Table \ref{tab:total-flies-dunnett-mef}.  This test indicates that each of the three Raptor shRNA knockdowns cause a reduction in the number of flies.
+The p-value for that comparason is **`r summary(restricted.flies.aov_mef)[[1]][["Pr(>F)"]][2]`** for the UAS.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *Mef/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Live.Flies~Driver, subset(annotated_pupae_data_mef, UAS=36304), var.equal=F)$p.value`**.  
 
-```{r mef-total-fly-summary-tables,echo=FALSE,results='asis'}
-print(xtable(total_fly_summary_mef, caption="Summary of the Number of Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-summary-mef"), include.rownames=F, type='html')
-print(xtable(total.flies.aov_mef, caption="ANOVA for the Number of Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-anova-mef"), type='html')
+Due to the significant ANOVA we performed a post-hoc Dunnett's test using the *Mef/+* progeny as the controls.  An ANOVA analysis excluding the +/+ flies had a p-value of **`r summary(restricted.flies.aov_mef)[[1]][["Pr(>F)"]][1]`** for the UAS.  A Dunnett's test results are shown below.
+
+```{r mef-total-fly-dunnett-tables,echo=FALSE,results='asis'}
 print(xtable(fly.dunnett.summary_mef, caption="Dunnett's Test for the Number of Flies Comparing to Control (Mef-Gal4/+)", label="tab:total-flies-dunnett-mef", digits=c(0,1,7)), type='html')
+```
+
+#### Raptor Knockdown Flies Only
+
+```{r mef-raptor-total-fly-summary-tables,echo=FALSE,results='asis'}
+print(xtable(total_fly_summary_mef_raptor, caption="Summary of the Number of Flies by Driver and UAS for Mef-GAL4", label="tab:total-flies-summary-mef"), include.rownames=F, type='html')
+```
+
+```{r mef-raptor-total-fly-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
+ymax <- max(total_fly_summary_mef_raptor$mean+total_fly_summary_mef_raptor$se, na.rm=T)
+plot <- barplot(total_fly_summary_mef_raptor$mean,
+        beside=T, las=1,
+        ylim=c(0,ymax),
+        names.arg=total_fly_summary_mef_raptor$UAS,
+        col=total_fly_summary_mef_raptor$Gene,
+        ylab="Total Number of Flies",
+        xlab="shRNA Clone",
+        main="Total Number of Flies for the Mef-GAL4 Driver")
+
+legend("top", levels(total_fly_summary_mef_raptor$Gene)[1:2], fill= palette()[1:2], bty='n')
+
+superpose.eb(plot, 
+             total_fly_summary_mef_raptor$mean,
+             total_fly_summary_mef_raptor$se)
+```
+
+To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the number of eclosed flies.  We did a Shaprio-Wilk test to check for normality (p=`r shapiro.test(residuals(total.flies.aov_mef))$p.value`) and a Levene's Test to check for equal variance (p=`r leveneTest(Live.Flies~Driver*UAS, data=annotated_pupae_data_mef)$"Pr(>F)"[1]`).  A Levene's Test if we remove the +/+ control gives a p-value of `r leveneTest(Live.Flies~UAS, data=subset(annotated_pupae_data_mef, Driver=="Mef-Gal4"))$"Pr(>F)"[1]` and the Shapiro-Wilk test was p=`r shapiro.test(residuals(restricted.flies.aov_mef))$p.value`, so using that model, neither the assumptions of normality and equal variance are met.
+
+We therefore did a Kruskal-Wallis omnibus test, the p-value for that comparason is **`r restricted.flies.raptor.kw_mef$p.value`** for the UAS.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *Mef/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Live.Flies~Driver, subset(annotated_pupae_data_mef, UAS=36304), var.equal=F)$p.value`**.  
+
+Due to the significant Kruskal-Wallis test we performed post-hoc Wilcoxon tests using the *Mef/+* progeny as the controls.  
+
+```{r mef-raptor-total-fly-dunnett-tables,echo=FALSE,results='asis'}
+print(xtable(total.flies.wilcoxon.summary, caption="Wilcoxon Tests for the Number of Flies Comparing to Control (Mef-Gal4/+)", label="tab:total-flies-dunnett-mef", digits=c(0,1,7)), type='html')
 ```
 
 ### Analysis of Number of Flies by Gender
