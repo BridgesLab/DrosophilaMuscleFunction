@@ -544,6 +544,12 @@ dead_pupae_summary_mef <- ddply(subset(annotated_pupae_data_mef, Driver=='Mef-Ga
                         se = sd(Dead.Pupae.pct, na.rm=T)/sqrt(length(Dead.Pupae.pct)),
                         sd = sd(Dead.Pupae.pct, na.rm=T),
                         rel.error = sd(Dead.Pupae.pct, na.rm=T)/mean(Dead.Pupae.pct, na.rm=T)*100)
+
+dead_pupae_summary_mef_raptor <- ddply(subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'&Gene%in%c("Control","Raptor")), ~Gene+UAS, summarize,
+                        mean = mean(Dead.Pupae.pct, na.rm=T),
+                        se = sd(Dead.Pupae.pct, na.rm=T)/sqrt(length(Dead.Pupae.pct)),
+                        sd = sd(Dead.Pupae.pct, na.rm=T),
+                        rel.error = sd(Dead.Pupae.pct, na.rm=T)/mean(Dead.Pupae.pct, na.rm=T)*100)
 ```
 
 ```{r mef-total-pupae-statistics, echo=FALSE}
@@ -658,6 +664,27 @@ print(xtable(pupae.aov_mef, caption="ANOVA for Percent of Dead Pupae by Driver a
 print(xtable(pupae.aov.Mef_mef, caption="ANOVA for Percent of Dead Pupae by UAS for Mef-GAL4", label="tab:dead-pupae-anova-Mef"), type='html')
 print(xtable(pupae.dunnett.summary_mef, caption="Dunnett's Test for the Percent of Dead Pupae Comparing to Control (Mef-Gal4/+)", label="tab:dead-pupae-dunnett-mef", digits=c(0,1,7)), type='html')
 ```
+
+#### Raptor Knockdown Only
+
+```{r mef-raptor-dead-pupae-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
+ymax <- max(100)
+plot <- barplot(dead_pupae_summary_mef_raptor$mean,
+        beside=T, las=1,
+        ylim=c(0,ymax),
+        names.arg=dead_pupae_summary_mef_raptor$UAS,
+        col=dead_pupae_summary_mef_raptor$Gene,
+        ylab="Percent of Dead Pupae",
+        xlab="shRNA Clone",
+        main="Percent of Dead Pupae Using the Mef-GAL4 Driver")
+
+legend("topleft", levels(dead_pupae_summary_mef_raptor$Gene)[1:2], fill= palette()[1:2], bty='n')
+
+superpose.eb(plot, 
+             dead_pupae_summary_mef_raptor$mean,
+             dead_pupae_summary_mef_raptor$se)
+```
+
 
 ### Analysis of Total Number of Flies
 
