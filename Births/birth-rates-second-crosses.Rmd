@@ -470,7 +470,6 @@ superpose.eb(plot,
      
 ## Mef-GAL4 Driver
 
-
 This analysis is just for the *Mef2-GAL4* Driver.
 
 ```{r data-collection-mef, echo=FALSE}
@@ -615,12 +614,69 @@ superpose.eb(plot,
 ```
 
 
-To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  We then checked wither the residuals were normally distributed.  The p-value for that Shapiro-Wilk test was p=`r shapiro.test(residuals(total.pupae.mef.raptor.aov))$p.value`.  We also checked for equal variance between groups.  The p-value for that Levene's test was `r leveneTest(Total.Pupae~Driver*UAS, data=subset(annotated_pupae_data_mef,Gene%in%c('Control','Raptor')))$"Pr(>F)"[1]`.  
+To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of total pupae.  We then checked wither the residuals were normally distributed.  The p-value for that Shapiro-Wilk test was p=`r shapiro.test(residuals(total.pupae.mef.raptor.aov))$p.value`.  We also checked for equal variance between groups.  The p-value for that Levene's test was `r leveneTest(Total.Pupae~Driver*UAS, data=subset(annotated_pupae_data_mef,Gene%in%c('Control','Raptor')))$"Pr(>F)"[1]`.  
 
 Based on this the ANOVA assumptions were met.  Therefore the p-value for effect of genotype on total pupae is **`r summary(total.pupae.mef.raptor.aov)[[1]][["Pr(>F)"]][2]`** for the UAS.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *C179/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Total.Pupae~Driver, subset(annotated_pupae_data_mef, UAS==36304&Gene%in%c('Control','Raptor')))$p.value`**.  These data indicatee that there was no significant effect on the number of pupae.
 
 
 ### Analysis of Dead Pupae
+
+```{r mef-dead-pupae-statistics, echo=FALSE}
+#perform anova testing first for an effect of the driver, then for an effect of the shRNAs
+dead.pupae.aov.mef <- aov(Dead.Pupae.pct~Driver*UAS, data=annotated_pupae_data_mef)
+dead.pupae.aov.mef.no.wt <- aov(Dead.Pupae.pct~UAS, data=subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'))
+dead.pupae.kw.mef.no.wt <- kruskal.test(Dead.Pupae.pct~UAS, data=subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'))
+#did dunnet test vs the control
+library(multcomp)
+pupae.dunnett_mef <- glht(dead.pupae.aov.mef.no.wt, linfct=mcp(UAS="Dunnett"))
+#made a table with the dunnet test results
+pupae.dunnett.summary_mef <- cbind(summary(pupae.dunnett_mef)$test$coefficients, summary(pupae.dunnett_mef)$test$pvalues)
+colnames(pupae.dunnett.summary_mef) <- c("Effect Size (%)", "p-value")
+
+#did wilcoxon tests vs the control
+dead.pupae.wilcoxon.summary <- data.frame(row.names=levels(annotated_pupae_data_mef$UAS))
+
+for (uas in levels(annotated_pupae_data_mef$UAS)){
+  if (uas %in% c('36304','35144')){
+  dead.pupae.wilcoxon.summary[uas,'pval'] <- NA
+    }
+else
+  dead.pupae.wilcoxon.summary[uas,'pval'] <- wilcox.test(Dead.Pupae.pct~UAS, data=subset(annotated_pupae_data_mef, Driver=="Mef-Gal4" & UAS %in% c('36304',uas)))$p.value
+}
+dead.pupae.wilcoxon.summary$padj <- p.adjust(dead.pupae.wilcoxon.summary$pval, method="BH")
+
+
+#For raptor knockdowns only
+#perform anova testing first for an effect of the driver, then for an effect of the shRNAs
+dead.pupae.aov.mef.raptor <- aov(Dead.Pupae.pct~Driver*UAS, data=subset(annotated_pupae_data_mef, Gene %in% c("Control","Raptor")))
+dead.pupae.aov.mef.raptor.no.wt <- aov(Dead.Pupae.pct~UAS, data=subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'& Gene %in% c("Control","Raptor")))
+
+
+#did kruskal wallis tests
+dead.pupae.kw.mef.raptor.no.wt <- kruskal.test(Dead.Pupae.pct~UAS, data=subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'& Gene %in% c("Control","Raptor")))
+
+#did dunnet test vs the control
+
+pupae.dunnett_mef_raptor <- glht(dead.pupae.aov.mef.raptor.no.wt, linfct=mcp(UAS="Dunnett"))
+#made a table with the dunnet test results
+pupae.dunnett.summary_mef_raptor <- cbind(summary(pupae.dunnett_mef_raptor)$test$coefficients, summary(pupae.dunnett_mef_raptor)$test$pvalues)
+colnames(pupae.dunnett.summary_mef_raptor) <- c("Effect Size (%)", "p-value")
+
+
+#did wilcoxon tests vs the control
+dead.pupae.wilcoxon.summary.raptor <- data.frame(row.names=c('31528','34814'))
+
+for (uas in c('31528','34814')){
+  dead.pupae.wilcoxon.summary.raptor[uas,'pval'] <- wilcox.test(Dead.Pupae.pct~UAS, data=subset(annotated_pupae_data_mef, Driver=="Mef-Gal4" & UAS %in% c('36304',uas)))$p.value
+}
+dead.pupae.wilcoxon.summary.raptor$padj <- p.adjust(dead.pupae.wilcoxon.summary.raptor$pval, method="BH")
+```
+
+A summary of the percent of dead pupae for each cross is shown below:
+
+```{r mef-dead-pupae-summary-tables,echo=FALSE,results='asis', message=FALSE}
+print(xtable(dead_pupae_summary_mef, caption="Summary of Percent of Dead Pupae by Driver and UAS for Mef-GAL4", label="tab:dead-pupae-summary-mef"), include.rownames=F, type='html')
+```
 
 ```{r dead-pupae-barplot-mef,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
 ymax <- max(100)
@@ -640,32 +696,25 @@ superpose.eb(plot,
              dead_pupae_summary_mef$se)
 ```
 
-```{r mef-dead-pupae-statistics, echo=FALSE}
-#perform anova testing first for an effect of the driver, then for an effect of the shRNAs
-pupae.aov_mef <- aov(Dead.Pupae.pct~Driver*UAS, data=annotated_pupae_data_mef)
-pupae.aov.Mef_mef <- aov(Dead.Pupae.pct~UAS, data=subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'))
-#did dunnet test vs the control
-library(multcomp)
-pupae.dunnett_mef <- glht(pupae.aov.Mef_mef, linfct=mcp(UAS="Dunnett"))
-#made a table with the dunnet test results
-pupae.dunnett.summary_mef <- cbind(summary(pupae.dunnett_mef)$test$coefficients, summary(pupae.dunnett_mef)$test$pvalues)
-colnames(pupae.dunnett.summary_mef) <- c("Effect Size (%)", "p-value")
+To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  To test for normality we did a Shapiro-Wilk test (p=`r shapiro.test(residuals(dead.pupae.aov.mef))$p.value`) and to test for equal variance we did a Levene's test (p=`r leveneTest(Dead.Pupae.pct~UAS, data=subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'))$"Pr(>F)"[1]`).  Since normality but equal variance was not we did a Kruskal-Wallis test.
+
+The p-value for that comparason is **`r dead.pupae.kw.mef.no.wt$p.value`** for the UAS.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *Mef/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Dead.Pupae.pct~Driver, subset(annotated_pupae_data_mef, UAS=36304),var.equal=F)$p.value`**.  We therefore excluded the +/+ progeny from the analysis and compared with the *Mef-Gal4/+* progeny as a control.  
+
+Since the Kruskal-Wallis test was significant, we did a post-hoc test to look at each strain relative to the control.  To test for differences compared to the *Mef-GAL4/+* control strain, we did a Wilcoxon Rank Sum tests.  The range was `r (min(dead_pupae_summary_mef$mean[2:3])-dead_pupae_summary_mef$mean[1])/dead_pupae_summary_mef$mean[1]`-`r (max(dead_pupae_summary_mef$mean[2:3])-dead_pupae_summary_mef$mean[1])/dead_pupae_summary_mef$mean[1]` times more dead pupae. The results of this test are shown in the table below.  
+
+
+```{r mef-dead-pupae-dunnett-tables,echo=FALSE,results='asis', message=FALSE}
+#print(xtable(pupae.dunnett.summary_mef, caption="Dunnett's Test for the Percent of Dead Pupae Comparing to Control (Mef-Gal4/+)", label="tab:dead-pupae-dunnett-mef", digits=c(0,1,15)), type='html')
+print(xtable(dead.pupae.wilcoxon.summary, caption="Wilcoxon Rank Sum Tests for the Percent of Dead Pupase Comparing to Control (Mef-Gal4/+)", digits =c(0,4,4)),type='html')
 ```
 
-A summary of the percent of dead pupae for each cross is shown in Table \ref{tab:dead-pupae-summary-mef} and in Figure \ref{fig:dead-pupae-barplot}.
-To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  The p-value for that comparason is **`r summary(pupae.aov_mef)[[1]][["Pr(>F)"]][2]`** for the UAS.  The results of this ANOVA are shown in Table \ref{tab:dead-pupae-anova-mef}.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *Mef/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Dead.Pupae.pct~Driver, subset(annotated_pupae_data_mef, UAS=36304))$p.value`**.  We therefore excluded the +/+ progeny from the analysis and compared with the *Mef-Gal4/+* progeny as a control.  
 
-The ANOVA for this comparason yielded a p-value for the UAS of **`r summary(pupae.aov.Mef_mef)[[1]][["Pr(>F)"]][1]`**.  The results of this ANOVA are in Table \ref{tab:dead-pupae-anova-Mef}.  Since this ANOVA was significant, we did a post-hoc test to look at each strain relative to the control.  To test for differences compared to the *Mef-GAL4/+* control strain, we did a Dunnett's test.  The range was `r (min(dead_pupae_summary_mef$mean[2:3])-dead_pupae_summary_mef$mean[1])/dead_pupae_summary_mef$mean[1]`-`r (max(dead_pupae_summary_mef$mean[2:3])-dead_pupae_summary_mef$mean[1])/dead_pupae_summary_mef$mean[1]` times more dead pupae. The results of this test are shown in Table \ref{tab:dead-pupae-dunnett-mef}.  
-
-
-```{r mef-dead-pupae-summary-tables,echo=FALSE,results='asis', message=FALSE}
-print(xtable(dead_pupae_summary_mef, caption="Summary of Percent of Dead Pupae by Driver and UAS for Mef-GAL4", label="tab:dead-pupae-summary-mef"), include.rownames=F, type='html')
-print(xtable(pupae.aov_mef, caption="ANOVA for Percent of Dead Pupae by Driver and UAS for Mef-GAL4", label="tab:dead-pupae-anova-mef"), type='html')
-print(xtable(pupae.aov.Mef_mef, caption="ANOVA for Percent of Dead Pupae by UAS for Mef-GAL4", label="tab:dead-pupae-anova-Mef"), type='html')
-print(xtable(pupae.dunnett.summary_mef, caption="Dunnett's Test for the Percent of Dead Pupae Comparing to Control (Mef-Gal4/+)", label="tab:dead-pupae-dunnett-mef", digits=c(0,1,7)), type='html')
-```
 
 #### Raptor Knockdown Only
+
+```{r mef-raptor-dead-pupae-summary-tables,echo=FALSE,results='asis', message=FALSE}
+print(xtable(dead_pupae_summary_mef_raptor, caption="Summary of Percent of Dead Pupae by Driver and UAS for Mef-GAL4", label="tab:dead-pupae-summary-mef"), include.rownames=F, type='html')
+```
 
 ```{r mef-raptor-dead-pupae-barplot,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
 ymax <- max(100)
@@ -685,6 +734,17 @@ superpose.eb(plot,
              dead_pupae_summary_mef_raptor$se)
 ```
 
+
+To analyse these data, first we did an ANOVA testing for whether the UAS has an effect on the percentage of dead pupae.  To test for normality we did a Shapiro-Wilk test (p=`r shapiro.test(residuals(dead.pupae.aov.mef.raptor.no.wt))$p.value`) and to test for equal variance we did a Levene's test (p=`r leveneTest(Dead.Pupae.pct~UAS, data=subset(annotated_pupae_data_mef, Driver=='Mef-Gal4'&Gene %in% c("Control","Raptor")))$"Pr(>F)"[1]`).  Since normality was met, but equal variance was not we did a Kruskal-Wallis test.
+
+The p-value for that comparason is **`r dead.pupae.kw.mef.raptor.no.wt$p.value`** for the UAS.  To test if the driver alone had an effect with did a Student's t-test comparing the +/+ and *Mef/+* progeny.  The p-value for the Driver having an effect is **`r t.test(Dead.Pupae.pct~Driver, subset(annotated_pupae_data_mef, UAS=36304),var.equal=F)$p.value`**.  We therefore excluded the +/+ progeny from the analysis and compared with the *Mef-Gal4/+* progeny as a control.  
+
+Since this Kruskal-Wallis test was significant, we did a post-hoc Wilcoxon tests to look at each strain relative to the control.  The range was `r (min(dead_pupae_summary_mef$mean[2:3])-dead_pupae_summary_mef$mean[1])/dead_pupae_summary_mef$mean[1]`-`r (max(dead_pupae_summary_mef$mean[2:3])-dead_pupae_summary_mef$mean[1])/dead_pupae_summary_mef$mean[1]` times more dead pupae. The results of this test are shown in the table below.  
+
+```{r mef-raptor-dead-pupae-wilcoxon-tables,echo=FALSE,results='asis', message=FALSE}
+print(xtable(dead.pupae.wilcoxon.summary.raptor, caption="Wilcoxon Rank Sum Tests for the Percent of Dead Pupae Comparing to Control (Mef-Gal4/+)", label="tab:dead-pupae-dunnett-mef", digits=c(0,5,5)), type='html')
+```
+dead.pupae.wilcoxon.summary
 
 ### Analysis of Total Number of Flies
 
