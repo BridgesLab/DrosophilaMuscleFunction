@@ -24,9 +24,10 @@ Figure 3A | Births/birth-ratio-analysis.Rmd | Births/figure/mef-raptor-total-fly
 Figure 3B | Births/birth-ratio-analysis.Rmd | Births/figure/c179-raptor-total-fly-barplot.png
 Figure 3C | Births/birth-rates-second-crosses.Rmd | Births/figure/c179-raptor-total-pupae-barplot.png 
 Figure 3D | Births/birth-rates-second-crosses.Rmd | Births/figure/mef-raptor-total-pupae-barplot.png
-Figure 3E  || 
+Figure 3E  | | 
 Figure 3F | Births/birth-ratio-analysis.Rmd | Births/figure/c179-births-gendered.png
 Figure 3G | Births/birth-ratio-analysis.Rmd | Births/figure/c179-births-gendered.png
+Figure 4 | Lifespan/longevity-analysis-dTORC1.Rmd | Lifespan/figure/survival-c179-raptor-gender-strain
 Figure 5 | Crawling/crawling-analysis.Rmd | Crawling/figure/barplot-raptor.png
 Supplementary Figure 1 | Births/rapamycin-dose-response.Rmd | 
 Supplementary Figure 2 | Births/birth-ratio-analysis.Rmd | Births/figure/24b-births-18c.png
