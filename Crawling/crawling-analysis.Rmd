@@ -183,6 +183,49 @@ superpose.eb(plot,
 }
 ```
 
+```{r barplot-tsc, dev=c('png','pdf'),echo=FALSE}
+par(mfrow=c(1,length(levels(uas.summary$Age.Range))))
+for (range in levels(uas.summary$Age.Range)){
+data.used <- droplevels(subset(uas.summary,Age.Range==range&Gene%in%c('Control','Tsc1')))
+par( mar=c(10,4.1,4.1,2.1))
+ymax <- max(data.used$mean+data.used$se, na.rm=T)
+plot <- barplot(data.used $mean,
+        beside=T, las=2,
+        ylim=c(0,ymax),
+        names.arg=data.used$UAS,
+        col=data.used$Gene,
+        ylab="Time to Crawl 4cm (s)",
+        xlab="shRNA Clone",
+        main=sprintf("Age Range- %s",range))
+
+legend("topleft", levels(data.used$Gene), fill= palette()[1:length(levels(data.used$Gene))], bty='n')
+
+superpose.eb(plot, 
+             data.used$mean,
+             data.used$se)
+}
+```
+
+```{r barplot-tsc-3w, dev=c('png','pdf'),echo=FALSE}
+data.used <- droplevels(subset(uas.summary,Age.Range=='(19,45]'&Gene%in%c('Control','Tsc1')))
+par( mar=c(10,4.1,4.1,2.1))
+ymax <- max(data.used$mean+data.used$se, na.rm=T)
+plot <- barplot(data.used $mean,
+        beside=T, las=2,
+        ylim=c(0,ymax),
+        names.arg=data.used$UAS,
+        col=data.used$Gene,
+        ylab="Time to Crawl 4cm (s)",
+        xlab="shRNA Clone",
+        main=sprintf("Age Range- %s",range))
+
+legend("topleft", levels(data.used$Gene), fill= palette()[1:length(levels(data.used$Gene))], bty='n')
+
+superpose.eb(plot, 
+             data.used$mean,
+             data.used$se)
+```
+
 ```{r barplot-gender,dev=c('png','pdf'),echo=FALSE}
 
 par(mfrow=c(2,length(levels(uas.summary.gender$Age.Range))))

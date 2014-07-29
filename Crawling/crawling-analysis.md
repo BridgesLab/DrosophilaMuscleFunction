@@ -3,8 +3,7 @@ Crawling Assays
 
 
 
-
-The raw data saved in ../Data/Crawling Data.csv.  This script was most recently run on Fri May  9 15:37:12 2014.
+The raw data saved in ../Data/Crawling Data.csv.  This script was most recently run on Wed Jul 16 09:29:26 2014.
 
 Analysis
 ---------
@@ -12,24 +11,22 @@ Analysis
 
 
 
-
 ![plot of chunk timing-density-plot](figure/timing-density-plot.png) 
-
 
 
 ![plot of chunk barplot](figure/barplot.png) 
 
-
 ![plot of chunk barplot-raptor](figure/barplot-raptor.png) 
 
+![plot of chunk barplot-tsc](figure/barplot-tsc.png) 
+
+![plot of chunk barplot-tsc-3w](figure/barplot-tsc-3w.png) 
 
 ![plot of chunk barplot-gender](figure/barplot-gender.png) 
 
-
 ![plot of chunk barplot-time-limit](figure/barplot-time-limit.png) 
-
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Fri May  9 15:37:13 2014 -->
+<!-- Wed Jul 16 09:29:28 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Summary of Crawling Times per Cross </CAPTION>
 <TR> <TH> Age.Range </TH> <TH> Gene </TH> <TH> UAS </TH> <TH> mean </TH> <TH> se </TH> <TH> sd </TH> <TH> rel.error </TH> <TH> n </TH>  </TR>
@@ -54,7 +51,6 @@ Analysis
    <A NAME=tab:summary></A>
 </TABLE>
 
-
 Statistical Analysis
 ----------------------
 
@@ -62,14 +58,12 @@ To test this effect, first we tested a model in which first the age range was ta
 
 
 
-
 We then checked whether these had normally distributed residuals and they did not (p=1.6191 &times; 10<sup>-51</sup>, 5.7246 &times; 10<sup>-36</sup> and 8.2443 &times; 10<sup>-26</sup>).  We therefore did individual Wilcoxon-Rank Sum Tests comparing each genotype to the control group.
 
 
 
-
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Fri May  9 15:37:14 2014 -->
+<!-- Wed Jul 16 09:29:28 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Wilcoxon Rank-Sum Tests for each group compared to the control, not adjusted for multiple observations </CAPTION>
 <TR> <TH>  </TH> <TH> (2,19] </TH> <TH> (19,45] </TH> <TH> (45,73] </TH>  </TR>
@@ -82,7 +76,7 @@ We then checked whether these had normally distributed residuals and they did no
    <A NAME=tab:wilcoxon-tests></A>
 </TABLE>
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Fri May  9 15:37:14 2014 -->
+<!-- Wed Jul 16 09:29:28 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Raptor Knockdown Wilcoxon Rank-Sum tests for each UAS compared to the control, adjusted by the method of Benjamini and Hochberg </CAPTION>
 <TR> <TH>  </TH> <TH> UAS </TH> <TH> age group </TH> <TH> pval </TH> <TH> padj </TH>  </TR>
@@ -98,9 +92,8 @@ We then checked whether these had normally distributed residuals and they did no
    <A NAME=tab:raptor-wilcoxon-tests></A>
 </TABLE>
 
-
 <!-- html table generated in R 3.1.0 by xtable 1.7-3 package -->
-<!-- Fri May  9 15:37:14 2014 -->
+<!-- Wed Jul 16 09:29:28 2014 -->
 <TABLE border=1>
 <CAPTION ALIGN="bottom"> Fisher's Exact Test For Flies Which Do Not Crawl 4cm in 10 Seconds </CAPTION>
 <TR> <TH>  </TH> <TH> (2,19] </TH> <TH> (19,45] </TH> <TH> (45,73] </TH>  </TR>
@@ -112,7 +105,6 @@ We then checked whether these had normally distributed residuals and they did no
   <TR> <TD align="right"> 34814 </TD> <TD align="right">  </TD> <TD align="right">  </TD> <TD align="right">  </TD> </TR>
    <A NAME=tab:fisher-test-summary></A>
 </TABLE>
-
 
 Session Information
 ----------------------
@@ -130,13 +122,12 @@ Session Information
 ## [8] base     
 ## 
 ## other attached packages:
-## [1] xtable_1.7-3     multcomp_1.3-3   TH.data_1.0-3    survival_2.37-7 
-## [5] mvtnorm_0.9-9999 plyr_1.8.1       lubridate_1.3.3  reshape2_1.4    
-## [9] knitr_1.5       
+## [1] xtable_1.7-3      multcomp_1.3-3    TH.data_1.0-3     survival_2.37-7  
+## [5] mvtnorm_0.9-99992 plyr_1.8.1        lubridate_1.3.3   reshape2_1.4     
+## [9] knitr_1.6        
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] digest_0.6.4    evaluate_0.5.3  formatR_0.10    grid_3.1.0     
-##  [5] lattice_0.20-29 memoise_0.2.1   Rcpp_0.11.1     sandwich_2.3-0 
+##  [1] digest_0.6.4    evaluate_0.5.5  formatR_0.10    grid_3.1.0     
+##  [5] lattice_0.20-29 memoise_0.2.1   Rcpp_0.11.2     sandwich_2.3-0 
 ##  [9] stringr_0.6.2   tools_3.1.0     zoo_1.7-11
 ```
-
