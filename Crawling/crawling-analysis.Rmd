@@ -174,6 +174,7 @@ plot <- barplot(data.used $mean,
         ylab="Time to Crawl 4cm (s)",
         xlab="shRNA Clone",
         main=sprintf("Age Range- %s",range))
+<<<<<<< HEAD:Crawling/crawling-analysis.Rmd
 
 legend("topleft", levels(data.used$Gene), fill= palette()[1:length(levels(data.used$Gene))], bty='n')
 
@@ -226,6 +227,17 @@ superpose.eb(plot,
              data.used$se)
 ```
 
+=======
+
+legend("topleft", levels(data.used$Gene), fill= palette()[1:length(levels(data.used$Gene))], bty='n')
+
+superpose.eb(plot, 
+             data.used$mean,
+             data.used$se)
+}
+```
+
+>>>>>>> 66cbe557aec678df3797dfd5c822ec1d9485e037:Crawling/crawling-analysis.Rmd
 ```{r barplot-gender,dev=c('png','pdf'),echo=FALSE}
 
 par(mfrow=c(2,length(levels(uas.summary.gender$Age.Range))))
