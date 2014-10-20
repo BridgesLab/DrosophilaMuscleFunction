@@ -8,6 +8,9 @@ birth_file_name <- '../Data/Birth Data.csv'
 birth_data <- read.csv(birth_file_name)
 crawling_data <- read.csv(data_file_name)
 mapping.data <- read.csv(mapping_file)
+
+manual_eclosure_crawling_file_name <- '../Data/Crawling Data - Manual Eclosure.csv'
+manual_crawling_data <- read.csv(manual_eclosure_crawling_file_name)
 ```
 
 The raw data saved in `r data_file_name`.  This script was most recently run on `r date()`.
@@ -174,7 +177,6 @@ plot <- barplot(data.used $mean,
         ylab="Time to Crawl 4cm (s)",
         xlab="shRNA Clone",
         main=sprintf("Age Range- %s",range))
-<<<<<<< HEAD:Crawling/crawling-analysis.Rmd
 
 legend("topleft", levels(data.used$Gene), fill= palette()[1:length(levels(data.used$Gene))], bty='n')
 
@@ -227,17 +229,6 @@ superpose.eb(plot,
              data.used$se)
 ```
 
-=======
-
-legend("topleft", levels(data.used$Gene), fill= palette()[1:length(levels(data.used$Gene))], bty='n')
-
-superpose.eb(plot, 
-             data.used$mean,
-             data.used$se)
-}
-```
-
->>>>>>> 66cbe557aec678df3797dfd5c822ec1d9485e037:Crawling/crawling-analysis.Rmd
 ```{r barplot-gender,dev=c('png','pdf'),echo=FALSE}
 
 par(mfrow=c(2,length(levels(uas.summary.gender$Age.Range))))
@@ -344,9 +335,31 @@ print(xtable(melted.raptor.wilcoxon.tables, caption="Raptor Knockdown Wilcoxon R
 print(xtable(crawling.fisher.tests, caption=sprintf("Fisher's Exact Test For Flies Which Do Not Crawl 4cm in %s Seconds", time.limit), label='tab:fisher-test-summary'), type='html')
 ```
 
+Manual Eclosure Climbing Assay
+------------------------------
+
+Flies were assisted in eclosure at 10 days and then 4 days later a climbing assay was performed.
+
+
+```{r manual-eclosure-climbing, echo=FALSE, dev=c('png','pdf')}
+manual_climbing_summary <- ddply(manual_crawling_data, ~Genotype, summarise,
+                                 mean = mean(Time),
+                                 sd = sd(Time),
+                                 se = sd(Time)/sqrt(length(Time)),
+                                 n = length(Time),
+                                 Shapiro = shapiro.test(Time)$p.value)
+ymax = max(manual_climbing_summary$mean + manual_climbing_summary$se)
+plot <- with(manual_climbing_summary, barplot(mean, ylab="Time to Climb 4 cm (s)", names.arg=Genotype,
+                                              las=1, ylim=c(0,ymax)))
+superpose.eb(plot, manual_climbing_summary$mean, manual_climbing_summary$se)
+```
+
+Since the data was not normal based on a Shapiro-Wilk test we did a Wilcoxon Rank Sum test comparing the two groups.  The p-value from this test was `r wilcox.test(Time~Genotype, data=manual_crawling_data)$p.value`.
+
+
 Session Information
 ----------------------
 
-```{r sessionInfo, echo=F}
+```{r sessionInfo, echo=FALSE}
 sessionInfo()
 ```
