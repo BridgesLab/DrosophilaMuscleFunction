@@ -1,0 +1,43 @@
+qPCR Analysis for Differentiation
+========================================================
+
+This is to  generate the graphs for the differentiation time course.
+
+```{r data-entry, echo=FALSE, message=FALSE}
+sheet_name <- 'Data_for_R'
+file_name <- '../Data/3-18-14 time courseqPCRplusgenes.xlsx'
+library(xlsx)
+tc_data <- read.xlsx2(file_name, sheetName= sheet_name,colClasses=c('character', rep('numeric',6)))
+```
+
+These data are in the file `r file_name` as worksheet `sheet_name`.  This script was most recently updated on `r date()`.
+
+Graphs
+-------
+
+```{r time-plot, echo=FALSE, dev=c('png','pdf'), warning=FALSE}
+library(RColorBrewer)
+times <- c(0,2,4,6,10,15)
+genes_to_plot <- c('Myod1','Myog','Myf5','Cdkn1a','Mef2c')
+gene_colors <- brewer.pal(length(genes_to_plot), "Set2")
+plot_data <- droplevels(subset(tc_data, Gene %in% genes_to_plot))
+rownames(plot_data) <- seq(length=nrow(plot_data))
+plot(times, tc_data['Gapdh',2:7], pch=19, ylab="Relative Expression", xlab="Differentiation (Days)", ylim=c(0,1.3), col=palette()[1], las=1)
+
+for (n in seq(1,length(genes_to_plot))) {
+points(times, as.numeric(plot_data[n,2:7]), pch=19, col=gene_colors[n])
+tmp_data <- as.numeric(plot_data[n,2:7])
+loess.tmp <- loess(tmp_data~times, span=0.4)
+lines(seq(0,15), predict(loess.tmp, newdata=data.frame(times=seq(0,15))), col=gene_colors[n])
+}
+legend('bottomright', as.character(plot_data[1:5]$Gene), pch=19, lty=1, col=gene_colors, bty='n')
+```
+
+Session Information
+-------------------
+
+```{r session-info, echo=FALSE}
+sessionInfo()
+```
+
+
