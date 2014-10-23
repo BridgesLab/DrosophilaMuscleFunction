@@ -1,16 +1,27 @@
-qPCR Analysis for Differentiation
-========================================================
+---
+title: "qPCR Analysis for Differentiation"
+output:
+  html_document:
+    toc: true
+    theme: united
+  pdf_document:
+    toc: true
+    highlight: zenburn
+
+author: "Innocence Harvey and Dave Bridges"
+---
+
 
 This is to  generate the graphs for the differentiation time course.
 
-```{r data-entry, echo=FALSE, message=FALSE}
+```{r data-entry, echo=TRUE, message=FALSE}
 sheet_name <- 'Data_for_R'
 file_name <- '../Data/3-18-14 time courseqPCRplusgenes.xlsx'
 library(xlsx)
 tc_data <- read.xlsx2(file_name, sheetName= sheet_name,colClasses=c('character', rep('numeric',6)))
 ```
 
-These data are in the file `r file_name` as worksheet `sheet_name`.  This script was most recently updated on `r date()`.
+These data are in the file `r file_name` as worksheet `r sheet_name`.  This script was most recently updated on `r date()`.
 
 Graphs
 -------
