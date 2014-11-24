@@ -1,12 +1,12 @@
 DrosophilaMuscleFunction
 ========================
 
-This dataset corresponds to studies performed primarily by the Bridges Laboratory (bridgeslab.uthsc.edu) on the role of mTORC1 in muscle function, primarily in *Drosophila melanogaster*.
+This dataset corresponds to studies performed primarily by the Bridges Laboratory (http://bridgeslab.uthsc.edu) on the role of mTORC1 in muscle function, primarily in *Drosophila melanogaster*.
 
 Publications
 -------------
 
-The following are publications, posters and the like and the corresponding version of this dataset at that time.
+The following are publications based on these data, along with the version of the dataset at that time.
 
 | Publication | Dataset | Tag |
 |-------------|---------|-----|
