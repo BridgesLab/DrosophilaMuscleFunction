@@ -1,0 +1,117 @@
+---
+title: "Quantification of Effects of Rapamycin on MyoD Levels"
+author: "Erika Yates and Dave Bridges"
+date: "December 1, 2014"
+output: 
+  html_document:
+    keep_md: true
+---
+
+# Experimental Design
+
+```{r data-input, echo=FALSE}
+spreadsheet_location <- 'https://docs.google.com/spreadsheet/pub?key=0Aitfmor6rCjYdEdfZ1ROOEoxS3lXQzFQU1J1cUp4Znc&single=true&gid=0&output=csv' 
+
+mapping.data <- read.csv('../Data/gene_mapping.csv')
+data_file_name <- '../Data/mhc_birth_worksheet.csv'
+download.file(spreadsheet_location, data_file_name, method="curl")
+data <- read.csv(data_file_name)
+data$Total <- rowSums(data[,10:14], na.rm=T)
+all.flies <- sum(data$Total, na.rm=T)
+require(plyr, quietly=T)
+data$Cross <- as.factor(paste(data$Male, data$Female, sep=" x "))
+data$Driver <- as.factor(sapply(strsplit(as.character(data$Female), "/"),"[", 1))
+#releveled UAS showing TSC1 then Raptor
+data$UAS <- as.factor(sapply(strsplit(as.character(data$Male), "/"),"[", 1))
+data$UAS <- relevel(data$UAS, ref='36304')
+#remove analyses where incomplete data is presented
+data.complete <- data[!(is.na(data$Total)),]
+#merged with gene mapping file
+annotated.data <- merge(mapping.data, data.complete, by="UAS", all.y=T)
+```
+
+The raw data saved in`r data_file_name`.  This script was most recently run on `r date()`.
+
+## Strain Summaries
+
+```{r data-analysis, echo=FALSE}
+gene.summarised.data <- ddply(annotated.data , .(Driver,Gene), summarise, 
+      WT = sum(WT),
+      Cyo.Sb = sum(Cyo.Sb),
+      Sb = sum(Sb),
+      Cyo = sum(Cyo),
+      Cyo.sb.1 = sum(Cyo.Sb.1),
+      Total = as.integer(sum(Total)))
+
+#gene.summarised.data$pval <-rep(NA, dim(gene.summarised.data)[1])
+#for (n in seq(1,dim(gene.summarised.data)[1])) {   
+#  values <- gene.summarised.data[n,3:5]
+#  test <- chisq.test(values, p=rep(1,3), rescale.p=T)
+#  gene.summarised.data[n,]$pval <- test$p.value  
+#}
+#gene.summarised.data$padj <- p.adjust(gene.summarised.data$pval, method="BH")
+
+uas.summarised.data <- ddply(annotated.data , .(Driver,UAS,Gene), summarise, 
+      WT = sum(WT),
+      Cyo.Sb = sum(Cyo.Sb),
+      Sb = sum(Sb),
+      Cyo = sum(Cyo),
+      Cyo.sb.1 = sum(Cyo.Sb.1),
+      Total = sum(Total))
+
+#uas.summarised.data$pval <-rep(NA, dim(uas.summarised.data)[1])
+#for (n in seq(1,dim(uas.summarised.data)[1])) {   
+#  values <- uas.summarised.data[n,3:5]
+#  test <- chisq.test(values, p=rep(1,3), rescale.p=T)
+#  uas.summarised.data[n,]$pval <- test$p.value  
+#}
+#uas.summarised.data$padj <- p.adjust(uas.summarised.data$pval, method="BH")
+
+uas.gender.summarised.data <- ddply(annotated.data , .(Driver,UAS,Gene,Gender), summarise, 
+      WT = sum(WT),
+      Cyo.Sb = sum(Cyo.Sb),
+      Sb = sum(Sb),
+      Cyo = sum(Cyo),
+      Cyo.sb.1 = sum(Cyo.Sb.1),
+      Total = sum(Total))
+```
+
+This analysis includes `r all.flies` flies.
+
+```{r data-tables,echo=FALSE,results='asis'}
+require(xtable)
+print(xtable(gene.summarised.data, caption="Gene Level Summarised Data", label="tab:gene_summarised_data", digits = c(rep(0,9))), include.rownames=F, type='html')
+print(xtable(uas.summarised.data, caption="UAS Level Summarised Data", label="tab:driver_summarised_data", digits = c(rep(0,10))), include.rownames=F, type='html')
+print(xtable(uas.gender.summarised.data, caption="UAS Level Summarised Data Separated by Gender", label="tab:driver_summarised_data", digits = c(rep(0,11))), include.rownames=F, type='html')
+```
+
+## Effects of Mhc-GAL4 Driver on Birth Rates
+
+```{r mhc-gal4-births, echo=FALSE, dev=c('png','pdf')}
+mhc_data <- uas.summarised.data[uas.summarised.data$Driver=='Mhc-GAL4'&uas.summarised.data$Gene %in% c("Control","Raptor")&uas.summarised.data$UAS!='31528',]
+mhc_data <- mhc_data[order(mhc_data$Gene),]
+mhc_data$WT.pct <- mhc_data$WT/mhc_data$Total*100
+mhc_data$Cyo.pct <- mhc_data$Cyo.Sb/mhc_data$Total*100
+mhc_data$WT.err <- sqrt(mhc_data$WT.pct/100*(1-mhc_data$WT.pct/100)/mhc_data$Total)*100
+mhc_data$Cyo.err <- sqrt(mhc_data$Cyo.pct/100*(1-mhc_data$Cyo.pct/100)/mhc_data$Total)*100
+
+plot <- barplot(as.matrix(t(mhc_data[,c('WT.pct','Cyo.pct')])),
+        beside=T, las=1, names.arg=mhc_data$UAS, ylab="Percent of Flies Eclosed",
+        ylim=c(0,60))
+abline(h=50, lty=2)
+legend("topright", c("Mhc-GAL4/shRNA", "Mhc-GAL4/+"), fill=grey.colors(2), bty='n')
+
+superpose.eb <- 
+ function (x, y, ebl, ebu = ebl, length = 0.08, ...) 
+ arrows(x, y + ebu, x, y - ebl, angle = 90, code = 3, 
+ length = length, ...)
+
+superpose.eb(plot, 
+             as.matrix(t(mhc_data[,c('WT.pct','Cyo.pct')])),
+             as.matrix(t(mhc_data[,c('WT.err','Cyo.err')])))
+```
+
+## Session Information
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
