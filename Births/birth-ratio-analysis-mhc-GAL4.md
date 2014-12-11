@@ -6,7 +6,7 @@ December 1, 2014
 
 
 
-The raw data saved in../Data/mhc_birth_worksheet.csv.  This script was most recently run on Wed Dec  3 09:46:03 2014.
+The raw data saved in../Data/mhc_birth_worksheet.csv.  This script was most recently run on Thu Dec 11 12:40:29 2014.
 
 ## Strain Summaries
 
@@ -20,7 +20,7 @@ This analysis includes 1.162\times 10^{4} flies.
 ```
 
 <!-- html table generated in R 3.1.1 by xtable 1.7-4 package -->
-<!-- Wed Dec  3 09:46:03 2014 -->
+<!-- Thu Dec 11 12:40:29 2014 -->
 <table border=1>
 <caption align="bottom"> Gene Level Summarised Data </caption>
 <tr> <th> Driver </th> <th> Gene </th> <th> WT </th> <th> Cyo.Sb </th> <th> Sb </th> <th> Cyo </th> <th> Cyo.sb.1 </th> <th> Total </th>  </tr>
@@ -40,7 +40,7 @@ This analysis includes 1.162\times 10^{4} flies.
    <a name=tab:gene_summarised_data></a>
 </table>
 <!-- html table generated in R 3.1.1 by xtable 1.7-4 package -->
-<!-- Wed Dec  3 09:46:03 2014 -->
+<!-- Thu Dec 11 12:40:29 2014 -->
 <table border=1>
 <caption align="bottom"> UAS Level Summarised Data </caption>
 <tr> <th> Driver </th> <th> UAS </th> <th> Gene </th> <th> WT </th> <th> Cyo.Sb </th> <th> Sb </th> <th> Cyo </th> <th> Cyo.sb.1 </th> <th> Total </th>  </tr>
@@ -70,7 +70,7 @@ This analysis includes 1.162\times 10^{4} flies.
    <a name=tab:driver_summarised_data></a>
 </table>
 <!-- html table generated in R 3.1.1 by xtable 1.7-4 package -->
-<!-- Wed Dec  3 09:46:03 2014 -->
+<!-- Thu Dec 11 12:40:29 2014 -->
 <table border=1>
 <caption align="bottom"> UAS Level Summarised Data Separated by Gender </caption>
 <tr> <th> Driver </th> <th> UAS </th> <th> Gene </th> <th> Gender </th> <th> WT </th> <th> Cyo.Sb </th> <th> Sb </th> <th> Cyo </th> <th> Cyo.sb.1 </th> <th> Total </th>  </tr>
@@ -142,7 +142,7 @@ This analysis includes 1.162\times 10^{4} flies.
 ## [1] xtable_1.7-4 plyr_1.8.1  
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] digest_0.6.4     evaluate_0.5.5   formatR_1.0      htmltools_0.2.6 
+##  [1] digest_0.6.5     evaluate_0.5.5   formatR_1.0      htmltools_0.2.6 
 ##  [5] knitr_1.8        Rcpp_0.11.3      rmarkdown_0.3.10 stringr_0.6.2   
 ##  [9] tools_3.1.1      yaml_2.1.13
 ```
