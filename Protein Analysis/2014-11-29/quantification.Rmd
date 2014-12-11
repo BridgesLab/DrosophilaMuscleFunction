@@ -1,0 +1,237 @@
+---
+title: "Quantification of Effects of Rapamycin on MyoD Levels"
+author: "Dave Bridges"
+date: "December 1, 2014"
+output: 
+  pdf_document:
+    keep_tex: true
+---
+
+C2C12 Cells were grown to confluence and then treated for 4h with 500 nM Rapamycin, 1 uM LYS6K2, or 10 uM MG132.  These data include experiments done on 2014-11-26 and 2014-11-29.  These data are located in `r getwd()` and was most recently updated on `r date()`.
+
+```{r data-entry}
+myod_data_file <- 'MyoD Quantification.txt'
+myod_data_file_2 <- 'MyoD Quantification-2.txt'
+myod_data <- read.csv(myod_data_file)
+
+akt_data_file <- 'Akt Quantification.txt'
+akt_data_file_2 <- 'Akt Quantification-2.txt'
+akt_data <- rbind(read.csv(akt_data_file), read.csv(akt_data_file_2))
+
+s6_data_file <- 'S6 Quantification.txt'
+s6_data_file_2 <- 'S6 Quantification-2.txt'
+s6_data <- rbind(read.csv(s6_data_file), read.csv(s6_data_file_2))
+```
+
+The input files are: `r akt_data_file` and `r myod_data_file`.
+
+# MyoD Quantification
+
+```{r myod-quantification, message=FALSE, warning=FALSE}
+myod_data <- myod_data[grepl("Lane", myod_data$Lane.Name),]
+myod_data <- myod_data[myod_data$Channel == 800,]
+myod_data$Lane.Number <- as.integer(sapply(strsplit(as.character(myod_data$Lane.Name), " "),  "[", 2))
+myod_data$Protein <- rep(c('MyoD'),12)
+
+library(reshape2)
+myod_lane_summary <- dcast(myod_data, Scan + Lane.Number ~ Protein, value.var='I.I..K.Counts.')
+myod_lane_summary$Treatment <- as.factor(rep(c("DMSO",
+                                               "Rapamycin",
+                                               "HS + DMSO",
+                                               "HS + Rapamycin",
+                                               "HS + Rapamycin + MG132",
+                                               "HS + LYS6K2"),2))
+myod_lane_summary$Treatment <- factor(myod_lane_summary$Treatment, 
+                                      levels(myod_lane_summary$Treatment)[c(2,4,3,5,1,6)])
+
+myod_lane_summary$MyoD_Norm <- c(
+  myod_lane_summary[c(1:6), 'MyoD']/myod_lane_summary[myod_lane_summary$Treatment=='HS + DMSO', 'MyoD'][1], 
+  myod_lane_summary[c(7:12), 'MyoD']/myod_lane_summary[myod_lane_summary$Treatment=='HS + DMSO', 'MyoD'][2])
+
+library(dplyr)
+se <- function(x) sd(x)/sqrt(length(x))
+myod_summary <-
+  myod_lane_summary %>%
+  group_by(Treatment) %>%
+  summarize(mean=mean(MyoD_Norm),
+            se = se(MyoD_Norm),
+            sd = sd(MyoD_Norm),
+            n = length(MyoD_Norm))
+
+ymax = max(myod_summary$mean + myod_summary$se)
+plot <- with(myod_summary, barplot(mean, names.arg=Treatment,
+                           las=1, ylim=c(0,ymax),cex.names=0.5,
+                           ylab="MyoD Levels (Arbitrary Units)"))
+
+superpose.eb <- function (x, y, ebl, ebu = ebl, length = 0.08, ...)
+  arrows(x, y + ebu, x, y - ebl, angle = 90, code = 3,
+  length = length, ...)
+
+superpose.eb(plot, myod_summary$mean, myod_summary$se)
+
+myod_summary$Serum <- c(rep("Horse Serum",4), rep("FBS",2))
+myod_summary$Drug <- c("DMSO","Rapamycin","LYS6K","Rapamycin + MG132", "DMSO", "Rapamycin")
+plot <- barplot(as.matrix(dcast(subset(myod_summary, Drug %in% c("DMSO","Rapamycin")), 
+                        Drug~Serum, value.var='mean')[2:3]),
+                        beside=T, las=1, ylab="Relative Protein Levels")
+superpose.eb(plot,
+            as.matrix(dcast(subset(myod_summary, Drug %in% c("DMSO","Rapamycin")), 
+                        Drug~Serum, value.var='mean')[2:3]),
+            as.matrix(dcast(subset(myod_summary, Drug %in% c("DMSO","Rapamycin")), 
+                        Drug~Serum, value.var='se')[2:3]))
+```
+
+Based on these data, Rapamycin treatment reduced MyoD levels in the presence of Horse Serum by `r (1-myod_summary[myod_summary$Treatment=='HS + Rapamycin', 'mean'])*100`% +/- `r myod_summary[myod_summary$Treatment=='HS + Rapamycin', 'se']*100`%.  The p-value by one-way t-test is `r t.test(subset(myod_lane_summary, Treatment=="HS + Rapamycin")$MyoD_Norm, mu=1, alternative='less')$p.value`.
+
+In the absence of horse serum, there was a `r myod_summary[myod_summary$Treatment=='Rapamycin', 'mean']/myod_summary[myod_summary$Treatment=='DMSO', 'mean']*100`% reduction.  The p-value from the two-way t-test of that comparason is `r t.test(MyoD~Treatment, data=subset(myod_lane_summary, Treatment %in% c('Rapamycin','DMSO')), alternative='greater')$p.value`.
+
+# pS6/S6 Quantification
+
+```{r s6-quantification, warning=FALSE}
+#for the first experiment
+s6_data <- s6_data[grepl("Lane", s6_data$Lane.Name),]
+s6_data <- s6_data[s6_data$Name == "Band 1",]
+s6_data$Lane.Number <- as.integer(sapply(strsplit(as.character(s6_data$Lane.Name), " "),  "[", 2))
+s6_data <- s6_data[order(s6_data$Lane.Number, s6_data$Channel),]
+for (row.name in rownames(s6_data)) {
+  if (s6_data[row.name,'Channel'] == '700')
+     s6_data[row.name,'Protein'] <- 'pS6'
+  else 
+    s6_data[row.name,'Protein'] <- 'S6'
+}
+
+s6_lane_summary <- dcast(s6_data, Scan + Lane.Number ~ Protein, value.var='I.I..K.Counts.', mean)
+s6_lane_summary$Ratio <- s6_lane_summary$pS6/s6_lane_summary$S6 
+s6_lane_summary$Treatment <- as.factor(rep(c("DMSO",
+                                               "Rapamycin",
+                                               "HS + DMSO",
+                                               "HS + Rapamycin",
+                                               "HS + Rapamycin + MG132",
+                                               "HS + LYS6K2"),3))
+
+s6_lane_summary$Treatment <- factor(s6_lane_summary$Treatment, 
+                                      levels(s6_lane_summary$Treatment)[c(2,4,3,5,1,6)])
+s6_lane_summary$Ratio.norm <- c(
+  s6_lane_summary[c(1:6), 'Ratio']/s6_lane_summary[s6_lane_summary$Treatment=='DMSO', 'Ratio'][1], 
+  s6_lane_summary[c(7:12), 'Ratio']/s6_lane_summary[s6_lane_summary$Treatment=='DMSO', 'Ratio'][2],
+  s6_lane_summary[c(13:18), 'Ratio']/s6_lane_summary[s6_lane_summary$Treatment=='DMSO', 'Ratio'][3])
+
+s6_lane_summary[is.na(s6_lane_summary$Ratio.norm),'Ratio.norm'] <- 0
+
+s6_summary <-
+  s6_lane_summary %>%
+  group_by(Treatment) %>%
+  summarize(mean=mean(Ratio.norm),
+            se = se(Ratio.norm),
+            sd = sd(Ratio.norm),
+            n = length(Ratio.norm))
+
+ymax = max(s6_summary$mean + s6_summary$se)
+plot <- with(s6_summary, barplot(mean, names.arg=Treatment,
+                           las=1, ylim=c(0,ymax), cex.names=0.3,
+                           ylab="pS6/S6 Ratio"))
+
+superpose.eb(plot, s6_summary$mean, s6_summary$se)
+```
+The addition of horse serum caused an increase in S6 phosphorylation ratio of `r s6_summary[s6_summary$Treatment == 'HS + DMSO', 'mean']` fold (+/- `r s6_summary[s6_summary$Treatment == 'HS + DMSO', 'se']` fold).  The one way t-test for this effect had a p-value of `r t.test(subset(s6_lane_summary, Treatment=="HS + Rapamycin")$Ratio.norm, mu=1, alternative='less')$p.value`.
+
+
+# pAkt/Akt Quantification
+
+```{r akt-quantification, warning=FALSE}
+akt_data <- akt_data[grepl("Lane", akt_data$Lane.Name),]
+akt_data$Lane.Number <- as.integer(sapply(strsplit(as.character(akt_data$Lane.Name), " "),  "[", 2))
+
+for (row.name in rownames(akt_data)) {
+  if (akt_data[row.name,'Channel'] == '700')
+     akt_data[row.name,'Protein'] <- 'pAkt'
+  else 
+    akt_data[row.name,'Protein'] <- 'Akt'
+}
+akt_data <- akt_data[akt_data$Lane.Name!='Lane 8',]
+
+akt_lane_summary <- dcast(akt_data, Scan + Lane.Number ~ Protein, value.var='I.I..K.Counts.')
+akt_lane_summary$Ratio <- akt_lane_summary$pAkt/akt_lane_summary$Akt 
+akt_lane_summary$Treatment <- as.factor(rep(c("DMSO",
+                                               "Rapamycin",
+                                               "HS + DMSO",
+                                               "HS + Rapamycin",
+                                               "HS + Rapamycin + MG132",
+                                               "HS + LYS6K2"),3))
+akt_lane_summary$Treatment <- factor(akt_lane_summary$Treatment, 
+                                      levels(akt_lane_summary$Treatment)[c(2,4,3,5,1,6)])
+akt_lane_summary$Ratio.norm <- c(
+  akt_lane_summary[c(1:6), 'Ratio']/akt_lane_summary[akt_lane_summary$Treatment=='HS + DMSO', 'Ratio'][1], 
+  akt_lane_summary[c(7:12), 'Ratio']/akt_lane_summary[akt_lane_summary$Treatment=='HS + DMSO', 'Ratio'][2],
+  akt_lane_summary[c(13:18), 'Ratio']/akt_lane_summary[akt_lane_summary$Treatment=='HS + DMSO', 'Ratio'][3])
+
+akt_summary <-
+  akt_lane_summary %>%
+  group_by(Treatment) %>%
+  summarize(mean=mean(Ratio.norm),
+            se = se(Ratio.norm),
+            sd = sd(Ratio.norm),
+            n = length(Ratio.norm))
+
+ymax = max(akt_summary$mean + akt_summary$se)
+plot <- with(akt_summary, barplot(mean, names.arg=Treatment,
+                           las=1, ylim=c(0,ymax), cex.names=0.3,
+                           ylab="pAkt/Akt Ratio"))
+
+superpose.eb(plot, akt_summary$mean, akt_summary$se)
+```
+
+The addition of horse serum caused an increase in Akt phosphorylation ratio of `r akt_summary[akt_summary$Treatment == 'DMSO', 'mean']` fold (+/- `r akt_summary[akt_summary$Treatment == 'DMSO', 'se']` fold).  The one way t-test for this effect had a p-value of `r t.test(subset(s6_lane_summary, Treatment=="HS + Rapamycin")$Ratio.norm, mu=1)$p.value`.
+
+## General Effects of Horse Serum
+
+```{r horse-serum, message=FALSE}
+plot <- barplot(as.matrix(cbind(
+  s6_summary[grepl("DMSO", s6_summary$Treatment),'mean'][c(2:1),],
+  akt_summary[grepl("DMSO", akt_summary$Treatment),'mean',][c(2:1),])),
+              beside=TRUE, las=1, ylim=c(0,13),
+  names.arg=c('S6','Akt'), ylab='Relative Phosphorylation')
+legend("topright", c('10% FBS','2% Horse Serum'), bty='n', fill=grey.colors(2))
+superpose.eb(plot,
+             as.matrix(cbind(
+  s6_summary[grepl("DMSO", s6_summary$Treatment),'mean'][c(2:1),],
+  akt_summary[grepl("DMSO", akt_summary$Treatment),'mean',][c(2:1),])),
+             as.matrix(cbind(
+  s6_summary[grepl("DMSO", s6_summary$Treatment),'se'][c(2:1),],
+  akt_summary[grepl("DMSO", akt_summary$Treatment),'se',][c(2:1),])))
+```
+
+## Combined Figure
+
+```{r combined-figure, dev=c('png','pdf')}
+par(mfrow=c(1,2))
+plot <- barplot(as.matrix(dcast(subset(myod_summary, Drug %in% c("DMSO","Rapamycin")), 
+                        Drug~Serum, value.var='mean')[2:3]),
+                        beside=T, las=1, ylab="Relative Protein Levels", main="MyoD")
+legend("topleft", c('DMSO','Rapamycin'), bty='n', fill=grey.colors(2))
+superpose.eb(plot,
+            as.matrix(dcast(subset(myod_summary, Drug %in% c("DMSO","Rapamycin")), 
+                        Drug~Serum, value.var='mean')[2:3]),
+            as.matrix(dcast(subset(myod_summary, Drug %in% c("DMSO","Rapamycin")), 
+                        Drug~Serum, value.var='se')[2:3]))
+
+plot <- barplot(as.matrix(cbind(
+  s6_summary[grepl("DMSO", s6_summary$Treatment),'mean'][c(2:1),],
+  akt_summary[grepl("DMSO", akt_summary$Treatment),'mean',][c(2:1),])),
+              beside=TRUE, las=1, ylim=c(0,13),
+  names.arg=c('S6','Akt'), ylab='Relative Phosphorylation')
+legend("topright", c('FBS','HS'), bty='n', fill=grey.colors(2))
+superpose.eb(plot,
+             as.matrix(cbind(
+  s6_summary[grepl("DMSO", s6_summary$Treatment),'mean'][c(2:1),],
+  akt_summary[grepl("DMSO", akt_summary$Treatment),'mean',][c(2:1),])),
+             as.matrix(cbind(
+  s6_summary[grepl("DMSO", s6_summary$Treatment),'se'][c(2:1),],
+  akt_summary[grepl("DMSO", akt_summary$Treatment),'se',][c(2:1),])))
+
+```
+
+## Session Information
+```{r sessionInfo}
+sessionInfo()
+```

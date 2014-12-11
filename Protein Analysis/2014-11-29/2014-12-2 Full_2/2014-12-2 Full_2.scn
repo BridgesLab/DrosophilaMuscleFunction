@@ -1,0 +1,23 @@
+#Properties Updated
+#Thu Dec 04 08:35:29 PST 2014
+NumImageNames=2
+FocusOffset=0
+ImageSetNames=
+ExperimentNames=S6
+ScannerName=ODY-0244
+FileType=LI-COR LI2D SCAN File
+ImageSetNumbers=
+Name=2014-12-2 Full_2
+ScanIntensity700=5
+ScanArea=0.0,0.0 to 10.0,17.0
+Comments=
+NumImageSetNames=0
+FileVersion=SCAN VERSION 1.5
+NumExperimentNames=1
+ScanChannels=700 800
+NumImageSetNumbers=0
+ScanResolution=169.32271
+ScanGroup=Bridges
+ImageNames=700.TIF, 800.TIF
+ScanQuality=medium
+ScanIntensity800=5
