@@ -159,7 +159,7 @@ print(xtable(wilcoxon.test.summary, caption="Wilcoxon Tests Compared to Control 
 ```
 
 <!-- html table generated in R 3.1.1 by xtable 1.7-4 package -->
-<!-- Fri Dec 12 16:23:51 2014 -->
+<!-- Fri Dec 12 16:26:09 2014 -->
 <table border=1>
 <caption align="bottom"> Wilcoxon Tests Compared to Control Flies </caption>
 <tr> <th>  </th> <th> Male-Young </th> <th> Female-Young </th> <th> Male-Old </th> <th> Female-Old </th>  </tr>
