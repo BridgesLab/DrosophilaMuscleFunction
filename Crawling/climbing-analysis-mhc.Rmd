@@ -1,0 +1,150 @@
+---
+title: "Climbing Rates of MHC-GAL4 Flies"
+author: "Erika Yates and Dave Bridges"
+date: "December 4, 2014"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document:
+    keep_tex: yes
+---
+
+This was based on the incomplete climbing data from the summer of 2014.
+
+```{r data-entry}
+color.scheme <- c('red',rep('black',3))
+
+mapping.data <- read.csv('../Data/gene_mapping.csv')
+mapping.data$UAS <- as.factor(mapping.data$UAS)
+climbing_data_file_name <- '../Data/Climbing Data MHC.csv'
+climbing.data <- read.csv(climbing_data_file_name)
+
+
+#get data from what crosses are what
+data_file_name <- '../Data/mhc_birth_worksheet.csv'
+data <- read.csv(data_file_name)
+data$Total <- rowSums(data[,10:14], na.rm=T)
+all.flies <- sum(data$Total, na.rm=T)
+
+data$Cross <- as.factor(paste(data$Male, data$Female, sep=" x "))
+data$Driver <- as.factor(sapply(strsplit(as.character(data$Female), "/"),"[", 1))
+#releveled UAS showing TSC1 then Raptor
+data$UAS <- as.factor(sapply(strsplit(as.character(data$Male), "/"),"[", 1))
+data$UAS <- relevel(data$UAS, ref='36304')
+#remove analyses where incomplete data is presented
+data.complete <- data[!(is.na(data$Total)),]
+#merged with gene mapping file
+annotated.data <- merge(mapping.data, data.complete, by="UAS", all.y=T)
+annotations <- annotated.data[,c('UAS','Gene','Driver','CrossName')]
+annotations <- unique(annotations[c('UAS','Gene','Driver','CrossName')])
+
+annotated.climbing.data <- merge(climbing.data, annotations, by='CrossName')
+#set time as a numeric
+annotated.climbing.data$Time <- as.numeric(as.character(annotated.climbing.data$Time))
+#set UAS as a factor
+annotated.climbing.data$UAS <- as.factor(annotated.climbing.data$UAS)
+require(lubridate)
+annotated.climbing.data$Born <- mdy(annotated.climbing.data$Born)
+annotated.climbing.data$Assay.Date <- mdy(annotated.climbing.data$Assay.Date)
+annotated.climbing.data$age <- annotated.climbing.data$Assay.Date - annotated.climbing.data$Born
+annotated.climbing.data <- droplevels(annotated.climbing.data)
+```
+
+## MHC-GAL4 Crosses
+
+### Early Climbing Activity
+
+This was defined as flies under 3 weeks of age.
+
+```{r mhc-gal4-climbing-early, message=FALSE, warning=FALSE}
+age.cutoff <- 20
+library(dplyr)
+mhc_summary <-
+  subset(annotated.climbing.data, 
+         Driver=='Mhc-GAL4'&Gene%in%c('Control','Raptor')&age<age.cutoff&UAS!='41912') %>%
+  group_by(Driver,Gene, UAS, Gender) %>%
+  summarise(mean = mean(Time, na.rm=T),
+            se = sd(Time, na.rm=T)/sqrt(length(Time)),
+            sd = sd(Time, na.rm=T),
+            n = length(Time),
+            age = mean(age, na.rm=T),
+            shapiro=shapiro.test(Time)$p.value)
+
+par(mfrow=c(1,2))
+plot <- with(subset(mhc_summary, Gender=='M'), barplot(mean, 
+          las=2, names.arg=UAS, main="Males", col=color.scheme, ylim=c(0,35)))
+legend('topleft',c('Control','Raptor Knockdown'), fill=color.scheme[1:2], bty='n')
+
+superpose.eb <- 
+ function (x, y, ebl, ebu = ebl, length = 0.08, ...) 
+ arrows(x, y + ebu, x, y - ebl, angle = 90, code = 3, 
+ length = length, ...)
+
+superpose.eb(plot, 
+             subset(mhc_summary, Gender=='M')$mean,
+             subset(mhc_summary, Gender=='M')$se)
+
+plot <- with(subset(mhc_summary, Gender=='F'), barplot(mean, 
+          las=2, names.arg=UAS, main="Females", col=color.scheme, ylim=c(0,35)))
+legend('topleft',c('Control','Raptor Knockdown'), fill=color.scheme[1:2], bty='n')
+
+superpose.eb(plot, 
+             subset(mhc_summary, Gender=='F')$mean,
+             subset(mhc_summary, Gender=='F')$se)
+```
+
+```{r mhc-gal4-climbing-late, message=FALSE, warning=FALSE, results='asis'}
+age.cutoff.young <- 19
+age.cutoff.late <- 45
+library(dplyr)
+mhc_summary <-
+  subset(annotated.climbing.data, 
+         Driver=='Mhc-GAL4'&Gene%in%c('Control','Raptor')&age>age.cutoff.young&age<age.cutoff.late&UAS!='41912') %>%
+  group_by(Driver,Gene, UAS, Gender) %>%
+  summarise(mean = mean(Time, na.rm=T),
+            se = sd(Time, na.rm=T)/sqrt(length(Time)),
+            sd = sd(Time, na.rm=T),
+            n = length(Time),
+            age = mean(age, na.rm=T),
+            shapiro=shapiro.test(Time)$p.value)
+
+par(mfrow=c(1,2))
+plot <- with(subset(mhc_summary, Gender=='M'), barplot(mean, 
+          las=2, names.arg=UAS, main="Males", col=color.scheme, ylim=c(0,220)))
+legend('topleft',c('Control','Raptor Knockdown'), fill=color.scheme[1:2], bty='n')
+
+superpose.eb <- 
+ function (x, y, ebl, ebu = ebl, length = 0.08, ...) 
+ arrows(x, y + ebu, x, y - ebl, angle = 90, code = 3, 
+ length = length, ...)
+
+superpose.eb(plot, 
+             subset(mhc_summary, Gender=='M')$mean,
+             subset(mhc_summary, Gender=='M')$se)
+
+plot <- with(subset(mhc_summary, Gender=='F'), barplot(mean, 
+          las=2, names.arg=UAS, main="Females", col=color.scheme, ylim=c(0,220)))
+legend('topleft',c('Control','Raptor Knockdown'), fill=color.scheme[1:2], bty='n')
+
+superpose.eb(plot, 
+             subset(mhc_summary, Gender=='F')$mean,
+             subset(mhc_summary, Gender=='F')$se)
+
+wilcoxon.test.summary <- data.frame(row.names=unique(mhc_summary$UAS))
+for (uas in unique(mhc_summary$UAS)[2:4]){
+wilcoxon.test.summary[uas,'Male-Young'] <- wilcox.test(Time~UAS,data = subset(annotated.climbing.data,Driver=='Mhc-GAL4'&Gene%in%c('Control','Raptor')&age<age.cutoff&Gender=='M'&UAS%in%c('36304',uas)))$p.value
+wilcoxon.test.summary[uas,'Female-Young'] <- wilcox.test(Time~UAS,data = subset(annotated.climbing.data,Driver=='Mhc-GAL4'&Gene%in%c('Control','Raptor')&age<age.cutoff&Gender=='F'&UAS%in%c('36304',uas)))$p.value
+wilcoxon.test.summary[uas,'Male-Old'] <- wilcox.test(Time~UAS,data = subset(annotated.climbing.data,Driver=='Mhc-GAL4'&Gene%in%c('Control','Raptor')&age>age.cutoff.young&age<age.cutoff.late&Gender=='M'&UAS%in%c('36304',uas)))$p.value
+wilcoxon.test.summary[uas,'Female-Old'] <- wilcox.test(Time~UAS,data = subset(annotated.climbing.data,Driver=='Mhc-GAL4'&Gene%in%c('Control','Raptor')&age>age.cutoff.young&age<age.cutoff.late&Gender=='F'&UAS%in%c('36304',uas)))$p.value
+}
+
+library(xtable)
+print(xtable(wilcoxon.test.summary, caption="Wilcoxon Tests Compared to Control Flies"), type='html')
+```
+
+
+
+## Session Information
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
