@@ -63,7 +63,7 @@ se <- function(x) sd(x)/sqrt(length(x))
 library(dplyr)
 mhc_raptor_summary <-
   mhc_raptor_data %>%
-  group_by(Gene, UAS, Gender) %>%
+  group_by(Gene, Gender, UAS) %>%
   summarize(mean=mean(age),
             median = median(age),
             se = se(age),
@@ -115,6 +115,68 @@ summary.coxph.table[paste(uas, gender),'sctest'] <- summary(coxph(survobj~UAS, d
 #print(xtable(summary.coxph.table, digits=c(0,0,5,5,5)), type='html')
 print(xtable(coxph.table, digits=c(3,3,3,5,5,3)), type='html')
 ```
+
+## *Tsc1* Knockdowns
+
+```{r mhc-gal4-tsc-lifespan, results='asis'}
+mhc_tsc1_data <- droplevels(subset(annotated.lifespan.data, Driver=="Mhc-GAL4"&Gene%in%c('Control','Tsc1')))
+se <- function(x) sd(x)/sqrt(length(x))
+mhc_tsc1_summary <-
+  mhc_tsc1_data %>%
+  group_by(Gene, Gender, UAS) %>%
+  summarize(mean=mean(age),
+            median = median(age),
+            se = se(age),
+            n = length(age))
+
+library(xtable)
+print(xtable(as.data.frame(mhc_tsc1_summary), caption="Summary statistics for effects of Mhc-GAL4 > Tsc1 knockdown flies"), type='html')
+```
+
+We looked at a total of `r sum(mhc_tsc1_summary$n)` flies in this group, with at least `r min(mhc_tsc1_summary$n)` flies of each gender for each UAS.  We used the survival package to test if these changes are significant
+
+## *Mhc*-GAL4 > *Tsc1* Survival Analysis
+
+```{r mhc-gal4-tsc1-survival, results='asis', dev=c('png','pdf')}
+
+par(mfrow=c(2,3))
+coxph.table <- data.frame()
+summary.coxph.table <- data.frame()
+for (gender in levels(mhc_tsc1_data$Gender)) {
+    for (uas in levels(mhc_tsc1_data$UAS)[2:4]) {
+        data.used <- droplevels(mhc_tsc1_data[mhc_tsc1_data$UAS%in%c('36304',uas)&mhc_tsc1_data$Gender==gender,])
+        survobj <- with(data.used, Surv(as.numeric(age)))
+        survfit.data <- survfit(survobj~UAS, data=data.used)
+
+        coxph.fit <- coxph(survobj~UAS, data=data.used)
+        beta <- coef(coxph.fit)
+        se <- sqrt(diag(coxph.fit$var))
+coxph.table[paste(uas,gender),'Coef'] <- coef(coxph.fit)
+coxph.table[paste(uas,gender),'SE'] <- sqrt(diag(coxph.fit$var))
+coxph.table[paste(uas,gender),'p'] <- 1 - pchisq((beta/se)^2, 1)
+coxph.table$padj <- p.adjust(coxph.table$p, method="BH")
+coxph.table$Hazard <- exp(coxph.table$Coef)
+        
+summary.coxph.table[paste(uas, gender),'n'] <- coxph(survobj~UAS, data=data.used)$nevent
+summary.coxph.table[paste(uas, gender),'logtest'] <- summary(coxph(survobj~UAS, data=data.used))$logtest[3]
+summary.coxph.table[paste(uas, gender),'wald'] <- summary(coxph(survobj~UAS, data=data.used))$wald[3]
+summary.coxph.table[paste(uas, gender),'sctest'] <- summary(coxph(survobj~UAS, data=data.used))$sctest[3]
+
+        plot(survfit.data, 
+             main = sprintf(paste(uas,gender)),
+             xlab= 'Days',
+             ylab= 'Percent Survival',
+             yscale=100, 
+             las = 1,
+             col= color.scheme)
+        legend("bottomleft", c("Control","Knockdown"), col=color.scheme, lty=1, bty="n")
+}
+}
+#print(xtable(summary.coxph.table, digits=c(0,0,5,5,5)), type='html')
+print(xtable(coxph.table, digits=c(3,3,3,5,5,3)), type='html')
+```
+
+
 
 ## Session Information
 ```{r sessionInfo, echo=FALSE}
