@@ -13,7 +13,7 @@ This was based on the incomplete lifespan data from the summer of 2014.
 ## *Raptor* Knockdowns
 
 <!-- html table generated in R 3.1.1 by xtable 1.7-4 package -->
-<!-- Sun Dec 14 13:56:01 2014 -->
+<!-- Sun Dec 14 13:57:25 2014 -->
 <table border=1>
 <caption align="bottom"> Summary statistics for effects of Mhc-GAL4 > Raptor knockdown flies </caption>
 <tr> <th>  </th> <th> Gene </th> <th> UAS </th> <th> Gender </th> <th> mean </th> <th> median </th> <th> se </th> <th> n </th>  </tr>
@@ -33,8 +33,8 @@ We looked at a total of 1238 flies in this group, with at least 98 flies of each
 
 ## *Mhc*-GAL4 > *Raptor* Survival Analysis
 
-![](figures/mhc-gal4-raptor-survival-1.png) <!-- html table generated in R 3.1.1 by xtable 1.7-4 package -->
-<!-- Sun Dec 14 13:56:01 2014 -->
+![](figure/mhc-gal4-raptor-survival-1.png) <!-- html table generated in R 3.1.1 by xtable 1.7-4 package -->
+<!-- Sun Dec 14 13:57:25 2014 -->
 <table border=1>
 <tr> <th>  </th> <th> Coef </th> <th> SE </th> <th> p </th> <th> padj </th> <th> Hazard </th>  </tr>
   <tr> <td align="right"> 31528 F </td> <td align="right"> 1.281 </td> <td align="right"> 0.134 </td> <td align="right"> 0.00000 </td> <td align="right"> 0.00000 </td> <td align="right"> 3.598 </td> </tr>
