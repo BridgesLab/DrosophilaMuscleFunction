@@ -1,0 +1,122 @@
+---
+title: "Longevity Analysis of MHC-GAL4 Flies"
+author: "Erika Yates and Dave Bridges"
+date: "December 4, 2014"
+output:
+  html_document:
+    keep_md: yes
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.path='figures/',
+               echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+This was based on the incomplete lifespan data from the summer of 2014.
+
+```{r data-entry}
+color.scheme <- c('black','red')
+
+mapping.data <- read.csv('../Data/gene_mapping.csv')
+mapping.data$UAS <- as.factor(mapping.data$UAS)
+lifespan_data_file_name <- '../Data/Death Worksheet Summer 2014.csv'
+lifespan.data <- read.csv(lifespan_data_file_name)
+
+
+#get data from what crosses are what
+data_file_name <- '../Data/mhc_birth_worksheet.csv'
+data <- read.csv(data_file_name)
+data$Total <- rowSums(data[,10:14], na.rm=T)
+all.flies <- sum(data$Total, na.rm=T)
+
+data$Cross <- as.factor(paste(data$Male, data$Female, sep=" x "))
+data$Driver <- as.factor(sapply(strsplit(as.character(data$Female), "/"),"[", 1))
+#releveled UAS showing TSC1 then Raptor
+data$UAS <- as.factor(sapply(strsplit(as.character(data$Male), "/"),"[", 1))
+#remove analyses where incomplete data is presented
+data.complete <- data[!(is.na(data$Total)),]
+#merged with gene mapping file
+annotated.data <- merge(mapping.data, data.complete, by="UAS", all.y=T)
+annotations <- annotated.data[,c('UAS','Gene','Driver','CrossName')]
+annotations <- unique(annotations[c('UAS','Gene','Driver','CrossName')])
+
+annotated.lifespan.data <- merge(lifespan.data, annotations, by='CrossName')
+#set UAS as a factor
+annotated.lifespan.data$UAS <- as.factor(annotated.lifespan.data$UAS)
+require(lubridate)
+annotated.lifespan.data$Birth.Date <- mdy(annotated.lifespan.data$Birth.Date)
+annotated.lifespan.data$Death.Date <- mdy(annotated.lifespan.data$Death.Date)
+annotated.lifespan.data$age <- annotated.lifespan.data$Death.Date - annotated.lifespan.data$Birth.Date
+annotated.lifespan.data <- droplevels(annotated.lifespan.data)
+annotated.lifespan.data$UAS <- relevel(annotated.lifespan.data$UAS, ref='36304')
+```
+
+# *Mhc*-GAL4 Crosses
+
+## *Raptor* Knockdowns
+
+```{r mhc-gal4-raptor-lifespan, results='asis'}
+mhc_raptor_data <- droplevels(subset(annotated.lifespan.data, Driver=="Mhc-GAL4"&Gene%in%c('Control','Raptor')))
+
+se <- function(x) sd(x)/sqrt(length(x))
+library(dplyr)
+mhc_raptor_summary <-
+  mhc_raptor_data %>%
+  group_by(Gene, UAS, Gender) %>%
+  summarize(mean=mean(age),
+            median = median(age),
+            se = se(age),
+            n = length(age))
+
+library(xtable)
+print(xtable(as.data.frame(mhc_raptor_summary), caption="Summary statistics for effects of Mhc-GAL4 > Raptor knockdown flies"), type='html')
+```
+
+We looked at a total of `r sum(mhc_raptor_summary$n)` flies in this group, with at least `r min(mhc_raptor_summary$n)` flies of each gender for each UAS.  We used the survival package to test if these changes are significant
+
+## *Mhc*-GAL4 > *Raptor* Survival Analysis
+
+```{r mhc-gal4-raptor-survival, results='asis', dev=c('png','pdf')}
+library(survival)
+par(mfrow=c(2,4))
+coxph.table <- data.frame()
+summary.coxph.table <- data.frame()
+for (gender in levels(mhc_raptor_data$Gender)) {
+    for (uas in levels(mhc_raptor_data$UAS)[2:5]) {
+        data.used <- droplevels(mhc_raptor_data[mhc_raptor_data$UAS%in%c('36304',uas)&mhc_raptor_data$Gender==gender,])
+        survobj <- with(data.used, Surv(as.numeric(age)))
+        survfit.data <- survfit(survobj~UAS, data=data.used)
+
+        coxph.fit <- coxph(survobj~UAS, data=data.used)
+        beta <- coef(coxph.fit)
+        se <- sqrt(diag(coxph.fit$var))
+coxph.table[paste(uas,gender),'Coef'] <- coef(coxph.fit)
+coxph.table[paste(uas,gender),'SE'] <- sqrt(diag(coxph.fit$var))
+coxph.table[paste(uas,gender),'p'] <- 1 - pchisq((beta/se)^2, 1)
+coxph.table$padj <- p.adjust(coxph.table$p, method="BH")
+coxph.table$Hazard <- exp(coxph.table$Coef)
+        
+summary.coxph.table[paste(uas, gender),'n'] <- coxph(survobj~UAS, data=data.used)$nevent
+summary.coxph.table[paste(uas, gender),'logtest'] <- summary(coxph(survobj~UAS, data=data.used))$logtest[3]
+summary.coxph.table[paste(uas, gender),'wald'] <- summary(coxph(survobj~UAS, data=data.used))$wald[3]
+summary.coxph.table[paste(uas, gender),'sctest'] <- summary(coxph(survobj~UAS, data=data.used))$sctest[3]
+
+        plot(survfit.data, 
+             main = sprintf(paste(uas,gender)),
+             xlab= 'Days',
+             ylab= 'Percent Survival',
+             yscale=100, 
+             las = 1,
+             col= color.scheme)
+        legend("bottomleft", c("Control","Knockdown"), col=color.scheme, lty=1, bty="n")
+}
+}
+#print(xtable(summary.coxph.table, digits=c(0,0,5,5,5)), type='html')
+print(xtable(coxph.table, digits=c(3,3,3,5,5,3)), type='html')
+```
+
+## Session Information
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
