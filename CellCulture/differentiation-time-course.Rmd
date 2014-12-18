@@ -1,0 +1,73 @@
+---
+title: "Time Course of C2C12 Differentiation"
+author: "Innocence Harvey and Dave Bridges"
+date: "December 18, 2014"
+output: html_document
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.path='figure/',
+               echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+This script uses the combined time course data from the second replicate.  This script was most recently updated on `r date()`
+
+```{r data-entry}
+filename <- '12-16-14 Harvey C2C12 TC2 and 3 MHC and all other diff genes.xlsx'
+datasheet <- 'for R'
+
+library(xlsx)
+data <- read.xlsx(filename, sheetIndex=5, stringsAsFactors=F)
+library(RColorBrewer)
+color.scheme <- brewer.pal(5, "Set2")
+time.course <- c(0,1/3,1,2,4,6,10,15)
+genes.to.examine <- c('Myod1','Cdkn1a','Myf5','Myog','Mef2c','Myh1','Myh3','Myh7')
+
+data.plot <- data[data$Gene %in% genes.to.examine,]
+```
+The input file with the raw data is `r filename` and this script uses the datasheet `r datasheet`
+
+```{r time-course, dev=c('png','pdf')}
+plot(time.course, as.numeric(data.plot[data.plot$Gene=="Myod1",2:9]), 
+     type='l', xlab="Days of Differentiation", ylab="Relative Expression",
+     las=1, lty=1, col=color.scheme[1], ylim=c(0,1))
+#add other lines
+
+lines(time.course, as.numeric(data.plot[data.plot$Gene=="Cdkn1a",2:9]), col=color.scheme[2], lty=1)
+lines(time.course, as.numeric(data.plot[data.plot$Gene=="Myf5",2:9]), col=color.scheme[3], lty=1)
+lines(time.course, as.numeric(data.plot[data.plot$Gene=="Myog",2:9]), col=color.scheme[4], lty=1)
+lines(time.course, as.numeric(data.plot[data.plot$Gene=="Mef2c",2:9]), col=color.scheme[5], lty=1)
+lines(time.course, as.numeric(data.plot[data.plot$Gene=="Myh1",2:9]), col=color.scheme[1], lty=2)
+lines(time.course, as.numeric(data.plot[data.plot$Gene=="Myh3",2:9]), col=color.scheme[2], lty=2)
+lines(time.course, as.numeric(data.plot[data.plot$Gene=="Myh7",2:9]), col=color.scheme[3], lty=3)
+
+
+legend("bottomright", c("Myod1","Cdkn1a","Myf5","Myog","Mef2c","Myh1","Myh3","Myh7"), col=color.scheme[c(1,2,3,4,5,1,2,3)], lty=c(1,1,1,1,1,2,2,2), bty='n')
+```
+
+## All Myosin Genes
+
+```{r time-course-myosin, dev=c('png','pdf')}
+data.myosin <- data[data$Gene %in% c('Myh1','Myh2','Myh3','Myh4','Myh5','Myh6','Myh7'),]
+plot(time.course, as.numeric(data.myosin[data.plot$Gene=="Myh1",2:9]), 
+     type='l', xlab="Days of Differentiation", ylab="Relative Expression",
+     las=1, lty=1, col=color.scheme[1], ylim=c(0,1))
+#add other lines
+
+lines(time.course, as.numeric(data.myosin[2,2:9]), col=color.scheme[2], lty=1)
+lines(time.course, as.numeric(data.myosin[3,2:9]), col=color.scheme[3], lty=1)
+lines(time.course, as.numeric(data.myosin[4,2:9]), col=color.scheme[4], lty=1)
+lines(time.course, as.numeric(data.myosin[5,2:9]), col=color.scheme[5], lty=1)
+
+
+
+legend("bottomright", data.myosin$Gene, col=color.scheme[c(1,2,3,4,5)], lty=1, bty='n')
+```
+
+Session Information
+--------------------
+
+```{r sessionInfo}
+sessionInfo()
+```

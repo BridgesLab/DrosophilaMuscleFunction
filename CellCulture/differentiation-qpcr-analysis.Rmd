@@ -1,10 +1,30 @@
 Effect of Rapamycin on Expression of Differentiation Markers
 ==============================================================
 
+---
+title: "Effect of Rapamycin on Expression of Differentiation Markers"
+author: "Innocence Harvey and Dave Bridges"
+date: "December 18, 2014"
+output:
+  html_document:
+    keep_md: yes
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+opts_chunk$set(fig.path='figure/',
+               echo=FALSE, warning=FALSE, message=FALSE)
+```
+
 ```{r data-entry, echo=FALSE}
 input_file <- 'qRT-PCR combined data.csv'
 #import our data
 data <- read.csv(input_file)
+
+mhc_data_file <- '12-11-14 Harvey MHC Primers for block diff of C2C12 data (from 2.28 plate 2).xlsx'
+library(xlsx)
+mhc_data <- read.xlsx(mhc_data_file, sheetName='normalized values for R')
+mhc_data$value <- as.numeric(as.character(mhc_data$value))
 
 genes.of.interest <- c("Actb","Cdkn1a","Mef2c","Myf5","Myod1","Myog" )
 #remove genes that we are not interested in
@@ -12,7 +32,7 @@ data.of.interest <- droplevels(subset(data, gene %in% genes.of.interest))
 data.of.interest$Rapamycin <- grepl("RAPA", data.of.interest$treatment)
 ```
 
-This uses the input file `r input_file`.  This is located in `r getwd()`.  It was most recently run on `r date()`.
+This uses the input file `r input_file`. It was most recently run on `r date()`.
 
 Omnibums ANOVA, All Experiments Combined
 ------------------------------------------
@@ -122,18 +142,35 @@ print(xtable(feb28.t.tests, caption="Student's T-Tests for Feb 28 Experiment, Ad
 
 
 ```{r barplots-feb28,dev=c('png','pdf'),echo=FALSE}
-  summary.data <- ddply(subset(data.of.interest, Exp =='feb28 plate 2'), .(gene, Rapamycin), summarise,
+mhc_data$Rapamycin <- mhc_data$treatment == 'Rapamycin'
+combined.data.of.interest <- rbind(mhc_data, data.of.interest[data.of.interest$Exp=='feb28 plate 2',colnames(mhc_data)])
+  summary.data <- ddply(combined.data.of.interest, .(gene, Rapamycin), summarise,
                       mean = mean(value),
                       sd = sd(value),
                       se = sd(value)/sqrt(length(value)),
                       n = length(value))
 summary.means <- dcast(summary.data, Rapamycin~gene, value.var='mean')
 summary.errors <- dcast(summary.data, Rapamycin~gene, value.var='se')
+genes.to.plot <- c('Myh1','Myh2','Myh3','Myh4','Myh7')
 
-plot <- barplot(as.matrix(summary.means[,3:7]), beside=T, las=1, ylab="mRNA Expression/GAPDH", ylim=c(0,1.2))
+plot <- barplot(as.matrix(summary.means[,genes.to.plot])
+                , beside=T, las=1, ylab="mRNA Expression/GAPDH", ylim=c(0,1.3))
 legend("topright", c("DMSO","Rapamycin"), fill=grey.colors(2), bty="n")
 
-superpose.eb(plot, as.matrix(summary.means[,3:7]), as.matrix(summary.errors[,3:7]))
+superpose.eb(plot, 
+             as.matrix(summary.means[,genes.to.plot]), 
+             as.matrix(summary.errors[,genes.to.plot]))
+
+
+genes.to.plot <- c('Myod1','Cdkn1a','Myf5','Myog','Mef2c','Myh1','Myh3','Myh7')
+
+plot <- barplot(as.matrix(summary.means[,genes.to.plot])
+                , beside=T, las=1, ylab="mRNA Expression/GAPDH", ylim=c(0,1.4))
+legend("topright", c("DMSO","Rapamycin"), fill=grey.colors(2), bty="n")
+
+superpose.eb(plot, 
+             as.matrix(summary.means[,genes.to.plot]), 
+             as.matrix(summary.errors[,genes.to.plot]))
 ```
 
 ### March 7 Plate 2 Experiment
