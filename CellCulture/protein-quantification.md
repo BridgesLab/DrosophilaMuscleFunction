@@ -4,7 +4,7 @@ December 1, 2014
 
 
 
-C2C12 Cells were grown to confluence and then treated for 4h with 500 nM Rapamycin, 1 uM LYS6K2, or 10 uM MG132.  These data include experiments done on 2014-11-26 and 2014-11-29.  These data are located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/CellCulture and was most recently updated on Thu Dec 18 10:47:47 2014.
+C2C12 Cells were grown to confluence and then treated for 4h with 500 nM Rapamycin, 1 uM LYS6K2, or 10 uM MG132.  These data include experiments done on 2014-11-26 and 2014-11-29.  These data are located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/CellCulture and was most recently updated on Thu Dec 18 10:51:41 2014.
 
 
 

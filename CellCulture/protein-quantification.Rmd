@@ -32,7 +32,7 @@ The input files are: `r akt_data_file` and `r myod_data_file`.
 
 # MyoD Quantification
 
-```{r myod-quantification, message=FALSE, warning=FALSE}
+```{r myod-quantification, message=FALSE, warning=FALSE, dev=c('png','pdf')}
 myod_data <- myod_data[grepl("Lane", myod_data$Lane.Name),]
 myod_data <- myod_data[myod_data$Channel == 800,]
 myod_data$Lane.Number <- as.integer(sapply(strsplit(as.character(myod_data$Lane.Name), " "),  "[", 2))
@@ -105,7 +105,7 @@ The addition of horse serum caused an increase in MyoD levels of `r 1/myod_summa
 
 # pS6/S6 Quantification
 
-```{r s6-quantification, warning=FALSE}
+```{r s6-quantification, warning=FALSE, dev=c('png','pdf')}
 #for the first experiment
 s6_data <- s6_data[grepl("Lane", s6_data$Lane.Name),]
 s6_data <- s6_data[s6_data$Name == "Band 1",]
@@ -156,7 +156,7 @@ The addition of horse serum caused an increase in S6 phosphorylation ratio of `r
 
 # pAkt/Akt Quantification
 
-```{r akt-quantification, warning=FALSE}
+```{r akt-quantification, warning=FALSE, dev=c('png','pdf')}
 akt_data <- akt_data[grepl("Lane", akt_data$Lane.Name),]
 akt_data$Lane.Number <- as.integer(sapply(strsplit(as.character(akt_data$Lane.Name), " "),  "[", 2))
 
@@ -203,7 +203,7 @@ The addition of horse serum caused an decrease phosphorylation ratio by `r 1-1/a
 
 ## General Effects of Horse Serum
 
-```{r horse-serum, message=FALSE}
+```{r horse-serum, message=FALSE, dev=c('png','pdf')}
 plot <- barplot(as.matrix(cbind(
   s6_summary[grepl("DMSO", s6_summary$Treatment),'mean'][c(2:1),],
   akt_summary[grepl("DMSO", akt_summary$Treatment),'mean',][c(2:1),])),
