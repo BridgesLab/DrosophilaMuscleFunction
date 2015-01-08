@@ -11,7 +11,7 @@ The following are publications based on these data, along with the version of th
 | Publication | Dataset | Tag |
 |-------------|---------|-----|
 | Hatfield, Isabelle, Erika Yates, Lawrence T Reiter and Dave Bridges (2014) The role of dTORC1 on muscle development, function and longevity in *Drosophila*. [F1000 Posters](http://f1000.com/posters/browse/summary/1095104)    |      |  [0.1.0](https://github.com/BridgesLab/DrosophilaMuscleFunction/releases/tag/0.1.0)   |
-| Hatfield, Isabelle, Innocence Harvey, Lawrence T. Reiter and Dave Bridges (2014) The role of TORC1 in muscle development in Drosophila. bioRxiv. doi:[10.1101/010991](http://dx.doi.org/10.1101/010991)    |     [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.12836.png)](http://dx.doi.org/10.5281/zenodo.12836)    |  [0.1.3](https://github.com/BridgesLab/DrosophilaMuscleFunction/releases/tag/0.1.3)   |
+| Hatfield, Isabelle, Innocence Harvey, Erika R. Yates, JeAnna R. Redd, Lawrence T. Reiter and Dave Bridges (2014) The role of TORC1 in muscle development in Drosophila. bioRxiv. doi:[10.1101/010991](http://dx.doi.org/10.1101/010991)    |     [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.13367.svg)](http://dx.doi.org/10.5281/zenodo.13367)   |  [0.2.0](https://github.com/BridgesLab/DrosophilaMuscleFunction/releases/tag/0.2.0)   |
 
 
 Licence
