@@ -1,4 +1,20 @@
-# Analysis of Longevity from Muscle mTORC1 Effector Flies
+---
+title: "Analysis of Longevity from Muscle dTORC1 Effector Flies"
+author: " Dave Bridges, Isabelle Hatfield and Erika Yates"
+date: "February 9, 2015"
+output:
+  html_document:
+    keep_md: yes
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE,dev=c('png','pdf'))
+options(scipen = 9, digits = 5)
+
+```
+
+These studies evaluate the effects of knockdown of several dTORC1 effectors, including Autophagy genes (*Atg5*, *Atg8a* and *Atg8b*) and the SREBP1 ortholog *Hlh106*  This data is located in `r getwd()` and was most recently updated on `r date()`.
 
 ## Experimental Design
 
@@ -7,13 +23,16 @@ require(RCurl, quietly=T)
 require(lubridate, quietly=T)
 birth_worksheet <- 'https://docs.google.com/spreadsheet/pub?key=0Am2qM2oZ12_jdHhNTjNuc25zdDJKZzR3MzVuUUU4dEE&single=true&gid=0&output=csv' 
 death_worksheet <- 'https://docs.google.com/spreadsheet/pub?key=0Aitfmor6rCjYdG9GUlgtRXRuc01EVFJqdmp3WVU4b0E&single=true&gid=0&output=csv'
+birth_filename <- '../Data/SREBP-Atg Births Worksheet.csv'
+death_filename <- '../Data/SREBP-Atg Death Worksheet.csv'
+#this contains the data with the control flies
+lifespan_data_file_name <- '../Data/Death Worksheet Summer 2014.csv'
+lifespan.data <- read.csv(lifespan_data_file_name)
 
 mapping_data <- read.csv('../Data/gene_mapping.csv')
-birth_file <- getURL(birth_worksheet)
-death_file <- getURL(death_worksheet)
-birth_data <- read.csv(textConnection(birth_file))
+birth_data <- read.csv(birth_filename)
 birth_data$CrossName <- tolower(birth_data$CrossName)
-death_data <- read.csv(textConnection(death_file))
+death_data <- read.csv(death_filename)
 death_data$CrossName <- tolower(death_data$CrossName)
 
 data <- merge(death_data, birth_data[duplicated(birth_data$CrossName)==FALSE,c('CrossName','Generation','Cross','Replicate','DateStarted', 'Male', 'Female')], by='CrossName')
@@ -47,7 +66,7 @@ This script was most recently run on `r date()`.  There has been a total of **`r
 
 ## Gene Level Analysis
 
-```{r summary-statistics, echo=FALSE, dev=c('png','pdf')}
+```{r summary-statistics}
 require(plyr)
 require(reshape2)
 
@@ -88,14 +107,14 @@ summarised.data.natural.gene.gender <- ddply(data[data$Accidental==FALSE,], .(Dr
 
 The total number of deaths for each cross and genotype, removing deaths that were accidental or not due to natural causes, the data is shown in the table below:
 
-```{r selected-data,echo=FALSE,results='asis'}
+```{r selected-data}
 require(xtable)
-print(xtable(dcast(summarised.data.natural.gene.gender, Driver+Gene+Gender~Genotype, value.var='Deaths', margins=F, sum), caption = "Total Natural Deaths by Gender for Each Gene and Genotype", label = "tab:analysed-deaths-gene-gender"), include.rownames=F, type='html')
+kable(dcast(summarised.data.natural.gene.gender, Driver+Gene+Gender~Genotype, value.var='Deaths', margins=F, sum), caption = "Total Natural Deaths by Gender for Each Gene and Genotype", label = "tab:analysed-deaths-gene-gender")
 ```  
 
 The distribution of deaths in the samples are shown at a gender level in the Figure below:
 
-```{r histogram-gender,fig=TRUE,echo=FALSE, dev=c('pdf','png')}
+```{r histogram-gender}
 with(data[data$Accidental==FALSE&data$Gender=='male'&data$Genotype!='Tm3/Tm6B'&data$Genotype!='NA',], plot(density(Age, na.rm=T), col="black", las=1))
 with(data[data$Accidental==FALSE&data$Gender=='female'&data$Genotype!='Tm3/Tm6B'&data$Genotype!='NA',], lines(density(Age, na.rm=T), main="Natural Death Distribution", col="red", las=1, xlab=""))
 legend("topright", c("Male","Female"), lty=1, col=c("black","red"), bty="n")
@@ -106,7 +125,7 @@ legend("topright", c("Male","Female"), lty=1, col=c("black","red"), bty="n")
 
 All of these are relative to the reference Genotype which is the knockdown (GAL4/shRNA).  The key packages used in this The summary statistics from this analysis are shown in the tables below:
 
-```{r survival-analysis-24b, echo=FALSE}
+```{r survival-analysis-24b}
 require(RColorBrewer)
 genotype.colors <- brewer.pal(2, "Set2")
 require(survival)
@@ -196,12 +215,12 @@ for (gender in levels(data$Gender)) {
 ```
 
 ```{r coxph-datatables,echo=FALSE,results='asis'}
-print(xtable(summary.coxph.24b.gene, digits=c(0,0,9,9,9),caption = "Gene Level Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b"), type='html')
-print(xtable(summary.coxph.24b.gene.gender, digits=c(0,0,9,9,9),caption = "Gene and Gender Level  Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b-gender"), type='html')
+kable(summary.coxph.24b.gene, digits=c(0,0,9,9,9),caption = "Gene Level Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b")
+kable(summary.coxph.24b.gene.gender, digits=c(0,0,9,9,9),caption = "Gene and Gender Level  Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b-gender")
 ```
 
 
-```{r survival-24b-atg5,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
+```{r survival-24b-atg5}
     data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg5'&data$Genotype!='Tm3/Tm6B',])
     survobj <- with(data.used, Surv(Age, Accidental==FALSE))
     survfit <- survfit(survobj~Genotype, data=data.used)
@@ -243,7 +262,7 @@ par(mfrow=c(1,2))
     legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
 ```
 
-```{r survival-24b-atg8a,fig=TRUE,echo=FALSE}
+```{r survival-24b-atg8a}
     data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg8a'&data$Genotype!='Tm3/Tm6B',])
     survobj <- with(data.used, Surv(Age, Accidental==FALSE))
     survfit <- survfit(survobj~Genotype, data=data.used)
@@ -257,7 +276,7 @@ par(mfrow=c(1,2))
     legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
 ```
 
-```{r survival-24b-atg8a-gender,fig=TRUE,echo=FALSE}
+```{r survival-24b-atg8a-gender}
 par(mfrow=c(1,2))
     data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg8a'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male',])
     survobj <- with(data.used, Surv(Age, Accidental==FALSE))
@@ -284,7 +303,7 @@ par(mfrow=c(1,2))
     legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
 ```
 
-```{r survival-24b-atg8b,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
+```{r survival-24b-atg8b}
     data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg8b'&data$Genotype!='Tm3/Tm6B',])
     survobj <- with(data.used, Surv(Age, Accidental==FALSE))
     survfit <- survfit(survobj~Genotype, data=data.used)
@@ -298,7 +317,7 @@ par(mfrow=c(1,2))
     legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
 ```
 
-```{r survival-24b-atg8b-gender,fig=TRUE,echo=FALSE}
+```{r survival-24b-atg8b-gender}
 par(mfrow=c(1,2))
     data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg8b'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male',])
     survobj <- with(data.used, Surv(Age, Accidental==FALSE))
@@ -325,7 +344,7 @@ par(mfrow=c(1,2))
     legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
 ```
 
-```{r survival-24b-HLH106,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
+```{r survival-24b-HLH106}
     data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='Atg8b'&data$Genotype!='Tm3/Tm6B',])
     survobj <- with(data.used, Surv(Age, Accidental==FALSE))
     survfit <- survfit(survobj~Genotype, data=data.used)
@@ -339,7 +358,7 @@ par(mfrow=c(1,2))
     legend("bottomleft", levels(data.used$Genotype), col=genotype.colors, lty=c(1,2,2), bty="n")
 ```
 
-```{r survival-24b-HLH106-gender,fig=TRUE,echo=FALSE, dev=c('png','pdf')}
+```{r survival-24b-HLH106-gender}
 par(mfrow=c(1,2))
     data.used <- droplevels(data[data$Driver=='24B-Gal4'&data$Gene=='HLH106'&data$Genotype!='Tm3/Tm6B'&data$Gender=='male',])
     survobj <- with(data.used, Surv(Age, Accidental==FALSE))
@@ -367,22 +386,22 @@ par(mfrow=c(1,2))
 ```
 
 
-```{r coxph-datatables-atg,echo=FALSE,results='asis'}
+```{r coxph-datatables-atg}
 atg5.summary <- rbind(coxph.table.24b.Atg5,coxph.table.24b.Atg5.female,coxph.table.24b.Atg5.male)
 rownames(atg5.summary) <- c("Total", "Male", "Female")
-print(xtable(atg5.summary, digits=c(0,3,3,3,8),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and Atg5 Knockdown", label = "tab:coxph.table.24b.atg5"), type='html')
+kable(atg5.summary, digits=c(0,3,3,3,8),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and Atg5 Knockdown", label = "tab:coxph.table.24b.atg5")
 
 atg8a.summary <- rbind(coxph.table.24b.Atg8a,coxph.table.24b.Atg8a.female,coxph.table.24b.Atg8a.male)
 rownames(atg8a.summary) <- c("Total", "Male", "Female")
-print(xtable(atg8a.summary, digits=c(0,3,3,3,3),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and Atg8a Knockdown", label = "tab:coxph.table.24b.atg8a"), type='html')
+kable(atg8a.summary, digits=c(0,3,3,3,3),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and Atg8a Knockdown", label = "tab:coxph.table.24b.atg8a")
 
 atg8b.summary <- rbind(coxph.table.24b.Atg8b,coxph.table.24b.Atg8b.female,coxph.table.24b.Atg8b.male)
 rownames(atg8b.summary) <- c("Total", "Male", "Female")
-print(xtable(atg8b.summary, digits=c(0,3,3,3,15),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and Atg8b Knockdown", label = "tab:coxph.table.24b.atg8b"), type='html')
+kable(atg8b.summary, digits=c(0,3,3,3,15),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and Atg8b Knockdown", label = "tab:coxph.table.24b.atg8b")
 
 HLH106.summary <- rbind(coxph.table.24b.HLH106,coxph.table.24b.HLH106.female,coxph.table.24b.HLH106.male)
 rownames(HLH106.summary) <- c("Total", "Male", "Female")
-print(xtable(HLH106.summary, digits=c(0,3,3,3,15),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and HLH106 Knockdown", label = "tab:coxph.table.24b.HLH106"), type='html')
+kable(HLH106.summary, digits=c(0,3,3,3,15),caption = "Gene Level Cox Proportional Hazard Tests for 24B-Gal4 Drivers and HLH106 Knockdown", label = "tab:coxph.table.24b.HLH106")
 ```
 
 ## Atg5 Knockdown
@@ -421,6 +440,7 @@ In the case of muscle *HLH106* knockdown flies, we observed the knockdown flies 
 
 
 ## Session Information
-```{r sessionInfo, echo=F}
+
+```{r sessionInfo}
 sessionInfo()
 ```
