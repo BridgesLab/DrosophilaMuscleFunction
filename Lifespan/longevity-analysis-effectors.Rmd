@@ -3,9 +3,9 @@ title: "Analysis of Longevity from Muscle dTORC1 Effector Flies"
 author: ' Dave Bridges, Isabelle Hatfield and Erika Yates'
 date: "February 9, 2015"
 output:
-  pdf_document: default
   html_document:
     keep_md: yes
+  pdf_document: default
 ---
 
 ```{r global_options, include=FALSE}
@@ -103,6 +103,8 @@ library(dplyr)
 combined.data <- rbind(filter(effector.data, Genotype=='shRNA/GAL4') %>% select(Gender, Gene, UAS, Driver, Age),
                        select(control.data, Gender, Gene, UAS, Driver, Age))
 combined.data <- droplevels(combined.data)
+combined.data$Gene <- relevel(combined.data$Gene, ref="Control")
+combined.data$UAS <- relevel(combined.data$UAS, ref="36304")
 write.csv(combined.data, "../Data/Effector Longevity Analysis Data.csv")
 ```
 
@@ -159,7 +161,7 @@ summary.coxph.24b.gene <- data.frame(row.names=levels(combined.data$Gene),
                                 waldtest.p=rep(NA,length(levels(combined.data$Gene))),
                                 sctest.p=rep(NA,length(levels(combined.data$Gene))))
 #calculate statistics for each gene/control pair
-for (gene in levels(combined.data$Gene)[1:4]) {
+for (gene in levels(combined.data$Gene)[2:5]) {
     data.used <- droplevels(subset(d24b.data, Gene %in% c("Control",gene)))
     survobj <- with(data.used, Surv(Age))
     survfit <- survfit(survobj~Gene, data=data.used)
@@ -200,7 +202,7 @@ summary.coxph.24b.gene.gender <- data.frame(
                 sctest.p=rep(NA,8))
 
 #iterate over gender, then over each gene
-for (gene in levels(d24b.data$Gene)[1:4]) {
+for (gene in levels(d24b.data$Gene)[2:5]) {
   for (gender in levels(d24b.data$Gender)) {
         data.used <- droplevels(subset(d24b.data, Gender==gender&Gene %in% c("Control",gene)))
         survobj <- with(data.used, Surv(Age))
@@ -251,7 +253,7 @@ summary.coxph.24b.UAS <- data.frame(row.names=levels(combined.data$UAS),
                                 waldtest.p=rep(NA,length(levels(combined.data$UAS))),
                                 sctest.p=rep(NA,length(levels(combined.data$UAS))))
 #calculate statistics for each UAS/control pair
-for (uas in levels(combined.data$UAS)[1:5]) {
+for (uas in levels(combined.data$UAS)[2:6]) {
     data.used <- droplevels(subset(d24b.data, UAS %in% c("36304",uas)))
     survobj <- with(data.used, Surv(Age))
     survfit <- survfit(survobj~UAS, data=data.used)
@@ -292,7 +294,7 @@ summary.coxph.24b.UAS.gender <- data.frame(
                 sctest.p=rep(NA,12))
 
 #iterate over gender, then over each UAS
-for (uas in levels(d24b.data$UAS)[1:5]) {
+for (uas in levels(d24b.data$UAS)[2:6]) {
   for (gender in levels(d24b.data$Gender)) {
         data.used <- droplevels(subset(d24b.data, Gender==gender&UAS %in% c("36304",uas)))
         survobj <- with(data.used, Surv(Age))
@@ -330,6 +332,17 @@ for (uas in levels(d24b.data$UAS)[1:5]) {
 ```{r coxph-datatables-uas}
 kable(summary.coxph.24b.UAS, digits=c(0,9,9,9,9),caption = "UAS Level Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b")
 kable(summary.coxph.24b.UAS.gender, digits=c(0,9,9,9,9),caption = "UAS and Gender Level  Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b-gender")
+```
+
+## Hazard Ratios and Summary Tables
+
+```{r hazard-ratios}
+hazard.table <- data.frame()
+for (table in ls()[grep("coxph.table", ls())] ){
+  hazard.table <- rbind(hazard.table, cbind(group=strsplit(table, "24b.")[[1]][2], get(table)))
+}
+hazard.table$padj <- p.adjust(hazard.table$p, method="BH")
+kable(hazard.table, caption="Hazard Ratios for All Comparasons", row.names=F)
 ```
 
 

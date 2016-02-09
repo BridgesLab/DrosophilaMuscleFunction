@@ -4,13 +4,13 @@ February 9, 2015
 
 
 
-These studies evaluate the effects of knockdown of several dTORC1 effectors, including Autophagy genes (*Atg5*, *Atg8a* and *Atg8b*) and the SREBP1 ortholog *Hlh106*  This data is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan and was most recently updated on Tue Feb  9 16:16:07 2016.
+These studies evaluate the effects of knockdown of several dTORC1 effectors, including Autophagy genes (*Atg5*, *Atg8a* and *Atg8b*) and the SREBP1 ortholog *Hlh106*  This data is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan and was most recently updated on Tue Feb  9 16:49:24 2016.
 
 ## Experimental Design
 
 
 
-This script was most recently run on Tue Feb  9 16:16:08 2016.  There has been a total of **1117** deaths, with **1113** of natural causes and **1109** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was 155 days old at time of death.
+This script was most recently run on Tue Feb  9 16:49:25 2016.  There has been a total of **1117** deaths, with **1113** of natural causes and **1109** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was 155 days old at time of death.
 
 ## Gene Level Analysis
 
@@ -27,12 +27,12 @@ Table: Total Natural Deaths by Gender for Each Gene and Genotype
 
 UAS     Gene       female   male
 ------  --------  -------  -----
+36304   Control       124    101
 25975   HLH106         44     22
 27551   Atg5           61     81
 27554   Atg8b          54     46
 34073   HLH106         57     64
 34340   Atg8a          10     47
-36304   Control       124    101
 
 ## Survival Analysis
 
@@ -45,11 +45,11 @@ Table: Gene Level Tests for 24B-Gal4 Drivers
 
              n   logtest.p   waldtest.p    sctest.p
 --------  ----  ----------  -----------  ----------
+Control     NA          NA           NA          NA
 Atg5       367   0.0208122    0.0218350   0.0215273
 Atg8a      282   0.0000000    0.0000000   0.0000000
 Atg8b      325   0.2681544    0.2719850   0.2716462
 HLH106     412   0.0032338    0.0033468   0.0032504
-Control     NA          NA           NA          NA
 
 
 
@@ -76,12 +76,12 @@ Table: UAS Level Tests for 24B-Gal4 Drivers
 
            n   logtest.p   waldtest.p    sctest.p
 ------  ----  ----------  -----------  ----------
+36304     NA          NA           NA          NA
 25975    291   0.0012544    0.0018383   0.0017014
 27551    367   0.0208122    0.0218350   0.0215273
 27554    325   0.2681544    0.2719850   0.2716462
 34073    346   0.0581304    0.0607235   0.0603195
 34340    282   0.0000000    0.0000000   0.0000000
-36304     NA          NA           NA          NA
 
 
 
@@ -89,6 +89,8 @@ Table: UAS and Gender Level  Tests for 24B-Gal4 Drivers
 
                   n     logtest.p    waldtest.p      sctest.p
 -------------  ----  ------------  ------------  ------------
+female 36304     NA            NA            NA            NA
+male 36304       NA            NA            NA            NA
 female 25975    168   0.000294054   0.000499263   0.000415450
 male 25975      123   0.063911798   0.052066030   0.050012278
 female 27551    185   0.000078321   0.000118024   0.000095685
@@ -99,8 +101,41 @@ female 34073    181   0.000049950   0.000083672   0.000068421
 male 34073      165   0.028979399   0.026531128   0.025760116
 female 34340    134   0.001739391   0.000273395   0.000107367
 male 34340      148   0.000000252   0.000000051   0.000000015
-female 36304     NA            NA            NA            NA
-male 36304       NA            NA            NA            NA
+
+## Hazard Ratios and Summary Tables
+
+
+Table: Hazard Ratios for All Comparasons
+
+group                Coef        SE   Hazard.Ratio         p      padj
+--------------  ---------  --------  -------------  --------  --------
+25975            -0.44645   0.14331        1.56276   0.00184   0.00414
+25975.female     -0.62812   0.18043        1.87408   0.00050   0.00123
+25975.male        0.46476   0.23925        0.62829   0.05207   0.06390
+27551            -0.25092   0.10942        1.28521   0.02184   0.02948
+27551.female     -0.62422   0.16213        1.86678   0.00012   0.00040
+27551.male        0.08732   0.15041        0.91638   0.56155   0.56155
+27554            -0.13321   0.12127        1.14249   0.27199   0.29374
+27554.female     -0.39276   0.16542        1.48107   0.01758   0.02637
+27554.male        0.44430   0.18224        0.64128   0.01477   0.02493
+34073            -0.22341   0.11912        1.25033   0.06072   0.07128
+34073.female     -0.68169   0.17330        1.97721   0.00008   0.00038
+34073.male        0.35884   0.16176        0.69849   0.02653   0.03411
+34340             1.26360   0.15854        0.28264   0.00000   0.00000
+34340.female      1.23500   0.33935        0.29083   0.00027   0.00074
+34340.male        1.02805   0.18867        0.35770   0.00000   0.00000
+Atg5             -0.25092   0.10942        1.28521   0.02184   0.02948
+Atg5.female      -0.62422   0.16213        1.86678   0.00012   0.00040
+Atg5.male         0.08732   0.15041        0.91638   0.56155   0.56155
+Atg8a             1.26360   0.15854        0.28264   0.00000   0.00000
+Atg8a.female      1.23500   0.33935        0.29083   0.00027   0.00074
+Atg8a.male        1.02805   0.18867        0.35770   0.00000   0.00000
+Atg8b            -0.13321   0.12127        1.14249   0.27199   0.29374
+Atg8b.female     -0.39276   0.16542        1.48107   0.01758   0.02637
+Atg8b.male        0.44430   0.18224        0.64128   0.01477   0.02493
+HLH106           -0.30339   0.10341        1.35444   0.00335   0.00695
+HLH106.female    -0.67425   0.14205        1.96256   0.00000   0.00001
+HLH106.male       0.36866   0.14800        0.69166   0.01274   0.02457
 
 
 ## Session Information
