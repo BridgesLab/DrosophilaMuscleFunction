@@ -25,44 +25,79 @@ birth_worksheet <- 'https://docs.google.com/spreadsheet/pub?key=0Am2qM2oZ12_jdHh
 death_worksheet <- 'https://docs.google.com/spreadsheet/pub?key=0Aitfmor6rCjYdG9GUlgtRXRuc01EVFJqdmp3WVU4b0E&single=true&gid=0&output=csv'
 birth_filename <- '../Data/SREBP-Atg Births Worksheet.csv'
 death_filename <- '../Data/SREBP-Atg Death Worksheet.csv'
+
+mapping_data <- read.csv('../Data/gene_mapping.csv')
 #this contains the data with the control flies
 lifespan_data_file_name <- '../Data/Death Worksheet Summer 2014.csv'
 lifespan.data <- read.csv(lifespan_data_file_name)
+#get data from what crosses are what
+lifespan_data_file_name_births <- '../Data/mhc_birth_worksheet.csv'
+lifespan.data.births <- read.csv(lifespan_data_file_name_births )
+lifespan.data.births$Total <- rowSums(lifespan.data.births[,10:14], na.rm=T)
+all.flies <- sum(lifespan.data.births$Total, na.rm=T)
 
-mapping_data <- read.csv('../Data/gene_mapping.csv')
+lifespan.data.births$Cross <- as.factor(paste(lifespan.data.births$Male, lifespan.data.births$Female, sep=" x "))
+lifespan.data.births$Driver <- as.factor(sapply(strsplit(as.character(lifespan.data.births$Female), "/"),"[", 1))
+#releveled UAS showing TSC1 then Raptor
+lifespan.data.births$UAS <- as.factor(sapply(strsplit(as.character(lifespan.data.births$Male), "/"),"[", 1))
+#remove analyses where incomplete data is presented
+lifespan.data.births.complete <- lifespan.data.births[!(is.na(lifespan.data.births$Total)),]
+#merged with gene mapping file
+annotated.data <- merge(mapping_data, lifespan.data.births.complete, by="UAS", all.y=T)
+annotations <- annotated.data[,c('UAS','Gene','Driver','CrossName')]
+annotations <- unique(annotations[c('UAS','Gene','Driver','CrossName')])
+
+annotated.lifespan.data <- merge(lifespan.data, annotations, by='CrossName')
+#set UAS as a factor
+annotated.lifespan.data$UAS <- as.factor(annotated.lifespan.data$UAS)
+annotated.lifespan.data$Birth.Date <- mdy(annotated.lifespan.data$Birth.Date)
+annotated.lifespan.data$Death.Date <- mdy(annotated.lifespan.data$Death.Date)
+annotated.lifespan.data$age <- annotated.lifespan.data$Death.Date - annotated.lifespan.data$Birth.Date
+annotated.lifespan.data <- droplevels(annotated.lifespan.data)
+annotated.lifespan.data$UAS <- relevel(annotated.lifespan.data$UAS, ref='36304')
+
+
+#extract only the data that corresponds to the control flies
+control.data <- subset(annotated.lifespan.data, Gene=="Control")
+#reformat age column
+control.data$Age <- as.integer(control.data$age)
+
 birth_data <- read.csv(birth_filename)
 birth_data$CrossName <- tolower(birth_data$CrossName)
 death_data <- read.csv(death_filename)
 death_data$CrossName <- tolower(death_data$CrossName)
 
-data <- merge(death_data, birth_data[duplicated(birth_data$CrossName)==FALSE,c('CrossName','Generation','Cross','Replicate','DateStarted', 'Male', 'Female')], by='CrossName')
-data$Birth.Date <- mdy(gsub("/", "-", data$Birth.Date))
-data$Death.Date <- mdy(gsub("/", "-", data$Death.Date))
-data$Age <- as.integer(data$Death.Date - data$Birth.Date)
-data$Cross <- as.factor(paste(data$Male, data$Female, sep=" x "))
+effector.data <- merge(death_data, birth_data[duplicated(birth_data$CrossName)==FALSE,c('CrossName','Generation','Cross','Replicate','DateStarted', 'Male', 'Female')], by='CrossName')
+effector.data$Birth.Date <- mdy(gsub("/", "-", effector.data$Birth.Date))
+effector.data$Death.Date <- mdy(gsub("/", "-", effector.data$Death.Date))
+effector.data$Age <- as.integer(effector.data$Death.Date - effector.data$Birth.Date)
+effector.data$Cross <- as.factor(paste(effector.data$Male, effector.data$Female, sep=" x "))
 
 #this is complicated in this group
-data$Driver <- as.factor(sapply(strsplit(as.character(data$Female), "/"),"[", 1))
-data$UAS <- as.factor(data$Male)
+effector.data$Driver <- as.factor(sapply(strsplit(as.character(effector.data$Female), "/"),"[", 1))
+effector.data$UAS <- as.factor(effector.data$Male)
 
-data <- merge(data, mapping_data)
+effector.data <- merge(effector.data, mapping_data)
 #moved gender to being case insensitive
-data$Gender <- as.factor(tolower(data$Gender))
+effector.data$Gender <- as.factor(tolower(effector.data$Gender))
 #made genotype case insensitive
-data$Phenotype <- as.factor(tolower(data$Phenotype))
-data$Genotype[data$Phenotype =='wt'] <- "shRNA/GAL4"
-data$Genotype[data$Phenotype == 'sb'] <- "shRNA/Tm3"
+effector.data$Phenotype <- as.factor(tolower(effector.data$Phenotype))
+effector.data$Genotype[effector.data$Phenotype =='wt'] <- "shRNA/GAL4"
+effector.data$Genotype[effector.data$Phenotype == 'sb'] <- "shRNA/Tm3"
 #made genotype into a factor
-data$Genotype <- as.factor(data$Genotype)
+effector.data$Genotype <- as.factor(effector.data$Genotype)
 #set levels of genotype
-data$Genotype <- factor(data$Genotype, levels=c("shRNA/GAL4","shRNA/Tm3"))
-data$Genotype <- relevel(data$Genotype, ref="shRNA/GAL4")
+effector.data$Genotype <- factor(effector.data$Genotype, levels=c("shRNA/GAL4","shRNA/Tm3"))
+effector.data$Genotype <- relevel(effector.data$Genotype, ref="shRNA/GAL4")
 
-data <- droplevels(data)
-write.csv(data, "../Data/Effector Longevity Analysis Data.csv")
+effector.data <- droplevels(effector.data)
+library(dplyr)
+combined.data <- rbind(select(effector.data, Gender, Gene, UAS, Driver, Age),
+                       select(control.data, Gender, Gene, UAS, Driver, Age))
+write.csv(combined.data, "../Data/Effector Longevity Analysis Data.csv")
 ```
 
-This script was most recently run on `r date()`.  There has been a total of **`r dim(death_data)[1]`** deaths, with **`r dim(death_data[death_data$Accidental==FALSE,])[1]`** of natural causes and **`r dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]`** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was `r max(data$Age, na.rm=T)` days old at time of death.
+This script was most recently run on `r date()`.  There has been a total of **`r dim(death_data)[1]`** deaths, with **`r dim(death_data[death_data$Accidental==FALSE,])[1]`** of natural causes and **`r dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]`** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was `r max(combined.data$Age, na.rm=T)` days old at time of death.
 
 ## Gene Level Analysis
 
@@ -70,7 +105,7 @@ This script was most recently run on `r date()`.  There has been a total of **`r
 require(plyr)
 require(reshape2)
 
-complete.data <- data[!(is.na(data$Age)),]
+complete.data <- combined.data[!(is.na(combined.data$Age)),]
 
 summarised.data.all <- ddply(complete.data, .(Driver,UAS,Genotype), summarise,
                          Deaths = length(Age),
