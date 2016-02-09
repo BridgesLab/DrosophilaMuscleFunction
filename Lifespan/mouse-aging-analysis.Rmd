@@ -1,0 +1,236 @@
+\documentclass{article}
+
+\usepackage{fullpage}
+\usepackage[colorlinks=false]{hyperref}
+\usepackage[tableposition=top]{caption}
+\usepackage[utf8]{inputenc}
+
+\begin{document}
+\SweaveOpts{concordance=FALSE}
+
+\title{Aging Analysis of Mck-TSC1}
+\author{Dave Bridges, Kaleigh Fisher and Binbin Lu}
+\date{\today}
+\maketitle
+
+\section*{Data Entry}
+These data are accumulated from the database.  The analysis includes all alive animals, animals which were sacrificed and animals which died of natural causes (denoted in the database as "Unknown").  Animals which died with an estimated death date are excluded from the analysis.  We are testing the effects of age on death by natural causes.
+<<data files, echo=FALSE>>=
+# library(rjson)
+# library(RCurl)
+# all.url.first <- 'http://bridgeslab.uthsc.edu/mousedb/api/v1/animal/?format=json&username=davebridges&api_key=fce3fde2a9a2e5dc9e04c20aad90120a621c50b3&limit=1000&strain__Strain=Muscle%20TSC1'
+# all.url.second <- 'http://bridgeslab.uthsc.edu/mousedb/api/v1/animal/?format=json&username=davebridges&api_key=fce3fde2a9a2e5dc9e04c20aad90120a621c50b3&limit=1000&offset=1000&strain__Strain=Muscle%20TSC1'
+# all.url.third <- 'http://bridgeslab.uthsc.edu/mousedb/api/v1/animal/?format=json&username=davebridges&api_key=fce3fde2a9a2e5dc9e04c20aad90120a621c50b3&limit=1000&offset=2000&strain__Strain=Muscle%20TSC1'
+# all.url.json <- fromJSON(getURL(all.url.first))
+# all.url.json.second <- fromJSON(getURL(all.url.second))
+# all.url.json.third <- fromJSON(getURL(all.url.third))
+# 
+# data.first <- as.data.frame(do.call(rbind, all.url.json[[2]]))
+# data.second <- as.data.frame(do.call(rbind, all.url.json.second[[2]]))
+# data.third <- as.data.frame(do.call(rbind, all.url.json.third[[2]]))
+# 
+# data <- as.data.frame(rbind(data.first, data.second, data.third))
+# 
+# #sets the reference Genotype to be the knockouts
+# data$Genotype <- relevel(as.factor(as.character(data$Genotype)), ref="fl/fl; Tg/+")
+# data$strain <- relevel(as.factor(unlist(data$strain)), ref="Muscle TSC1")
+# data$Cause_of_Death <- relevel(as.factor(unlist(data$Cause_of_Death)), ref="Unknown")
+# data$treatment <- unlist(data$treatment)
+# 
+# library(dplyr)
+# data <- select(data, Cause_of_Death, Genotype, age, strain)
+# #forced age into a numeric variable
+# data$age <- as.numeric(data$age)
+# #removes animals from analysis with an estimated death
+data_file = "../Data/Mouse Log.csv"
+# write.csv(data, data_file)
+data <- read.csv(data_file)
+data$Genotype <- relevel(as.factor(data$Genotype), ref="fl/fl; Tg/+")
+data.useful <- subset(data, Cause_of_Death != c("Estimated"))
+useful <- c("fl/fl; Tg/+", "fl/fl; +/+", "+/+; +/+", "+/+; Tg/+")
+data.filtered <- subset(data.useful, Genotype %in% useful)
+ko <- c("fl/fl; Tg/+", "fl/fl; +/+")
+data.filtered.ko <- subset(data.useful, Genotype %in% ko)
+@
+
+\section*{Mck-TSC1 Mice}
+<<mck-subset, echo=FALSE>>=
+data.known.mck <- subset(data.filtered, strain == "Muscle TSC1",)
+data.known.mck <- droplevels(data.known.mck) # removes unused levels
+data.known.mck.ko <- subset(data.filtered.ko, strain == "Muscle TSC1",)
+data.known.mck.ko <- droplevels(data.known.mck.ko) # removes unused levels
+@
+
+\section*{Analysis}
+
+The data is saved in \verb+\Sexpr{getwd()}+ with the data saved as \Sexpr{data_file} and analysed using R \cite{base}.
+The data was analysed using the survival package \cite{survival1, survival2}.  Log rank tests were performed using the coin package \cite{coin1, coin2}.
+This plot analyses all of the natural deaths (marked in the database as unknown)
+<<data-analysis-all, echo=FALSE>>=
+library(survival)
+data.genotyped.mck <- subset(data.known.mck, Genotype != "N.D.")
+survobj.mck.all <- with(data.genotyped.mck, Surv(age, Cause_of_Death=="Unknown"))
+surv.fit.mck.all <- survfit(survobj.mck.all~strain, data=data.genotyped.mck)
+plot(surv.fit.mck.all)
+@
+This analysis contains a total of \textbf{\Sexpr{surv.fit.mck.all$n}} animals, from which we have detected \textbf{\Sexpr{sum(surv.fit.mck.all$n.event)}} natural deaths.  See Table \ref{tab:death-summary} for a summary of natural deaths and see Figure \ref{fig:km-all} for the combined death curves with errors.
+
+\subsection*{Comparing all Four Genotypes}
+This analysis looks at all four genotypes for Mck-TSC1.
+<<data-analysis, echo=FALSE>>=
+#for all four genotypes
+survobj.mck <- with(data.known.mck, Surv(age,Cause_of_Death=="Unknown"))
+surv.fit.mck <- survfit(survobj.mck~Genotype, data=data.known.mck)
+sdf.mck <- survdiff(formula=survobj.mck~Genotype, data=data.known.mck)
+coxph.mck <- coxph(formula=survobj.mck~Genotype, data=data.known.mck)
+#logrank test
+library(coin)
+surv_test(formula=survobj.mck~Genotype, data=data.known.mck)
+@
+
+The chi-squared test for comparing all four genotypes is significant, with a p-value of \Sexpr{round(pchisq(sdf.mck$chisq, df=3, lower=FALSE),6)}.  The results of these tests are in Table \ref{tab:mck-tests}.  The effects of each genotype, relative to the knockout strains are in Table \ref{tab:mck-coef}. These data are visualised in Figure \ref{fig:km-genotype}.  This means that the knockout mice are \Sexpr{round(1/exp(max(coef(coxph.mck))),2)} to \Sexpr{round(1/exp(min(coef(coxph.mck))),2)} times more likely to die at any given time, depending on the strain.
+
+<<label=mck-data,echo=FALSE,results=tex>>=
+library(xtable)
+summary.mck.tests <- rbind(summary(coxph.mck)$logtest, summary(coxph.mck)$waldtest, summary(coxph.mck)$sctest)
+rownames(summary.mck.tests) <- c("Likelihood ratio test", "Wald test", "Score (logrank) test")
+print(xtable(summary.mck.tests, digits=c(0,4,0,6), caption = "Muscle TSC1 Knockout Tests", label = "tab:mck-tests"))
+print(xtable(coxph.mck, digits=c(0,2,3,3,2,6), caption = "Muscle TSC1 Knockout Coefficients, relative to Knockout", label = "tab:mck-coef"))
+@
+
+\subsection*{Comparing Floxed to Knockout}
+This section only compares fl/fl;+/+ to fl/fl;Tg/+.
+<<wt_ko, echo=FALSE>>=
+#for wt v ko
+survobj.mck.ko <- with(data.known.mck.ko, Surv(age,Cause_of_Death=="Unknown"))
+surv.fit.mck.ko <- survfit(survobj.mck.ko~Genotype, data=data.known.mck.ko)
+#summary(surv.fit.mck.ko) same as for all four genotypes
+sdf.mck.ko <- survdiff(formula=survobj.mck.ko~Genotype, data=data.known.mck.ko)
+coxph.mck.ko <- coxph(formula=survobj.mck.ko~Genotype, data=data.known.mck.ko)
+#surv_test(formula=survobj.mck.ko~Genotype, data=data.known.mck.ko)
+@
+
+The chi-squared test for comparing the two genotypes is significant, with a p-value of \Sexpr{round(pchisq(sdf.mck.ko$chisq, df=1, lower=FALSE),6)}.  The results of these tests are in Table \ref{tab:mck-tests-ko}.  The effects of each genotype, relative to the knockout strains are in Table \ref{tab:mck-coef-ko}. These results are presented graphically in Figure \ref{fig:km-genotype}.  This means that the knockout mice are \Sexpr{round(1/exp(coef(coxph.mck.ko)),2)} times more likely to die at any given time.
+
+<<label=mck-data,echo=FALSE,results=tex>>=
+library(xtable)
+summary.mck.ko.tests <- rbind(summary(coxph.mck.ko)$logtest, summary(coxph.mck.ko)$waldtest, summary(coxph.mck.ko)$sctest)
+rownames(summary.mck.ko.tests) <- c("Likelihood ratio test", "Wald test", "Score (logrank) test")
+print(xtable(summary.mck.ko.tests, digits=c(0,4,0,6), caption = "Muscle TSC1 Knockout Tests (WT vs KO)", label = "tab:mck-tests-ko"))
+print(xtable(coxph.mck.ko, digits=c(0,2,3,3,2,6), caption = "Muscle TSC1 Knockout Coefficients, relative to Knockout (WT vs KO)", label = "tab:mck-coef-ko"))
+@
+
+\subsection*{Death Logs}
+This table shows the age, and at risk individuals for each natural death, along with the \% survival and the confidence intervals.
+<<label=deaths, echo=FALSE>>=
+summary(surv.fit.mck)
+@
+
+<<label=fitting-mck, include=FALSE, echo=FALSE>>=
+library(RColorBrewer)
+colors <- brewer.pal(4, "Set1")
+plot(surv.fit.mck, xlab="Survival Time in Days",
+    ylab="% Surviving",
+     yscale=100, 
+     col=colors,
+     lty = c(1,2,2,2),
+     mark.time=F)
+legend("bottomleft", levels(data.known.mck$Genotype), bty="n",fill=colors, lty=c(1,2,2,2))
+@
+
+<<label=fitting-mck-ko, include=FALSE, echo=FALSE>>=
+plot(surv.fit.mck.ko, xlab="Survival Time in Days",
+    ylab="% Surviving",
+     yscale=100, 
+     col=colors,
+     mark.time=F)
+legend("bottomleft", levels(data.known.mck.ko$Genotype), bty="n",fill=colors)
+@
+
+<<label=mck-data,echo=FALSE,results=tex>>=
+library(xtable)
+summary.mck <- cbind(sdf.mck$n, sdf.mck$obs)
+colnames(summary.mck) <- c("Total Animals", "Natural Deaths")
+print(xtable(xtable(summary.mck), caption = "Muscle TSC1 Knockout Summary", label = "tab:death-summary", digit=0))
+@
+
+\begin{figure}
+\begin{center}
+<<label=fitting-all,fig=TRUE,echo=FALSE>>=
+<<data-analysis-all>>
+@
+\end{center}
+\caption{Survival Curve for All Muscle-TSC1 Mice}
+\label{fig:km-all}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=fitting-mck,fig=TRUE,echo=FALSE>>=
+<<fitting-mck>>
+@
+\end{center}
+\caption{Survival Curve for Mck-TSC1 Mice}
+\label{fig:km-genotype}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+<<label=fitting-mck-ko,fig=TRUE,echo=FALSE>>=
+<<fitting-mck-ko>>
+@
+\end{center}
+\caption{Survival Curve for Mck-TSC1 Mice, WT/KO Only}
+\label{fig:km-ko}
+\end{figure}
+
+\section*{Combining the Control Mice}
+
+\begin{figure}
+\begin{center}
+<<label=fitting-mck-controls-combined, echo=FALSE, fig=T>>=
+#for wt v ko
+data.known.mck$Knockout <- data.known.mck$Genotype != 'fl/fl; Tg/+'
+survobj.mck.combined <- with(data.known.mck, Surv(age,Cause_of_Death=="Unknown"))
+surv.fit.mck.combined <- survfit(survobj.mck.combined~Knockout, data=data.known.mck)
+#summary(surv.fit.mck.combined) same as for all four genotypes
+sdf.mck.combined <- survdiff(formula=survobj.mck.combined~Knockout, data=data.known.mck)
+coxph.mck.combined <- coxph(formula=survobj.mck.combined~Knockout, data=data.known.mck)
+#surv_test(formula=survobj.mck.combined~Genotype, data=data.known.mck)
+plot(surv.fit.mck.combined, xlab="Survival Time in Days",
+    ylab="% Surviving",
+     yscale=100,
+     col=c("black","red"),
+     mark.time=F)
+legend("bottomleft", c("Knockout", "Controls"), bty="n",fill=c("black","red"))
+@
+\end{center}
+\caption{Survival Curve for All Muscle-TSC1 Mice, Controls Combined}
+\label{fig:km-all-combined}
+\end{figure}
+
+The chi-squared test for comparing the two genotypes is significant, with a p-value of \Sexpr{round(pchisq(sdf.mck.combined$chisq, df=1, lower=FALSE),8)}.  The results of these tests are in Table \ref{tab:mck-tests-combined}.  The effects of each genotype, relative to the knockout strains are in Table \ref{tab:mck-coef-combined}. These results are presented graphically in Figure \ref{fig:km-all-combined}.  This means that the knockout mice are \Sexpr{round(1/exp(coef(coxph.mck.combined)),2)} times more likely to die at any given time.
+
+<<label=mck-data,echo=FALSE,results=tex>>=
+summary.mck.combined.tests <- rbind(summary(coxph.mck.combined)$logtest, summary(coxph.mck.combined)$waldtest, summary(coxph.mck.combined)$sctest)
+rownames(summary.mck.combined.tests) <- c("Likelihood ratio test", "Wald test", "Score (logrank) test")
+print(xtable(summary.mck.combined.tests, digits=c(0,4,0,6), caption = "Muscle TSC1 Knockout Tests controls combined", label = "tab:mck-tests-combined"))
+print(xtable(coxph.mck.combined, digits=c(0,2,3,3,2,6), caption = "Muscle TSC1 Knockout Coefficients, controls combined", label = "tab:mck-coef-combined"))
+@
+
+<<bibliography, include=F, echo=F>>=
+require(bibtex)
+write.bib(c(names(sessionInfo()$otherPkgs),'base'), file='references.bib')
+@
+
+
+\bibliography{references}
+\bibliographystyle{unsrt}
+
+\section*{Session Information}
+<<sessionInfo, results=tex, echo=F>>=
+toLatex(sessionInfo())
+@
+
+
+\end{document}
