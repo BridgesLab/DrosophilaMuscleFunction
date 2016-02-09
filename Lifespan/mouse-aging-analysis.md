@@ -6,7 +6,7 @@ February 9, 2015
 
 # Data Entry
 
-These data are accumulated from the database.  The analysis includes all alive animals, animals which were sacrificed and animals which died of natural causes (denoted in the database as "Unknown").  Animals which died with an estimated death date are excluded from the analysis.  We are testing the effects of age on death by natural causes.  This script is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan and was most recently run on Tue Feb  9 17:30:42 2016.
+These data are accumulated from the database.  The analysis includes all alive animals, animals which were sacrificed and animals which died of natural causes (denoted in the database as "Unknown").  Animals which died with an estimated death date are excluded from the analysis.  We are testing the effects of age on death by natural causes.  This script is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan and was most recently run on Tue Feb  9 17:32:42 2016.
 
 
 # Mck-TSC1 Mice
