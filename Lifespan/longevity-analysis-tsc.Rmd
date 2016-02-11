@@ -1,0 +1,524 @@
+---
+title: "Analysis of Longevity from Muscle dTORC1 Effector Flies"
+author: ' Dave Bridges, Isabelle Hatfield and Erika Yates'
+date: "February 9, 2015"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE,dev=c('png','pdf'))
+options(scipen = 9, digits = 5)
+
+```
+
+These studies evaluate the effects of knockdown of the dTORC1 negative regulator *Tsc1*.  This data is located in `r getwd()` and was most recently updated on `r date()`.
+
+## Experimental Design
+
+```{r data-input, echo=FALSE}
+require(lubridate, quietly=T)
+
+mapping_data <- read.csv('../Data/gene_mapping.csv')
+#this contains the data with the control flies
+lifespan_data_file_name <- '../Data/Death Worksheet Summer 2014.csv'
+lifespan.data <- read.csv(lifespan_data_file_name)
+#get data from what crosses are what
+lifespan_data_file_name_births <- '../Data/mhc_birth_worksheet.csv'
+lifespan.data.births <- read.csv(lifespan_data_file_name_births )
+lifespan.data.births$Total <- rowSums(lifespan.data.births[,10:14], na.rm=T)
+all.flies <- sum(lifespan.data.births$Total, na.rm=T)
+
+lifespan.data.births$Cross <- as.factor(paste(lifespan.data.births$Male, lifespan.data.births$Female, sep=" x "))
+lifespan.data.births$Driver <- as.factor(sapply(strsplit(as.character(lifespan.data.births$Female), "/"),"[", 1))
+#releveled UAS showing TSC1 then Raptor
+lifespan.data.births$UAS <- as.factor(sapply(strsplit(as.character(lifespan.data.births$Male), "/"),"[", 1))
+#remove analyses where incomplete data is presented
+lifespan.data.births.complete <- lifespan.data.births[!(is.na(lifespan.data.births$Total)),]
+#merged with gene mapping file
+annotated.data <- merge(mapping_data, lifespan.data.births.complete, by="UAS", all.y=T)
+annotations <- annotated.data[,c('UAS','Gene','Driver','CrossName')]
+annotations <- unique(annotations[c('UAS','Gene','Driver','CrossName')])
+
+annotated.lifespan.data <- merge(lifespan.data, annotations, by='CrossName')
+#set UAS as a factor
+annotated.lifespan.data$UAS <- as.factor(annotated.lifespan.data$UAS)
+annotated.lifespan.data$Birth.Date <- mdy(annotated.lifespan.data$Birth.Date)
+annotated.lifespan.data$Death.Date <- mdy(annotated.lifespan.data$Death.Date)
+annotated.lifespan.data$age <- annotated.lifespan.data$Death.Date - annotated.lifespan.data$Birth.Date
+annotated.lifespan.data <- droplevels(annotated.lifespan.data)
+annotated.lifespan.data$UAS <- relevel(annotated.lifespan.data$UAS, ref='36304')
+
+
+#extract only the data that corresponds to the control flies
+control.data <- subset(annotated.lifespan.data, Gene=="Control")
+#reformat age column
+control.data$Age <- as.integer(control.data$age)
+#changed 24B-GAL4 to 24B-Gal4
+library(plyr)
+control.data$Driver <- revalue(control.data$Driver , c("24B-GAL4"="24B-Gal4"))
+control.data$Driver <- revalue(control.data$Driver , c("Hand-GAL4"="Hand-Gal4"))
+
+#switched gender to male/female
+control.data$Gender <- revalue(control.data$Gender, c("M"="male", "F"="female"))
+detach("package:plyr", unload=TRUE)
+
+tsc_filename <- "../Data/Longevity Analysis Data.csv"
+tsc.data <- read.csv(tsc_filename)
+
+library(dplyr)
+#only pull in the knockdown flies (we are using the controls as the comparison group)
+combined.data <- rbind(filter(tsc.data, Genotype=='shRNA/GAL4') %>% select(Gender, Gene, UAS, Driver, Age),
+                       select(control.data, Gender, Gene, UAS, Driver, Age))
+combined.data <- droplevels(combined.data)
+combined.data$Gene <- relevel(combined.data$Gene, ref="Control")
+combined.data$UAS <- relevel(as.factor(combined.data$UAS), ref="36304")
+write.csv(combined.data, "../Data/dTORC1 Longevity Analysis Data.csv")
+```
+
+This script was most recently run on `r date()`.  There has been a total of **` dim(death_data)[1]`** deaths, with **` dim(death_data[death_data$Accidental==FALSE,])[1]`** of natural causes and **` dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]`** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was `r max(combined.data$Age, na.rm=T)` days old at time of death.
+
+## Gene Level Analysis
+
+```{r summary-statistics}
+complete.data <- combined.data[!(is.na(combined.data$Age)),]
+
+summarised.data.all <- 
+  subset(complete.data, Driver=='24B-Gal4') %>%
+  group_by(Gene, UAS) %>%
+  summarise(Deaths = length(Age),
+            Median.Age = median(Age),
+            Age= mean(Age),
+            Error = sd(Age, na.rm=T)/sqrt(length(Age)))
+
+summarised.data.gender <- 
+  subset(complete.data, Driver=='24B-Gal4') %>%
+  group_by(Gene, UAS, Gender) %>%
+  summarise(Deaths = length(Age),
+            Median.Age = median(Age),
+            Age= mean(Age),
+            Error = sd(Age, na.rm=T)/sqrt(length(Age)))
+```
+
+
+
+## Number of Flies Examined
+
+The total number of deaths for each cross and genotype, removing deaths that were accidental or not due to natural causes, the data is shown in the table below:
+
+```{r selected-data}
+library(tidyr)
+kable(summarised.data.gender %>% select(Gene, Gender, Deaths) %>% spread(Gender, Deaths), caption = "Total Natural Deaths by Gender for Each Gene and Genotype", label = "tab:analysed-deaths-gene-gender")
+```  
+
+## Survival Analysis - 24B Driver
+
+All of these are relative to the reference Genotype which is the knockdown (GAL4/shRNA).  The key packages used in this The summary statistics from this analysis are shown in the tables below:
+
+```{r survival-analysis-24b-by-gene}
+require(RColorBrewer)
+genotype.colors <- brewer.pal(2, "Set2")
+require(survival)
+#only use 24b data
+d24b.data <- droplevels(subset(complete.data, Driver=='24B-Gal4') )
+
+#set up the dataframe
+summary.coxph.24b.gene <- data.frame(row.names=levels(combined.data$Gene), 
+                                n=rep(NA,length(levels(combined.data$Gene))), 
+                                logtest.p=rep(NA,length(levels(combined.data$Gene))),
+                                waldtest.p=rep(NA,length(levels(combined.data$Gene))),
+                                sctest.p=rep(NA,length(levels(combined.data$Gene))))
+#calculate statistics for each gene/control pair
+for (gene in levels(d24b.data$Gene)[2]) {
+    data.used <- droplevels(subset(d24b.data, Gene %in% c("Control",gene)))
+    survobj <- with(data.used, Surv(Age))
+    survfit <- survfit(survobj~Gene, data=data.used)
+    #print(sprintf('Analysis of %s with 24B-GAL4 Driver', gene))
+    #print(survfit(survobj~Genotype, data=data.used), print.rmean=TRUE)
+    coxph.fit <- coxph(survobj~Gene, data=data.used)
+    beta <- coef(coxph.fit)
+    se <- sqrt(diag(coxph.fit$var))
+    assign(paste('coxph.table.24b',gene,sep='.'),data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+    
+    summary.coxph.24b.gene[gene,] <- c(
+      n=coxph(survobj~Gene, data=data.used)$nevent,
+      logtest.p=summary(coxph(survobj~Gene, data=data.used))$logtest[3],
+      waldtest.p=summary(coxph(survobj~Gene, data=data.used))$wald[3],
+      sctest.p=summary(coxph(survobj~Gene, data=data.used))$sctest[3])
+    #summary.coxph.24b$padj <- p.adjust(summary.coxph.24b$logrank.p,n=3,method="BH")
+    
+    plot(survfit, main = sprintf('Survival of %s with 24B-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Gene), col=genotype.colors, lty=c(1,2,2), bty="n")
+}
+
+par(mfrow=c(1,2))
+#Separating out genders for this analysis
+summary.coxph.24b.gene.gender <- data.frame(
+                row.names=paste(rep(c(levels(d24b.data$Gene)[2]),2), c("male","female")),
+                n=rep(NA,2), 
+                logtest.p=rep(NA,2),
+                waldtest.p=rep(NA,2),
+                sctest.p=rep(NA,2))
+
+#iterate over gender, then over each gene
+for (gene in levels(d24b.data$Gene)[2]) {
+  for (gender in levels(d24b.data$Gender)) {
+        data.used <- droplevels(subset(d24b.data, Gender==gender&Gene %in% c("Control",gene)))
+        survobj <- with(data.used, Surv(Age))
+        survfit <- survfit(survobj~Gene, data=data.used)
+        #print(survfit(survobj~Gene, data=data.used), print.rmean=TRUE)
+        #print(coxph(survobj~Gene, data=data.used))
+        
+        coxph.fit <- coxph(survobj~Gene, data=data.used)
+        beta <- coef(coxph.fit)
+        se <- sqrt(diag(coxph.fit$var))
+        assign(paste(paste('coxph.table.24b',gene,sep='.'),gender, sep="."),
+               data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+        
+        summary.coxph.24b.gene.gender[paste(gene, gender),] <- c(
+          n=coxph(survobj~Gene, data=data.used)$nevent,
+          logtest.p=summary(coxph(survobj~Gene, data=data.used))$logtest[3],
+          waldtest.p=summary(coxph(survobj~Gene, data=data.used))$wald[3],
+          sctest.p=summary(coxph(survobj~Gene, data=data.used))$sctest[3])
+        #summary.coxph.24b$padj <- p.adjust(summary.coxph.24b$logrank.p,n=3,method="BH")
+        plot(survfit, main = sprintf('%s', paste(gene,gender)),
+             xlab= 'Days',
+             ylab= 'Percent Survival',
+             yscale=100, 
+             las = 1,
+             lty=c(1,2,2,2),
+             col= genotype.colors)
+        legend("bottomleft", levels(data.used$Gene), col=genotype.colors, lty=c(1,2,2,2), bty="n")
+}
+}
+```
+
+```{r coxph-datatables-24b}
+kable(summary.coxph.24b.gene, digits=c(0,9,9,9,9),caption = "Gene Level Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b")
+kable(summary.coxph.24b.gene.gender, digits=c(0,9,9,9,9),caption = "Gene and Gender Level  Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b-gender")
+```
+
+### Analysis by shRNA Clone - 24B
+
+
+```{r survival-analysis-24b-by-UAS}
+#set up the dataframe
+summary.coxph.24b.UAS <- data.frame(row.names=levels(combined.data$UAS), 
+                                n=rep(NA,length(levels(combined.data$UAS))), 
+                                logtest.p=rep(NA,length(levels(combined.data$UAS))),
+                                waldtest.p=rep(NA,length(levels(combined.data$UAS))),
+                                sctest.p=rep(NA,length(levels(combined.data$UAS))))
+#calculate statistics for each UAS/control pair
+for (uas in levels(d24b.data$UAS)[2:4]) {
+    data.used <- droplevels(subset(d24b.data, UAS %in% c("36304",uas)))
+    survobj <- with(data.used, Surv(Age))
+    survfit <- survfit(survobj~UAS, data=data.used)
+    #print(sprintf('Analysis of %s with 24B-GAL4 Driver', UAS))
+    #print(survfit(survobj~Genotype, data=data.used), print.rmean=TRUE)
+    coxph.fit <- coxph(survobj~UAS, data=data.used)
+    beta <- coef(coxph.fit)
+    se <- sqrt(diag(coxph.fit$var))
+    assign(paste('coxph.table.24b',uas,sep='.'),data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+    
+    summary.coxph.24b.UAS[uas,] <- c(
+      n=coxph(survobj~UAS, data=data.used)$nevent,
+      logtest.p=summary(coxph(survobj~UAS, data=data.used))$logtest[3],
+      waldtest.p=summary(coxph(survobj~UAS, data=data.used))$wald[3],
+      sctest.p=summary(coxph(survobj~UAS, data=data.used))$sctest[3])
+    #summary.coxph.24b$padj <- p.adjust(summary.coxph.24b$logrank.p,n=3,method="BH")
+    
+    plot(survfit, main = sprintf('Survival of %s with 24B-GAL4 Driver', uas),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$UAS), col=genotype.colors, lty=c(1,2,2), bty="n")
+}
+
+par(mfrow=c(1,2))
+#Separating out genders for this analysis
+summary.coxph.24b.UAS.gender <- data.frame(
+                row.names=as.character(outer(levels(d24b.data$Gender), levels(d24b.data$UAS),"paste")),
+                n=rep(NA,8), 
+                logtest.p=rep(NA,8),
+                waldtest.p=rep(NA,8),
+                sctest.p=rep(NA,8))
+
+#iterate over gender, then over each UAS
+for (uas in levels(d24b.data$UAS)[2:4]) {
+  for (gender in levels(d24b.data$Gender)) {
+        data.used <- droplevels(subset(d24b.data, Gender==gender&UAS %in% c("36304",uas)))
+        survobj <- with(data.used, Surv(Age))
+        survfit <- survfit(survobj~UAS, data=data.used)
+        #print(survfit(survobj~UAS, data=data.used), print.rmean=TRUE)
+        #print(coxph(survobj~UAS, data=data.used))
+        
+        coxph.fit <- coxph(survobj~UAS, data=data.used)
+        beta <- coef(coxph.fit)
+        se <- sqrt(diag(coxph.fit$var))
+        assign(paste(paste('coxph.table.24b',uas,sep='.'),gender, sep="."),
+               data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+        
+        summary.coxph.24b.UAS.gender[paste(gender, uas),] <- c(
+          n=coxph(survobj~UAS, data=data.used)$nevent,
+          logtest.p=summary(coxph(survobj~UAS, data=data.used))$logtest[3],
+          waldtest.p=summary(coxph(survobj~UAS, data=data.used))$wald[3],
+          sctest.p=summary(coxph(survobj~UAS, data=data.used))$sctest[3])
+        #summary.coxph.24b$padj <- p.adjust(summary.coxph.24b$logrank.p,n=3,method="BH")
+        plot(survfit, main = sprintf('%s', paste(uas,gender)),
+             xlab= 'Days',
+             ylab= 'Percent Survival',
+             yscale=100, 
+             las = 1,
+             lty=c(1,2,2,2),
+             col= genotype.colors)
+        legend("bottomleft", levels(data.used$UAS), col=genotype.colors, lty=c(1,2,2,2), bty="n")
+}
+}
+```
+
+```{r coxph-datatables-uas-24b}
+kable(summary.coxph.24b.UAS, digits=c(0,9,9,9,9),caption = "UAS Level Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b")
+kable(summary.coxph.24b.UAS.gender, digits=c(0,9,9,9,9),caption = "UAS and Gender Level  Tests for 24B-Gal4 Drivers", label = "tab:coxph-summary-24b-gender")
+```
+
+### Hazard Ratios and Summary Tables - 24B
+
+```{r hazard-ratios-24b}
+hazard.table <- data.frame()
+for (table in ls()[grep("coxph.table.24b", ls())] ){
+  hazard.table <- rbind(hazard.table, cbind(group=strsplit(table, "24b.")[[1]][2], get(table)))
+}
+hazard.table$padj <- p.adjust(hazard.table$p, method="BH")
+kable(hazard.table, caption="Hazard Ratios for All Comparasons", row.names=F)
+```
+
+## Survival Analysis - Hand
+
+```{r survival-analysis-hand-by-gene}
+require(RColorBrewer)
+genotype.colors <- brewer.pal(2, "Set2")
+require(survival)
+#only use hand data
+dhand.data <- droplevels(subset(complete.data, Driver=='Hand-Gal4') )
+
+#set up the dataframe
+summary.coxph.hand.gene <- data.frame(row.names=levels(combined.data$Gene), 
+                                n=rep(NA,length(levels(combined.data$Gene))), 
+                                logtest.p=rep(NA,length(levels(combined.data$Gene))),
+                                waldtest.p=rep(NA,length(levels(combined.data$Gene))),
+                                sctest.p=rep(NA,length(levels(combined.data$Gene))))
+#calculate statistics for each gene/control pair
+for (gene in levels(dhand.data$Gene)[2]) {
+    data.used <- droplevels(subset(dhand.data, Gene %in% c("Control",gene)))
+    survobj <- with(data.used, Surv(Age))
+    survfit <- survfit(survobj~Gene, data=data.used)
+    #print(sprintf('Analysis of %s with hand-GAL4 Driver', gene))
+    #print(survfit(survobj~Genotype, data=data.used), print.rmean=TRUE)
+    coxph.fit <- coxph(survobj~Gene, data=data.used)
+    beta <- coef(coxph.fit)
+    se <- sqrt(diag(coxph.fit$var))
+    assign(paste('coxph.table.hand',gene,sep='.'),data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+    
+    summary.coxph.hand.gene[gene,] <- c(
+      n=coxph(survobj~Gene, data=data.used)$nevent,
+      logtest.p=summary(coxph(survobj~Gene, data=data.used))$logtest[3],
+      waldtest.p=summary(coxph(survobj~Gene, data=data.used))$wald[3],
+      sctest.p=summary(coxph(survobj~Gene, data=data.used))$sctest[3])
+    #summary.coxph.hand$padj <- p.adjust(summary.coxph.hand$logrank.p,n=3,method="BH")
+    
+    plot(survfit, main = sprintf('Survival of %s with Hand-GAL4 Driver', gene),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$Gene), col=genotype.colors, lty=c(1,2,2), bty="n")
+}
+
+par(mfrow=c(1,2))
+#Separating out genders for this analysis
+summary.coxph.hand.gene.gender <- data.frame(
+                row.names=paste(rep(c(levels(dhand.data$Gene)[2]),2), c("male","female")),
+                n=rep(NA,2), 
+                logtest.p=rep(NA,2),
+                waldtest.p=rep(NA,2),
+                sctest.p=rep(NA,2))
+
+#iterate over gender, then over each gene
+for (gene in levels(dhand.data$Gene)[2]) {
+  for (gender in levels(dhand.data$Gender)) {
+        data.used <- droplevels(subset(dhand.data, Gender==gender&Gene %in% c("Control",gene)))
+        survobj <- with(data.used, Surv(Age))
+        survfit <- survfit(survobj~Gene, data=data.used)
+        #print(survfit(survobj~Gene, data=data.used), print.rmean=TRUE)
+        #print(coxph(survobj~Gene, data=data.used))
+        
+        coxph.fit <- coxph(survobj~Gene, data=data.used)
+        beta <- coef(coxph.fit)
+        se <- sqrt(diag(coxph.fit$var))
+        assign(paste(paste('coxph.table.hand',gene,sep='.'),gender, sep="."),
+               data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+        
+        summary.coxph.hand.gene.gender[paste(gene, gender),] <- c(
+          n=coxph(survobj~Gene, data=data.used)$nevent,
+          logtest.p=summary(coxph(survobj~Gene, data=data.used))$logtest[3],
+          waldtest.p=summary(coxph(survobj~Gene, data=data.used))$wald[3],
+          sctest.p=summary(coxph(survobj~Gene, data=data.used))$sctest[3])
+        #summary.coxph.hand$padj <- p.adjust(summary.coxph.hand$logrank.p,n=3,method="BH")
+        plot(survfit, main = sprintf('%s', paste(gene,gender)),
+             xlab= 'Days',
+             ylab= 'Percent Survival',
+             yscale=100, 
+             las = 1,
+             lty=c(1,2,2,2),
+             col= genotype.colors)
+        legend("bottomleft", levels(data.used$Gene), col=genotype.colors, lty=c(1,2,2,2), bty="n")
+}
+}
+```
+
+```{r coxph-datatables-hand}
+kable(summary.coxph.hand.gene, digits=c(0,9,9,9,9),caption = "Gene Level Tests for Hand-Gal4 Drivers", label = "tab:coxph-summary-hand")
+kable(summary.coxph.hand.gene.gender, digits=c(0,9,9,9,9),caption = "Gene and Gender Level  Tests for Hand-Gal4 Drivers", label = "tab:coxph-summary-hand-gender")
+```
+
+## Analysis by shRNA Clone
+
+
+```{r survival-analysis-hand-by-UAS}
+#set up the dataframe
+summary.coxph.hand.UAS <- data.frame(row.names=levels(combined.data$UAS), 
+                                n=rep(NA,length(levels(combined.data$UAS))), 
+                                logtest.p=rep(NA,length(levels(combined.data$UAS))),
+                                waldtest.p=rep(NA,length(levels(combined.data$UAS))),
+                                sctest.p=rep(NA,length(levels(combined.data$UAS))))
+#calculate statistics for each UAS/control pair
+for (uas in levels(dhand.data$UAS)[2:3]) {
+    data.used <- droplevels(subset(dhand.data, UAS %in% c("36304",uas)))
+    survobj <- with(data.used, Surv(Age))
+    survfit <- survfit(survobj~UAS, data=data.used)
+    #print(sprintf('Analysis of %s with hand-GAL4 Driver', UAS))
+    #print(survfit(survobj~Genotype, data=data.used), print.rmean=TRUE)
+    coxph.fit <- coxph(survobj~UAS, data=data.used)
+    beta <- coef(coxph.fit)
+    se <- sqrt(diag(coxph.fit$var))
+    assign(paste('coxph.table.hand',uas,sep='.'),data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+    
+    summary.coxph.hand.UAS[uas,] <- c(
+      n=coxph(survobj~UAS, data=data.used)$nevent,
+      logtest.p=summary(coxph(survobj~UAS, data=data.used))$logtest[3],
+      waldtest.p=summary(coxph(survobj~UAS, data=data.used))$wald[3],
+      sctest.p=summary(coxph(survobj~UAS, data=data.used))$sctest[3])
+    #summary.coxph.hand$padj <- p.adjust(summary.coxph.hand$logrank.p,n=3,method="BH")
+    
+    plot(survfit, main = sprintf('Survival of %s with Hand-GAL4 Driver', uas),
+         xlab= 'Days',
+         ylab= 'Percent Survival',
+         yscale=100, 
+         las = 1,
+         lty=c(1,2,2),
+         col= genotype.colors)
+    legend("bottomleft", levels(data.used$UAS), col=genotype.colors, lty=c(1,2,2), bty="n")
+}
+
+par(mfrow=c(1,2))
+#Separating out genders for this analysis
+summary.coxph.hand.UAS.gender <- data.frame(
+                row.names=as.character(outer(levels(dhand.data$Gender), levels(dhand.data$UAS),"paste")),
+                n=rep(NA,14), 
+                logtest.p=rep(NA,14),
+                waldtest.p=rep(NA,14),
+                sctest.p=rep(NA,14))
+
+#iterate over gender, then over each UAS
+for (uas in levels(dhand.data$UAS)[2:3]) {
+  for (gender in levels(dhand.data$Gender)) {
+        data.used <- droplevels(subset(dhand.data, Gender==gender&UAS %in% c("36304",uas)))
+        survobj <- with(data.used, Surv(Age))
+        survfit <- survfit(survobj~UAS, data=data.used)
+        #print(survfit(survobj~UAS, data=data.used), print.rmean=TRUE)
+        #print(coxph(survobj~UAS, data=data.used))
+        
+        coxph.fit <- coxph(survobj~UAS, data=data.used)
+        beta <- coef(coxph.fit)
+        se <- sqrt(diag(coxph.fit$var))
+        assign(paste(paste('coxph.table.hand',uas,sep='.'),gender, sep="."),
+               data.frame(Coef=beta, 
+                              SE = se,
+                              Hazard.Ratio = 1/exp(beta),
+                              p = 1 - pchisq((beta/se)^2, 1)))
+        
+        summary.coxph.hand.UAS.gender[paste(gender, uas),] <- c(
+          n=coxph(survobj~UAS, data=data.used)$nevent,
+          logtest.p=summary(coxph(survobj~UAS, data=data.used))$logtest[3],
+          waldtest.p=summary(coxph(survobj~UAS, data=data.used))$wald[3],
+          sctest.p=summary(coxph(survobj~UAS, data=data.used))$sctest[3])
+        #summary.coxph.hand$padj <- p.adjust(summary.coxph.hand$logrank.p,n=3,method="BH")
+        plot(survfit, main = sprintf('%s', paste(uas,gender)),
+             xlab= 'Days',
+             ylab= 'Percent Survival',
+             yscale=100, 
+             las = 1,
+             lty=c(1,2,2,2),
+             col= genotype.colors)
+        legend("bottomleft", levels(data.used$UAS), col=genotype.colors, lty=c(1,2,2,2), bty="n")
+}
+}
+```
+
+```{r coxph-datatables-uas-hand}
+kable(summary.coxph.hand.UAS, digits=c(0,9,9,9,9),caption = "UAS Level Tests for Hand-Gal4 Drivers", label = "tab:coxph-summary-hand")
+kable(summary.coxph.hand.UAS.gender, digits=c(0,9,9,9,9),caption = "UAS and Gender Level  Tests for Hand-Gal4 Drivers", label = "tab:coxph-summary-hand-gender")
+```
+
+## Hazard Ratios and Summary Tables
+
+```{r hazard-ratios-hand}
+hazard.table <- data.frame()
+for (table in ls()[grep("coxph.table.hand", ls())] ){
+  hazard.table <- rbind(hazard.table, cbind(group=strsplit(table, "hand.")[[1]][2], get(table)))
+}
+hazard.table$padj <- p.adjust(hazard.table$p, method="BH")
+kable(hazard.table, caption="Hazard Ratios for All Comparasons", row.names=F)
+```
+
+
+## Session Information
+
+```{r sessionInfo}
+sessionInfo()
+```
