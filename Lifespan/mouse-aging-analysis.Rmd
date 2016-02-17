@@ -35,13 +35,15 @@ data.known.mck <- subset(data.filtered, strain == "Muscle TSC1",)
 data.known.mck <- droplevels(data.known.mck) # removes unused levels
 data.known.mck.ko <- subset(data.filtered.ko, strain == "Muscle TSC1",)
 data.known.mck.ko <- droplevels(data.known.mck.ko) # removes unused levels
+
+with(subset(data.known.mck.ko, Cause_of_Death == "Unknown"), median(age))
 ```
 
 ## Analysis
 
 The data is saved in `r getwd()` with the data saved as `r data_file` and analysed using R \cite{base}.
 The data was analysed using the survival package \cite{survival1, survival2}.  Log rank tests were performed using the coin package \cite{coin1, coin2}.
-This plot analyses all of the natural deaths (marked in the database as unknown)
+This plot analyses all of the natural deaths (marked in the database as unknown).  The median age at death was `r with(subset(data.known.mck.ko, Cause_of_Death == "Unknown"&Genotype=='fl/fl; Tg/+'), median(age))` for knockout mice and `r with(subset(data.known.mck.ko, Cause_of_Death == "Unknown"&Genotype!='fl/fl; Tg/+'), median(age))` for control mice
 
 ```{r data-analysis-all}
 library(survival)

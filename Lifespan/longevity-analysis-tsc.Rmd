@@ -141,9 +141,10 @@ for (gene in levels(d24b.data$Gene)[2]) {
     coxph.fit <- coxph(survobj~Gene, data=data.used)
     beta <- coef(coxph.fit)
     se <- sqrt(diag(coxph.fit$var))
-    assign(paste('coxph.table.24b',gene,sep='.'),data.frame(Coef=beta, 
+    assign(paste('coxph.table.24b',gene,sep='.'),data.frame(
+                          Coef=beta, 
                               SE = se,
-                              Hazard.Ratio = 1/exp(beta),
+                              Hazard.Ratio = exp(beta),
                               p = 1 - pchisq((beta/se)^2, 1)))
     
     summary.coxph.24b.gene[gene,] <- c(
@@ -187,7 +188,7 @@ for (gene in levels(d24b.data$Gene)[2]) {
         assign(paste(paste('coxph.table.24b',gene,sep='.'),gender, sep="."),
                data.frame(Coef=beta, 
                               SE = se,
-                              Hazard.Ratio = 1/exp(beta),
+                              Hazard.Ratio = exp(beta),
                               p = 1 - pchisq((beta/se)^2, 1)))
         
         summary.coxph.24b.gene.gender[paste(gene, gender),] <- c(
@@ -235,7 +236,7 @@ for (uas in levels(d24b.data$UAS)[2:4]) {
     se <- sqrt(diag(coxph.fit$var))
     assign(paste('coxph.table.24b',uas,sep='.'),data.frame(Coef=beta, 
                               SE = se,
-                              Hazard.Ratio = 1/exp(beta),
+                              Hazard.Ratio = exp(beta),
                               p = 1 - pchisq((beta/se)^2, 1)))
     
     summary.coxph.24b.UAS[uas,] <- c(
@@ -279,7 +280,7 @@ for (uas in levels(d24b.data$UAS)[2:4]) {
         assign(paste(paste('coxph.table.24b',uas,sep='.'),gender, sep="."),
                data.frame(Coef=beta, 
                               SE = se,
-                              Hazard.Ratio = 1/exp(beta),
+                              Hazard.Ratio = exp(beta),
                               p = 1 - pchisq((beta/se)^2, 1)))
         
         summary.coxph.24b.UAS.gender[paste(gender, uas),] <- c(
@@ -343,7 +344,7 @@ for (gene in levels(dhand.data$Gene)[2]) {
     se <- sqrt(diag(coxph.fit$var))
     assign(paste('coxph.table.hand',gene,sep='.'),data.frame(Coef=beta, 
                               SE = se,
-                              Hazard.Ratio = 1/exp(beta),
+                              Hazard.Ratio = exp(beta),
                               p = 1 - pchisq((beta/se)^2, 1)))
     
     summary.coxph.hand.gene[gene,] <- c(
@@ -387,7 +388,7 @@ for (gene in levels(dhand.data$Gene)[2]) {
         assign(paste(paste('coxph.table.hand',gene,sep='.'),gender, sep="."),
                data.frame(Coef=beta, 
                               SE = se,
-                              Hazard.Ratio = 1/exp(beta),
+                              Hazard.Ratio = exp(beta),
                               p = 1 - pchisq((beta/se)^2, 1)))
         
         summary.coxph.hand.gene.gender[paste(gene, gender),] <- c(
@@ -435,7 +436,7 @@ for (uas in levels(dhand.data$UAS)[2:3]) {
     se <- sqrt(diag(coxph.fit$var))
     assign(paste('coxph.table.hand',uas,sep='.'),data.frame(Coef=beta, 
                               SE = se,
-                              Hazard.Ratio = 1/exp(beta),
+                              Hazard.Ratio = exp(beta),
                               p = 1 - pchisq((beta/se)^2, 1)))
     
     summary.coxph.hand.UAS[uas,] <- c(
@@ -479,7 +480,7 @@ for (uas in levels(dhand.data$UAS)[2:3]) {
         assign(paste(paste('coxph.table.hand',uas,sep='.'),gender, sep="."),
                data.frame(Coef=beta, 
                               SE = se,
-                              Hazard.Ratio = 1/exp(beta),
+                              Hazard.Ratio = exp(beta),
                               p = 1 - pchisq((beta/se)^2, 1)))
         
         summary.coxph.hand.UAS.gender[paste(gender, uas),] <- c(
