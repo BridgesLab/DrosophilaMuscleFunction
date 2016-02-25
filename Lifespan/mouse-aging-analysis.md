@@ -6,17 +6,20 @@ February 9, 2015
 
 # Data Entry
 
-These data are accumulated from the database.  The analysis includes all alive animals, animals which were sacrificed and animals which died of natural causes (denoted in the database as "Unknown").  Animals which died with an estimated death date are excluded from the analysis.  We are testing the effects of age on death by natural causes.  This script is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan and was most recently run on Tue Feb  9 17:32:42 2016.
+These data are accumulated from the database.  The analysis includes all alive animals, animals which were sacrificed and animals which died of natural causes (denoted in the database as "Unknown").  Animals which died with an estimated death date are excluded from the analysis.  We are testing the effects of age on death by natural causes.  This script is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan and was most recently run on Wed Feb 17 16:46:06 2016.
 
 
 # Mck-TSC1 Mice
 
+```
+## [1] 292
+```
 
 ## Analysis
 
 The data is saved in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan with the data saved as ../Data/Mouse Log.csv and analysed using R \cite{base}.
 The data was analysed using the survival package \cite{survival1, survival2}.  Log rank tests were performed using the coin package \cite{coin1, coin2}.
-This plot analyses all of the natural deaths (marked in the database as unknown)
+This plot analyses all of the natural deaths (marked in the database as unknown).  The median age at death was 272.5 for knockout mice and 623 for control mice
 
 ![](mouse-aging-analysis_files/figure-html/data-analysis-all-1.png) 
 This analysis contains a total of **625** animals, from which we have detected **49** natural deaths.  See Table below for a summary of natural deaths and see the figure below for the combined death curves with errors.

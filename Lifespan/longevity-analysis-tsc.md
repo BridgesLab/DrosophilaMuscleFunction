@@ -4,13 +4,13 @@ February 9, 2015
 
 
 
-These studies evaluate the effects of knockdown of the dTORC1 negative regulator *Tsc1*.  This data is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan and was most recently updated on Thu Feb 11 08:42:00 2016.
+These studies evaluate the effects of knockdown of the dTORC1 negative regulator *Tsc1*.  This data is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan and was most recently updated on Wed Feb 17 17:03:51 2016.
 
 ## Experimental Design
 
 
 
-This script was most recently run on Thu Feb 11 08:42:02 2016.  There has been a total of **` dim(death_data)[1]`** deaths, with **` dim(death_data[death_data$Accidental==FALSE,])[1]`** of natural causes and **` dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]`** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was 155 days old at time of death.
+This script was most recently run on Wed Feb 17 17:03:52 2016.  There has been a total of **` dim(death_data)[1]`** deaths, with **` dim(death_data[death_data$Accidental==FALSE,])[1]`** of natural causes and **` dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]`** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was 155 days old at time of death.
 
 ## Gene Level Analysis
 
@@ -96,18 +96,18 @@ Table: Hazard Ratios for All Comparasons
 
 group               Coef        SE   Hazard.Ratio         p      padj
 -------------  ---------  --------  -------------  --------  --------
-31039            1.25381   0.09007        0.28542   0.00000   0.00000
-31039.female     1.33444   0.12226        0.26331   0.00000   0.00000
-31039.male       1.24163   0.13839        0.28891   0.00000   0.00000
-31314           -0.13237   0.08413        1.14154   0.11561   0.12612
-31314.female    -0.39268   0.12298        1.48095   0.00141   0.00169
-31314.male       0.01619   0.12117        0.98394   0.89370   0.89370
-35144            0.80070   0.08767        0.44901   0.00000   0.00000
-35144.female     0.95373   0.12027        0.38530   0.00000   0.00000
-35144.male       0.64178   0.13069        0.52636   0.00000   0.00000
-Tsc1             0.49979   0.07208        0.60666   0.00000   0.00000
-Tsc1.female      0.53222   0.09772        0.58730   0.00000   0.00000
-Tsc1.male        0.48710   0.10928        0.61440   0.00001   0.00001
+31039            1.25381   0.09007        3.50365   0.00000   0.00000
+31039.female     1.33444   0.12226        3.79786   0.00000   0.00000
+31039.male       1.24163   0.13839        3.46124   0.00000   0.00000
+31314           -0.13237   0.08413        0.87601   0.11561   0.12612
+31314.female    -0.39268   0.12298        0.67524   0.00141   0.00169
+31314.male       0.01619   0.12117        1.01632   0.89370   0.89370
+35144            0.80070   0.08767        2.22710   0.00000   0.00000
+35144.female     0.95373   0.12027        2.59537   0.00000   0.00000
+35144.male       0.64178   0.13069        1.89986   0.00000   0.00000
+Tsc1             0.49979   0.07208        1.64837   0.00000   0.00000
+Tsc1.female      0.53222   0.09772        1.70271   0.00000   0.00000
+Tsc1.male        0.48710   0.10928        1.62759   0.00001   0.00001
 
 ## Survival Analysis - Hand
 
@@ -177,15 +177,15 @@ Table: Hazard Ratios for All Comparasons
 
 group               Coef        SE   Hazard.Ratio         p      padj
 --------------  --------  --------  -------------  --------  --------
-31039            0.36668   0.07102        0.69303   0.00000   0.00000
-31039.female     0.29872   0.10020        0.74177   0.00287   0.00369
-31039.male       0.46079   0.10399        0.63078   0.00001   0.00001
-31314            0.19205   0.08833        0.82526   0.02969   0.03340
-31314.female     0.19659   0.11575        0.82153   0.08945   0.08945
-31314.male       0.69464   0.15281        0.49926   0.00001   0.00001
-Raptor           1.07540   0.06514        0.34116   0.00000   0.00000
-Raptor.female    1.02366   0.09209        0.35928   0.00000   0.00000
-Raptor.male      1.70176   0.10514        0.18236   0.00000   0.00000
+31039            0.36668   0.07102         1.4429   0.00000   0.00000
+31039.female     0.29872   0.10020         1.3481   0.00287   0.00369
+31039.male       0.46079   0.10399         1.5853   0.00001   0.00001
+31314            0.19205   0.08833         1.2117   0.02969   0.03340
+31314.female     0.19659   0.11575         1.2172   0.08945   0.08945
+31314.male       0.69464   0.15281         2.0030   0.00001   0.00001
+Raptor           1.07540   0.06514         2.9312   0.00000   0.00000
+Raptor.female    1.02366   0.09209         2.7834   0.00000   0.00000
+Raptor.male      1.70176   0.10514         5.4836   0.00000   0.00000
 
 
 ## Session Information
