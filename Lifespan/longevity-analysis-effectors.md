@@ -4,13 +4,13 @@ February 9, 2015
 
 
 
-These studies evaluate the effects of knockdown of several dTORC1 effectors, including Autophagy genes (*Atg5*, *Atg8a* and *Atg8b*) and the SREBP1 ortholog *Hlh106*  This data is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan and was most recently updated on Tue Feb  9 16:49:24 2016.
+These studies evaluate the effects of knockdown of several dTORC1 effectors, including Autophagy genes (*Atg5*, *Atg8a* and *Atg8b*) and the SREBP1 ortholog *Hlh106*  This data is located in /Users/davebrid/Documents/GitHub/DrosophilaMuscleFunction/Lifespan and was most recently updated on `date()`.
 
 ## Experimental Design
 
 
 
-This script was most recently run on Tue Feb  9 16:49:25 2016.  There has been a total of **1117** deaths, with **1113** of natural causes and **1109** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was 155 days old at time of death.
+There has been a total of **1117** deaths, with **1113** of natural causes and **1109** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was 155 days old at time of death.
 
 ## Gene Level Analysis
 
@@ -38,7 +38,7 @@ UAS     Gene       female   male
 
 All of these are relative to the reference Genotype which is the knockdown (GAL4/shRNA).  The key packages used in this The summary statistics from this analysis are shown in the tables below:
 
-![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-1.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-2.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-3.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-4.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-5.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-6.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-7.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-8.png) 
+![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-1.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-2.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-3.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-4.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-5.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-6.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-7.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-gene-8.png)<!-- -->
 
 
 Table: Gene Level Tests for 24B-Gal4 Drivers
@@ -69,7 +69,7 @@ HLH106 female    225   0.000001906   0.000002068   0.000001487
 ## Analysis by shRNA Clone
 
 
-![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-1.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-2.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-3.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-4.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-5.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-6.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-7.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-8.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-9.png) ![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-10.png) 
+![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-1.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-2.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-3.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-4.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-5.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-6.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-7.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-8.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-9.png)<!-- -->![](longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-10.png)<!-- -->
 
 
 Table: UAS Level Tests for 24B-Gal4 Drivers
@@ -142,9 +142,9 @@ HLH106.male       0.36866   0.14800        0.69166   0.01274   0.02457
 
 
 ```
-## R version 3.2.2 (2015-08-14)
+## R version 3.3.0 (2016-05-03)
 ## Platform: x86_64-apple-darwin13.4.0 (64-bit)
-## Running under: OS X 10.11.3 (El Capitan)
+## Running under: OS X 10.12 (unknown)
 ## 
 ## locale:
 ## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -153,14 +153,16 @@ HLH106.male       0.36866   0.14800        0.69166   0.01274   0.02457
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] survival_2.38-3    RColorBrewer_1.1-2 tidyr_0.3.1       
-## [4] dplyr_0.4.3        lubridate_1.5.0    RCurl_1.95-4.7    
-## [7] bitops_1.0-6       knitr_1.11        
+## [1] survival_2.39-5    RColorBrewer_1.1-2 tidyr_0.6.0       
+## [4] dplyr_0.5.0        lubridate_1.6.0    RCurl_1.95-4.8    
+## [7] bitops_1.0-6       knitr_1.14        
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] Rcpp_0.12.2     assertthat_0.1  digest_0.6.8    R6_2.1.1       
-##  [5] DBI_0.3.1       formatR_1.2.1   magrittr_1.5    evaluate_0.8   
-##  [9] highr_0.5.1     stringi_1.0-1   lazyeval_0.1.10 rmarkdown_0.8.1
-## [13] splines_3.2.2   tools_3.2.2     stringr_1.0.0   parallel_3.2.2 
-## [17] yaml_2.1.13     htmltools_0.2.6
+##  [1] Rcpp_0.12.7        magrittr_1.5       splines_3.3.0     
+##  [4] lattice_0.20-34    R6_2.1.3           stringr_1.1.0     
+##  [7] highr_0.6          tools_3.3.0        grid_3.3.0        
+## [10] DBI_0.5-1          htmltools_0.3.5    yaml_2.1.13       
+## [13] lazyeval_0.2.0     assertthat_0.1     digest_0.6.10     
+## [16] tibble_1.2         Matrix_1.2-7.1     formatR_1.4       
+## [19] evaluate_0.9       rmarkdown_1.0.9016 stringi_1.1.1
 ```

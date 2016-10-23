@@ -15,7 +15,7 @@ options(scipen = 9, digits = 5)
 
 ```
 
-These studies evaluate the effects of knockdown of several dTORC1 effectors, including Autophagy genes (*Atg5*, *Atg8a* and *Atg8b*) and the SREBP1 ortholog *Hlh106*  This data is located in `r getwd()` and was most recently updated on `r date()`.
+These studies evaluate the effects of knockdown of several dTORC1 effectors, including Autophagy genes (*Atg5*, *Atg8a* and *Atg8b*) and the SREBP1 ortholog *Hlh106*  This data is located in `r getwd()` and was most recently updated on `date()`.
 
 ## Experimental Design
 
@@ -108,7 +108,7 @@ combined.data$UAS <- relevel(combined.data$UAS, ref="36304")
 write.csv(combined.data, "../Data/Effector Longevity Analysis Data.csv")
 ```
 
-This script was most recently run on `r date()`.  There has been a total of **`r dim(death_data)[1]`** deaths, with **`r dim(death_data[death_data$Accidental==FALSE,])[1]`** of natural causes and **`r dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]`** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was `r max(combined.data$Age, na.rm=T)` days old at time of death.
+There has been a total of **`r dim(death_data)[1]`** deaths, with **`r dim(death_data[death_data$Accidental==FALSE,])[1]`** of natural causes and **`r dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]`** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was `r max(combined.data$Age, na.rm=T)` days old at time of death.
 
 ## Gene Level Analysis
 
