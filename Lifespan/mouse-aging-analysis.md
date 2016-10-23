@@ -6,7 +6,7 @@ February 9, 2015
 
 # Data Entry
 
-These data are accumulated from the database.  The analysis includes all alive animals, animals which were sacrificed and animals which died of natural causes (denoted in the database as "Unknown").  Animals which died with an estimated death date are excluded from the analysis.  We are testing the effects of age on death by natural causes.  This script is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan and was most recently run on Wed Feb 17 16:46:06 2016.
+These data are accumulated from the database.  The analysis includes all alive animals, animals which were sacrificed and animals which died of natural causes (denoted in the database as "Unknown").  Animals which died with an estimated death date are excluded from the analysis.  We are testing the effects of age on death by natural causes.  This script is located in /Users/davebrid/Documents/GitHub/DrosophilaMuscleFunction/Lifespan and was most recently run on Sun Oct 23 10:55:01 2016.
 
 
 # Mck-TSC1 Mice
@@ -17,11 +17,11 @@ These data are accumulated from the database.  The analysis includes all alive a
 
 ## Analysis
 
-The data is saved in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan with the data saved as ../Data/Mouse Log.csv and analysed using R \cite{base}.
+The data is saved in /Users/davebrid/Documents/GitHub/DrosophilaMuscleFunction/Lifespan with the data saved as ../Data/Mouse Log.csv and analysed using R \cite{base}.
 The data was analysed using the survival package \cite{survival1, survival2}.  Log rank tests were performed using the coin package \cite{coin1, coin2}.
 This plot analyses all of the natural deaths (marked in the database as unknown).  The median age at death was 272.5 for knockout mice and 623 for control mice
 
-![](mouse-aging-analysis_files/figure-html/data-analysis-all-1.png) 
+![](mouse-aging-analysis_files/figure-html/data-analysis-all-1.png)<!-- -->
 This analysis contains a total of **625** animals, from which we have detected **49** natural deaths.  See Table below for a summary of natural deaths and see the figure below for the combined death curves with errors.
 
 ## Comparing all Four Genotypes
@@ -80,6 +80,13 @@ Table: Muscle TSC1 Knockout Coefficients, relative to Knockout
                         beta      se    2.5 %   97.5 %        p
 -------------------  -------  ------  -------  -------  -------
 Genotypefl/fl; +/+    -1.187   0.305   -1.959   -0.415   0.0026
+
+# Comparing Control Strains
+
+
+The chi-squared test for comparing the three control genotypes is not significant, with a p-value of 0.77162. 
+
+
 
 # Death Logs
 This table shows the age, and at risk individuals for each natural death, along with the \% survival and the confidence intervals.
@@ -439,9 +446,9 @@ This table shows the age, and at risk individuals for each natural death, along 
   894        2         1          0   0.10435   0.94323   0.66280   0.01643  Genotype=fl/fl; +/+  
   936        1         1          0   0.00000       Inf        NA        NA  Genotype=fl/fl; +/+  
 
-![](mouse-aging-analysis_files/figure-html/fitting-mck-1.png) 
+![](mouse-aging-analysis_files/figure-html/fitting-mck-1.png)<!-- -->
 
-![](mouse-aging-analysis_files/figure-html/fitting-mck-ko-1.png) 
+![](mouse-aging-analysis_files/figure-html/fitting-mck-ko-1.png)<!-- -->
 
 
 Table: Muscle TSC1 Knockout Summary
@@ -457,7 +464,7 @@ Genotype=fl/fl; +/+               208               15
 
 ## Combining the Control Mice
 
-![](mouse-aging-analysis_files/figure-html/fitting-mck-controls-combined-1.png) 
+![](mouse-aging-analysis_files/figure-html/fitting-mck-controls-combined-1.png)<!-- -->
 
 
 The chi-squared test for comparing the two genotypes is significant, with a p-value of 0.  The results of these tests are in the table below.  The effects of each genotype, relative to the knockout strains are in the table below. These results are presented graphically in the figure below.  This means that the knockout mice are 4.17138 times more likely to die at any given time.
@@ -489,9 +496,9 @@ KnockoutTRUE    -1.428   0.24   -2.085   -0.771   0.00002023
 
 
 ```
-## R version 3.2.2 (2015-08-14)
+## R version 3.3.0 (2016-05-03)
 ## Platform: x86_64-apple-darwin13.4.0 (64-bit)
-## Running under: OS X 10.11.3 (El Capitan)
+## Running under: OS X 10.12 (unknown)
 ## 
 ## locale:
 ## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -500,21 +507,22 @@ KnockoutTRUE    -1.428   0.24   -2.085   -0.771   0.00002023
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] bibtex_0.4.0       RColorBrewer_1.1-2 ggfortify_0.1.0   
-## [4] ggplot2_2.0.0      proto_0.3-10       xtable_1.8-0      
-## [7] coin_1.1-2         survival_2.38-3    knitr_1.11        
+## [1] bibtex_0.4.0       RColorBrewer_1.1-2 ggfortify_0.2.0   
+## [4] ggplot2_2.1.0      xtable_1.8-2       coin_1.1-2        
+## [7] survival_2.39-5    knitr_1.14        
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] Rcpp_0.12.2       formatR_1.2.1     highr_0.5.1      
-##  [4] plyr_1.8.3        tools_3.2.2       digest_0.6.8     
-##  [7] evaluate_0.8      gtable_0.1.2      lattice_0.20-33  
-## [10] DBI_0.3.1         yaml_2.1.13       parallel_3.2.2   
-## [13] mvtnorm_1.0-3     gridExtra_2.0.0   stringr_1.0.0    
-## [16] dplyr_0.4.3       stats4_3.2.2      grid_3.2.2       
-## [19] R6_2.1.1          rmarkdown_0.8.1   multcomp_1.4-1   
-## [22] TH.data_1.0-6     tidyr_0.3.1       magrittr_1.5     
-## [25] scales_0.3.0      codetools_0.2-14  htmltools_0.2.6  
-## [28] modeltools_0.2-21 splines_3.2.2     assertthat_0.1   
-## [31] colorspace_1.2-6  sandwich_2.3-4    stringi_1.0-1    
-## [34] munsell_0.4.2     zoo_1.7-12
+##  [1] Rcpp_0.12.7        formatR_1.4        highr_0.6         
+##  [4] plyr_1.8.4         tools_3.3.0        digest_0.6.10     
+##  [7] evaluate_0.9       tibble_1.2         gtable_0.2.0      
+## [10] lattice_0.20-34    Matrix_1.2-7.1     DBI_0.5-1         
+## [13] yaml_2.1.13        mvtnorm_1.0-5      gridExtra_2.2.1   
+## [16] stringr_1.1.0      dplyr_0.5.0        stats4_3.3.0      
+## [19] grid_3.3.0         R6_2.1.3           rmarkdown_1.0.9016
+## [22] multcomp_1.4-6     TH.data_1.0-7      tidyr_0.6.0       
+## [25] magrittr_1.5       scales_0.4.0       codetools_0.2-14  
+## [28] htmltools_0.3.5    modeltools_0.2-21  MASS_7.3-45       
+## [31] splines_3.3.0      assertthat_0.1     colorspace_1.2-6  
+## [34] sandwich_2.3-4     stringi_1.1.1      munsell_0.4.3     
+## [37] zoo_1.7-13
 ```

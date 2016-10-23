@@ -119,6 +119,23 @@ res <- cbind(beta, se = exp(beta), CI, p)
 kable(res, digits=c(3,3,3,3,4), caption = "Muscle TSC1 Knockout Coefficients, relative to Knockout", label = "tab:mck-coef")
 ```
 
+# Comparing Control Strains
+
+```{r control-strains}
+#for wt v ko
+data.controls <- subset(data.known.mck, Genotype!="fl/fl; Tg/+")
+data.controls$Genotype <- relevel(data.controls$Genotype, ref="+/+; +/+")
+survobj.controls <- with(data.controls, Surv(age,Cause_of_Death=="Unknown"&Genotype!="fl/fl; Tg/+"))
+surv.fit.controls <- survfit(survobj.controls~Genotype, data=data.controls)
+#summary(surv.fit.mck.ko) same as for all four genotypes
+sdf.controls <- survdiff(formula=survobj.controls~Genotype, data=data.controls)
+coxph.controls <- coxph(formula=survobj.controls~Genotype, data=data.controls)
+#surv_test(formula=survobj.mck.ko~Genotype, data=data.known.mck.ko)
+```
+The chi-squared test for comparing the three control genotypes is not significant, with a p-value of `r pchisq(sdf.controls$chisq, df=2, lower=FALSE)`. 
+
+
+
 # Death Logs
 This table shows the age, and at risk individuals for each natural death, along with the \% survival and the confidence intervals.
 ```{r label=deaths}
