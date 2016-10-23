@@ -4,13 +4,13 @@ February 9, 2015
 
 
 
-These studies evaluate the effects of knockdown of the dTORC1 negative regulator *Tsc1*.  This data is located in /Users/davebridges/Documents/Source/DrosophilaMuscleFunction/Lifespan and was most recently updated on Wed Feb 17 17:03:51 2016.
+These studies evaluate the effects of knockdown of the dTORC1 negative regulator *Tsc1*.  This data is located in /Users/davebrid/Documents/GitHub/DrosophilaMuscleFunction/Lifespan and was most recently updated on Sun Oct 23 11:15:14 2016.
 
 ## Experimental Design
 
 
 
-This script was most recently run on Wed Feb 17 17:03:52 2016.  There has been a total of **` dim(death_data)[1]`** deaths, with **` dim(death_data[death_data$Accidental==FALSE,])[1]`** of natural causes and **` dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]`** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was 155 days old at time of death.
+This script was most recently run on ` date()`.  There has been a total of **` dim(death_data)[1]`** deaths, with **` dim(death_data[death_data$Accidental==FALSE,])[1]`** of natural causes and **` dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]`** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was 155 days old at time of death.
 
 ## Gene Level Analysis
 
@@ -36,7 +36,7 @@ UAS     Gene       female   male
 
 All of these are relative to the reference Genotype which is the knockdown (GAL4/shRNA).  The key packages used in this The summary statistics from this analysis are shown in the tables below:
 
-![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-gene-1.png) ![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-gene-2.png) 
+![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-gene-1.png)<!-- -->![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-gene-2.png)<!-- -->
 
 
 Table: Gene Level Tests for 24B-Gal4 Drivers
@@ -59,7 +59,7 @@ Tsc1 female    920   0.000000007   0.000000051   0.000000036
 ### Analysis by shRNA Clone - 24B
 
 
-![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-1.png) ![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-2.png) ![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-3.png) ![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-4.png) ![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-5.png) ![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-6.png) 
+![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-1.png)<!-- -->![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-2.png)<!-- -->![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-3.png)<!-- -->![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-4.png)<!-- -->![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-5.png)<!-- -->![](longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-6.png)<!-- -->
 
 
 Table: UAS Level Tests for 24B-Gal4 Drivers
@@ -111,7 +111,7 @@ Tsc1.male        0.48710   0.10928        1.62759   0.00001   0.00001
 
 ## Survival Analysis - Hand
 
-![](longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-gene-1.png) ![](longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-gene-2.png) 
+![](longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-gene-1.png)<!-- -->![](longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-gene-2.png)<!-- -->
 
 
 Table: Gene Level Tests for Hand-Gal4 Drivers
@@ -134,7 +134,7 @@ Raptor female    904           0            0          0
 ## Analysis by shRNA Clone
 
 
-![](longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-UAS-1.png) ![](longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-UAS-2.png) ![](longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-UAS-3.png) ![](longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-UAS-4.png) 
+![](longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-UAS-1.png)<!-- -->![](longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-UAS-2.png)<!-- -->![](longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-UAS-3.png)<!-- -->![](longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-UAS-4.png)<!-- -->
 
 
 Table: UAS Level Tests for Hand-Gal4 Drivers
@@ -192,9 +192,9 @@ Raptor.male      1.70176   0.10514         5.4836   0.00000   0.00000
 
 
 ```
-## R version 3.2.2 (2015-08-14)
+## R version 3.3.0 (2016-05-03)
 ## Platform: x86_64-apple-darwin13.4.0 (64-bit)
-## Running under: OS X 10.11.3 (El Capitan)
+## Running under: OS X 10.12 (unknown)
 ## 
 ## locale:
 ## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -203,13 +203,15 @@ Raptor.male      1.70176   0.10514         5.4836   0.00000   0.00000
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-## [1] survival_2.38-3    RColorBrewer_1.1-2 tidyr_0.3.1       
-## [4] dplyr_0.4.3        lubridate_1.5.0    knitr_1.11        
+## [1] survival_2.39-5    RColorBrewer_1.1-2 tidyr_0.6.0       
+## [4] dplyr_0.5.0        lubridate_1.6.0    knitr_1.14        
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] Rcpp_0.12.2     digest_0.6.8    assertthat_0.1  R6_2.1.1       
-##  [5] DBI_0.3.1       formatR_1.2.1   magrittr_1.5    evaluate_0.8   
-##  [9] highr_0.5.1     stringi_1.0-1   lazyeval_0.1.10 rmarkdown_0.8.1
-## [13] splines_3.2.2   tools_3.2.2     stringr_1.0.0   parallel_3.2.2 
-## [17] yaml_2.1.13     htmltools_0.2.6
+##  [1] Rcpp_0.12.7        lattice_0.20-34    digest_0.6.10     
+##  [4] assertthat_0.1     grid_3.3.0         R6_2.1.3          
+##  [7] DBI_0.5-1          formatR_1.4        magrittr_1.5      
+## [10] evaluate_0.9       highr_0.6          stringi_1.1.1     
+## [13] lazyeval_0.2.0     Matrix_1.2-7.1     rmarkdown_1.0.9016
+## [16] splines_3.3.0      tools_3.3.0        stringr_1.1.0     
+## [19] yaml_2.1.13        htmltools_0.3.5    tibble_1.2
 ```
