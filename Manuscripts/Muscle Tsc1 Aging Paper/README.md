@@ -8,9 +8,9 @@ Figures were then modified using Adobe Illustrator CC  into the file **Figures.a
 | 1B |  |  |
 | 1C | Lifespan/mouse-aging-analysis.Rmd | Lifespan/mouse-aging-analysis_files/figure-html/fitting-mck-ko-1.pdf |
 | 1D | Lifespan/mouse-aging-analysis.Rmd | Lifespan/mouse-aging-analysis_files/figure-html/fitting-mck-controls-combined-1.pdf |
-| 2A |  |  |
-| 2B |  |  |
-| 2C |  |  |
-| 3A |  |  |
-| 3B |  |  |
-| 3C |  |  |
+| 2A | Lifespan/longevity-analysis-tsc.Rmd | Lifespan/longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-4.pdf |
+| 2B | Lifespan/longevity-analysis-tsc.Rmd | Lifespan/longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-6.pdf|
+| 2C | Lifespan/longevity-analysis-tsc.Rmd | Lifespan/longevity-analysis-tsc_files/figure-html/survival-analysis-hand-by-UAS-3.pdf|
+| 3A | Lifespan/longevity-analysis-effector.Rmd | Lifespan/longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-7.pdf |
+| 3B | Lifespan/longevity-analysis-effector.Rmd | Lifespan/longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-10.pdf |
+| 3C | Lifespan/longevity-analysis-effector.Rmd | Lifespan/longevity-analysis-effectors_files/figure-html/survival-analysis-24b-by-UAS-8.pdf |
