@@ -4,13 +4,13 @@ February 9, 2015
 
 
 
-These studies evaluate the effects of knockdown of the dTORC1 negative regulator *Tsc1*.  This data is located in /Users/davebrid/Documents/GitHub/DrosophilaMuscleFunction/Lifespan and was most recently updated on Sun Oct 23 11:15:14 2016.
+These studies evaluate the effects of knockdown of the dTORC1 negative regulator *Tsc1*.  This data is located in /Users/davebrid/Documents/GitHub/DrosophilaMuscleFunction/Lifespan and was most recently updated on Sun Oct 23 11:33:49 2016.
 
 ## Experimental Design
 
 
 
-This script was most recently run on ` date()`.  There has been a total of **` dim(death_data)[1]`** deaths, with **` dim(death_data[death_data$Accidental==FALSE,])[1]`** of natural causes and **` dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]`** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was 155 days old at time of death.
+The oldest fly recorded so far was 155 days old at time of death.
 
 ## Gene Level Analysis
 

@@ -79,7 +79,7 @@ combined.data$UAS <- relevel(as.factor(combined.data$UAS), ref="36304")
 write.csv(combined.data, "../Data/dTORC1 Longevity Analysis Data.csv")
 ```
 
-This script was most recently run on ` date()`.  There has been a total of **` dim(death_data)[1]`** deaths, with **` dim(death_data[death_data$Accidental==FALSE,])[1]`** of natural causes and **` dim(death_data[death_data$Phenotype!='?'&death_data$Accidental==FALSE,])[1]`** of identifiable genotypes excluding accidental deaths.  The oldest fly recorded so far was `r max(combined.data$Age, na.rm=T)` days old at time of death.
+The oldest fly recorded so far was `r max(combined.data$Age, na.rm=T)` days old at time of death.
 
 ## Gene Level Analysis
 
