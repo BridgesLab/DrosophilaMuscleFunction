@@ -4,8 +4,8 @@ Figures were then modified using Adobe Illustrator CC  into the file **Figures.a
 
 | Panel | Script | Figure |
 |-------|:---------------------------------:|:-----------------------------------------------------------------------------------:|
-| 1A |  |  |
-| 1B |  |  |
+| 1A | NA | Protein Analysis/Muscle-Tsc1 Blots/2014-12-09 Blots.ai
+| 1B | Protein Analysis/Muscle-Tsc1 Blots/quadriceps-quantification.Rmd | Protein Analysis/Muscle-Tsc1 Blots/figures/lc3-quantification-1.pdf
 | 1C | Lifespan/mouse-aging-analysis.Rmd | Lifespan/mouse-aging-analysis_files/figure-html/fitting-mck-ko-1.pdf |
 | 1D | Lifespan/mouse-aging-analysis.Rmd | Lifespan/mouse-aging-analysis_files/figure-html/fitting-mck-controls-combined-1.pdf |
 | 2A | Lifespan/longevity-analysis-tsc.Rmd | Lifespan/longevity-analysis-tsc_files/figure-html/survival-analysis-24b-by-UAS-4.pdf |
