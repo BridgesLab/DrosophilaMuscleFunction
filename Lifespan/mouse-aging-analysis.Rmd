@@ -11,7 +11,17 @@ output:
 ```{r global_options, include=FALSE}
 library(knitr)
 opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE,dev=c('png','pdf'))
-options(scipen = 9, digits = 5)
+options(scipen = 2, digits = 3)
+
+
+knitr::knit_hooks$set(inline = function(x) {
+  knitr:::format_sci(x, 'md')
+})
+
+
+superpose.eb <- function (x, y, ebl, ebu = ebl, length = 0.08, ...)
+  arrows(x, y + ebu, x, y - ebl, angle = 90, code = 3,
+  length = length, ...)
 ```
 
 # Data Entry
@@ -194,6 +204,17 @@ legend("bottomleft", c("Knockout", "Controls"), bty="n",fill=c("black","red"))
 
 
 The chi-squared test for comparing the two genotypes is significant, with a p-value of `r pchisq(sdf.mck.combined$chisq, df=1, lower=FALSE)`.  The results of these tests are in the table below.  The effects of each genotype, relative to the knockout strains are in the table below. These results are presented graphically in the figure below.  This means that the knockout mice are `r 1/exp(coef(coxph.mck.combined))` times more likely to die at any given time.
+
+## Testing Model Assumptions
+
+```{r assumptions-schoenfeld, fig.cap="Schoenfeld residuals plotted vs time to test the proportional hazard assumption"}
+mck.combined.ph <- cox.zph(coxph.mck.combined)
+kable(mck.combined.ph$table)
+library(survminer)
+ggcoxzph(mck.combined.ph)
+```
+
+We checked for correlation between scaled Schoenfeld residuals with time, and found no violation of the proportional hazard assumption (p = `r mck.combined.ph$table[[3]]`).
 
 ```{r label=mck-data}
 summary.mck.combined.tests <- rbind(summary(coxph.mck.combined)$logtest, summary(coxph.mck.combined)$waldtest, summary(coxph.mck.combined)$sctest)
