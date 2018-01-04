@@ -6,7 +6,7 @@ February 9, 2015
 
 # Data Entry
 
-These data are accumulated from the database.  The analysis includes all alive animals, animals which were sacrificed and animals which died of natural causes (denoted in the database as "Unknown").  Animals which died with an estimated death date are excluded from the analysis.  We are testing the effects of age on death by natural causes.  This script is located in /Users/davebrid/Documents/GitHub/DrosophilaMuscleFunction/Lifespan and was most recently run on Sun Jan 22 11:35:56 2017.
+These data are accumulated from the database.  The analysis includes all alive animals, animals which were sacrificed and animals which died of natural causes (denoted in the database as "Unknown").  Animals which died with an estimated death date are excluded from the analysis.  We are testing the effects of age on death by natural causes.  This script is located in /Users/davebrid/Documents/GitHub/DrosophilaMuscleFunction/Lifespan and was most recently run on Sun Jan 22 15:02:35 2017.
 
 
 # Mck-TSC1 Mice
@@ -466,6 +466,8 @@ Genotype=fl/fl; +/+               208               15
 
 ![](mouse-aging-analysis_files/figure-html/fitting-mck-controls-combined-1.png)<!-- -->
 
+![](mouse-aging-analysis_files/figure-html/fitting-mck-controls-combined-ggsurvplot-1.png)<!-- -->
+
 
 The chi-squared test for comparing the two genotypes is significant, with a p-value of 4.703&times; 10^-6^.  The results of these tests are in the table below.  The effects of each genotype, relative to the knockout strains are in the table below. These results are presented graphically in the figure below.  This means that the knockout mice are 4.171 times more likely to die at any given time.
 
@@ -479,6 +481,10 @@ KnockoutTRUE    0.023   0.025   0.875
 ![Schoenfeld residuals plotted vs time to test the proportional hazard assumption](mouse-aging-analysis_files/figure-html/assumptions-schoenfeld-1.png)
 
 We checked for correlation between scaled Schoenfeld residuals with time, and found no violation of the proportional hazard assumption (p = 0.875).
+
+## Influential Observations
+
+![](mouse-aging-analysis_files/figure-html/assumptions-influential-1.png)<!-- -->![](mouse-aging-analysis_files/figure-html/assumptions-influential-2.png)<!-- -->![](mouse-aging-analysis_files/figure-html/assumptions-influential-3.png)<!-- -->
 
 
 Table: Muscle TSC1 Knockout Tests controls combined
